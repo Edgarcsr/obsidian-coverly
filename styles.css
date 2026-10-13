@@ -8,6 +8,20 @@ body.mdp-hide-properties .metadata-property[data-property-key="icon"] {
   display: none !important;
 }
 
+/* Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar propriedade" */
+body.mdp-hide-properties
+  .metadata-container:not(
+    :has(
+      .metadata-property:not([data-property-key="cover"]):not(
+          [data-property-key="cover-position"]
+        ):not([data-property-key="cover-credit"]):not(
+          [data-property-key="cover-credit-url"]
+        ):not([data-property-key="icon"])
+    )
+  ) {
+  display: none;
+}
+
 /*
  * Os seletores de botão são escopados pelo contêiner (ex.: `.mdp-picker
  * .mdp-picker-tab`). O Obsidian estiliza todo botão com
