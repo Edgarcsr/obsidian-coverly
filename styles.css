@@ -3,6 +3,13 @@
   display: none !important;
 }
 
+/*
+ * Os seletores de botão são escopados pelo contêiner (ex.: `.mdp-picker
+ * .mdp-picker-tab`). O Obsidian estiliza todo botão com
+ * `button:not(.clickable-icon)` (fundo, cor e sombra), que vence uma classe
+ * sozinha; com duas classes, os estilos do plugin prevalecem.
+ */
+
 /* ---------- Cabeçalho (capa + ícone) ---------- */
 .mdp-header {
   --mdp-icon-overlap: 36px;
@@ -106,7 +113,7 @@
   transform: none;
 }
 
-.mdp-toolbar-btn {
+.mdp-cover .mdp-toolbar-btn {
   display: flex;
   align-items: center;
   height: 26px;
@@ -125,20 +132,20 @@
 }
 
 /* Separador fino entre os segmentos */
-.mdp-toolbar-btn + .mdp-toolbar-btn {
+.mdp-cover .mdp-toolbar-btn + .mdp-toolbar-btn {
   border-left: 1px solid var(--background-modifier-border);
 }
 
-.mdp-toolbar-btn:hover {
+.mdp-cover .mdp-toolbar-btn:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
 
-.mdp-toolbar-btn.is-icon {
+.mdp-cover .mdp-toolbar-btn.is-icon {
   padding: 0 7px;
 }
 
-.mdp-toolbar-btn.is-icon svg {
+.mdp-cover .mdp-toolbar-btn.is-icon svg {
   width: 14px;
   height: 14px;
 }
@@ -173,7 +180,7 @@
   margin-top: 12px;
 }
 
-.mdp-icon {
+.mdp-header .mdp-icon {
   position: relative;
   padding: 2px 6px;
   font-size: 64px;
@@ -192,7 +199,7 @@
   animation: mdp-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 
-.mdp-icon:hover {
+.mdp-header .mdp-icon:hover {
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 6px 18px rgb(0 0 0 / 16%);
 }
@@ -222,7 +229,7 @@
   opacity: 1;
 }
 
-.mdp-add-btn {
+.mdp-header .mdp-add-btn {
   display: flex;
   gap: 6px;
   align-items: center;
@@ -240,7 +247,7 @@
     color 0.12s ease;
 }
 
-.mdp-add-btn:hover {
+.mdp-header .mdp-add-btn:hover {
   color: var(--text-muted);
   background: var(--background-modifier-hover);
 }
@@ -279,7 +286,7 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.mdp-picker-tab {
+.mdp-picker .mdp-picker-tab {
   position: relative;
   height: auto;
   padding: 6px 8px 9px;
@@ -295,17 +302,17 @@
     color 0.12s ease;
 }
 
-.mdp-picker-tab:hover {
+.mdp-picker .mdp-picker-tab:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
 
-.mdp-picker-tab.is-active {
+.mdp-picker .mdp-picker-tab.is-active {
   color: var(--text-normal);
 }
 
 /* Sublinhado da aba ativa, por cima da borda da barra */
-.mdp-picker-tab.is-active::after {
+.mdp-picker .mdp-picker-tab.is-active::after {
   position: absolute;
   right: 8px;
   bottom: -1px;
@@ -338,7 +345,7 @@
   gap: 8px;
 }
 
-.mdp-picker-tile {
+.mdp-picker .mdp-picker-tile {
   height: 64px;
   padding: 0;
   background-size: cover;
@@ -349,11 +356,11 @@
   transition: opacity 0.12s ease;
 }
 
-.mdp-picker-tile:hover {
+.mdp-picker .mdp-picker-tile:hover {
   opacity: 0.85;
 }
 
-.mdp-picker-tile.is-selected {
+.mdp-picker .mdp-picker-tile.is-selected {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
@@ -425,7 +432,7 @@
   display: none;
 }
 
-.mdp-picker-photo {
+.mdp-picker .mdp-picker-photo {
   position: relative;
   height: 96px;
   padding: 0;
@@ -437,7 +444,7 @@
   cursor: pointer;
 }
 
-.mdp-picker-photo img {
+.mdp-picker .mdp-picker-photo img {
   display: block;
   width: 100%;
   height: 100%;
@@ -445,7 +452,7 @@
   transition: transform 0.25s ease;
 }
 
-.mdp-picker-photo:hover img {
+.mdp-picker .mdp-picker-photo:hover img {
   transform: scale(1.04);
 }
 
@@ -466,7 +473,7 @@
   transition: opacity 0.15s ease;
 }
 
-.mdp-picker-photo:hover .mdp-picker-photo-credit {
+.mdp-picker .mdp-picker-photo:hover .mdp-picker-photo-credit {
   opacity: 1;
 }
 
@@ -494,7 +501,7 @@
   gap: 4px;
 }
 
-.mdp-emoji-option {
+.mdp-emoji-modal .mdp-emoji-option {
   padding: 4px;
   font-size: 24px;
   background: transparent;
@@ -506,7 +513,7 @@
     transform 0.15s ease;
 }
 
-.mdp-emoji-option:hover {
+.mdp-emoji-modal .mdp-emoji-option:hover {
   background: var(--background-modifier-hover);
   transform: scale(1.12);
 }
