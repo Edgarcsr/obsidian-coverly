@@ -7,20 +7,48 @@ import type { CoverData } from "./note-data";
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
-/** Botão com ícone Lucide e rótulo. O ícone é decorativo: o rótulo dá nome ao botão. */
-const iconButton = (
+/** Ação discreta acima do título ("Adicionar ícone"), com ícone Lucide e rótulo. */
+const addButton = (
   parent: HTMLElement,
   iconId: string,
   label: string,
+  onClick: () => void
+): void => {
+  const button = parent.createEl("button", { cls: "mdp-add-btn" });
+  setIcon(button.createSpan({ cls: "mdp-add-btn-icon" }), iconId);
+  button.createSpan({ text: label });
+  button.addEventListener("click", onClick);
+};
+
+/** Segmento de texto da pílula de ações da capa. */
+const toolbarButton = (
+  parent: HTMLElement,
+  label: string,
   onClick?: () => void
 ): HTMLElement => {
-  const button = parent.createEl("button", { cls: "mdp-btn" });
-  setIcon(button.createSpan({ cls: "mdp-btn-icon" }), iconId);
-  button.createSpan({ text: label });
+  const button = parent.createEl("button", {
+    cls: "mdp-toolbar-btn",
+    text: label,
+  });
   if (onClick) {
     button.addEventListener("click", onClick);
   }
   return button;
+};
+
+/** Segmento só com ícone; o rótulo vai para leitores de tela e para a dica. */
+const toolbarIconButton = (
+  parent: HTMLElement,
+  iconId: string,
+  label: string,
+  onClick: () => void
+): void => {
+  const button = parent.createEl("button", {
+    attr: { "aria-label": label },
+    cls: "mdp-toolbar-btn is-icon",
+  });
+  setIcon(button, iconId);
+  button.addEventListener("click", onClick);
 };
 
 /**
@@ -117,15 +145,11 @@ const buildCover = (
   }
 
   const toolbar = cover.createDiv({ cls: "mdp-toolbar" });
-  iconButton(toolbar, "md-plus-cog", "Alterar capa", () => {
+  toolbarButton(toolbar, "Alterar", () => {
     plugin.openCoverPicker(sourcePath);
   });
-  const reposition = iconButton(
-    toolbar,
-    "md-plus-move-vertical",
-    "Reposicionar"
-  );
-  iconButton(toolbar, "md-plus-trash", "Remover", async () => {
+  const reposition = toolbarButton(toolbar, "Reposicionar");
+  toolbarIconButton(toolbar, "md-plus-trash", "Remover capa", async () => {
     await plugin.setCover(sourcePath, null);
   });
 
@@ -190,14 +214,14 @@ export const buildHeader = (
 
   // Ações de adicionar aparecem só ao passar o mouse, para não poluir a nota.
   const addRow = header.createDiv({ cls: "mdp-add-row" });
-  if (!data.cover) {
-    iconButton(addRow, "md-plus-image", "Adicionar capa", () => {
-      plugin.openCoverPicker(sourcePath);
+  if (!data.icon) {
+    addButton(addRow, "md-plus-smile", "Adicionar ícone", () => {
+      plugin.openIconPicker(sourcePath);
     });
   }
-  if (!data.icon) {
-    iconButton(addRow, "md-plus-smile", "Adicionar ícone", () => {
-      plugin.openIconPicker(sourcePath);
+  if (!data.cover) {
+    addButton(addRow, "md-plus-image", "Adicionar capa", () => {
+      plugin.openCoverPicker(sourcePath);
     });
   }
 
