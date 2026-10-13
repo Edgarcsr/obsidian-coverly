@@ -1,7 +1,7 @@
 import { Notice } from "obsidian";
 
+import { GALLERY } from "./gallery";
 import type MdPlusPlugin from "./main";
-import { GALLERY } from "./note-data";
 import type { CreditInfo } from "./note-data";
 import { searchUnsplash, trackUnsplashDownload } from "./unsplash";
 import type { UnsplashPhoto } from "./unsplash";
@@ -83,6 +83,21 @@ export class CoverPicker {
     this.place();
   };
 
+  /**
+   * Ctrl+V com uma imagem na área de transferência vira a capa, em qualquer
+   * aba. Texto colado (um link, por exemplo) segue o caminho normal do campo.
+   */
+  private readonly onPaste = async (event: ClipboardEvent): Promise<void> => {
+    const image = [...(event.clipboardData?.files ?? [])].find((file) =>
+      file.type.startsWith("image/")
+    );
+    if (!image) {
+      return;
+    }
+    event.preventDefault();
+    await this.upload(image);
+  };
+
   constructor(options: CoverPickerOptions) {
     this.options = options;
     this.current = options.current;
@@ -99,6 +114,7 @@ export class CoverPicker {
     this.place();
     document.addEventListener("pointerdown", this.onPointerDown, true);
     document.addEventListener("keydown", this.onKeydown, true);
+    document.addEventListener("paste", this.onPaste, true);
     window.addEventListener("resize", this.onResize);
   }
 
@@ -109,6 +125,7 @@ export class CoverPicker {
     this.el.remove();
     document.removeEventListener("pointerdown", this.onPointerDown, true);
     document.removeEventListener("keydown", this.onKeydown, true);
+    document.removeEventListener("paste", this.onPaste, true);
     window.removeEventListener("resize", this.onResize);
     this.onClose?.();
   }
@@ -169,6 +186,10 @@ export class CoverPicker {
   private renderBody(): void {
     this.body.empty();
     this.body.scrollTop = 0;
+    // A altura acompanha o conteúdo da aba, então a posição é refeita no fim.
+    window.requestAnimationFrame(() => {
+      this.place();
+    });
     switch (this.tab) {
       case "gallery": {
         this.renderGallery();
@@ -199,18 +220,29 @@ export class CoverPicker {
         text: section.title,
       });
       const grid = this.body.createDiv({ cls: "mdp-picker-grid" });
-      for (const preset of section.items) {
-        const value = `gradient:${preset.id}`;
+      for (const item of section.items) {
+        const value =
+          item.kind === "gradient" ? `gradient:${item.id}` : item.url;
         const tile = grid.createEl("button", {
-          attr: { "aria-label": preset.name, title: preset.name },
+          attr: { "aria-label": item.name, title: item.name },
           cls:
             value === this.current
               ? "mdp-picker-tile is-selected"
               : "mdp-picker-tile",
         });
-        tile.style.backgroundImage = preset.css;
+        if (item.kind === "gradient") {
+          tile.style.backgroundImage = item.css;
+        } else {
+          // Imagem com carregamento preguiçoso: só baixa ao rolar até ela.
+          tile.createEl("img", {
+            attr: { alt: item.name, loading: "lazy", src: item.thumb },
+          });
+        }
         tile.addEventListener("click", async () => {
-          await this.choose(value);
+          await this.choose(
+            value,
+            item.kind === "artwork" ? item.credit : undefined
+          );
           for (const other of this.body.querySelectorAll(".is-selected")) {
             other.removeClass("is-selected");
           }
@@ -228,7 +260,7 @@ export class CoverPicker {
     });
     zone.createDiv({
       cls: "mdp-picker-hint",
-      text: "Imagens com mais de 1500 pixels de largura funcionam melhor. Você também pode arrastar o arquivo para cá.",
+      text: "Arraste uma imagem para cá ou Ctrl+V para colar uma imagem. Imagens com mais de 1500 pixels de largura funcionam melhor.",
     });
     const input = zone.createEl("input", {
       attr: { accept: "image/*" },
@@ -292,7 +324,7 @@ export class CoverPicker {
       type: "url",
     });
     const submit = form.createEl("button", {
-      cls: "mdp-picker-primary mod-cta",
+      cls: "mdp-picker-primary is-accent",
       text: "Enviar",
     });
     form.createDiv({
@@ -396,7 +428,10 @@ export class CoverPicker {
       await trackUnsplashDownload(accessKey, photo.downloadLocation).catch(
         () => false
       );
-      await this.choose(photo.regular, photo.photographer);
+      await this.choose(photo.regular, {
+        name: `Foto de ${photo.photographer.name} no Unsplash`,
+        url: photo.photographer.url,
+      });
     });
   }
 

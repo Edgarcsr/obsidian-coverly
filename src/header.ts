@@ -250,8 +250,8 @@ const buildCover = (
   );
 
   if (data.credit) {
+    // O texto já vem completo ("Foto de X no Unsplash", "Hokusai, … · The Met").
     const credit = cover.createDiv({ cls: "mdp-credit" });
-    credit.createSpan({ text: "Foto de " });
     const link = credit.createEl("a", {
       attr: { href: data.creditUrl ?? "#" },
       text: data.credit,

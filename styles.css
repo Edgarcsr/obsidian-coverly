@@ -268,7 +268,8 @@
   display: flex;
   flex-direction: column;
   width: min(540px, calc(100vw - 16px));
-  height: min(480px, calc(100vh - 16px));
+  /* Altura acompanha a aba: Link fica compacto, Galeria rola */
+  max-height: min(480px, calc(100vh - 16px));
   overflow: hidden;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
@@ -329,6 +330,7 @@
 
 .mdp-picker-body {
   flex: 1;
+  min-height: 0;
   padding: 0 16px 16px;
   overflow-y: auto;
 }
@@ -356,6 +358,14 @@
   transition: opacity 0.12s ease;
 }
 
+.mdp-picker .mdp-picker-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
 .mdp-picker .mdp-picker-tile:hover {
   opacity: 0.85;
 }
@@ -375,13 +385,68 @@
   padding: 32px 0;
 }
 
-.mdp-picker-primary {
+/* Botão e campo próprios, no visual do Notion/shadcn, com as cores do tema */
+.mdp-picker .mdp-picker-primary {
   width: 100%;
   max-width: 320px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    opacity 0.12s ease;
 }
 
-.mdp-picker-input {
+.mdp-picker .mdp-picker-primary:hover {
+  background-color: var(--background-modifier-active-hover);
+}
+
+.mdp-picker .mdp-picker-primary.is-accent {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+  border-color: transparent;
+}
+
+.mdp-picker .mdp-picker-primary.is-accent:hover {
+  background-color: var(--interactive-accent-hover);
+}
+
+.mdp-picker .mdp-picker-primary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.mdp-picker .mdp-picker-input {
   width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  background-color: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: none;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.mdp-picker .mdp-picker-input::placeholder {
+  color: var(--text-faint);
+}
+
+.mdp-picker .mdp-picker-input:focus {
+  border-color: var(--background-modifier-border-focus);
+  outline: none;
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--interactive-accent) 25%, transparent);
 }
 
 /* Carregar: a área inteira aceita arrastar o arquivo */
