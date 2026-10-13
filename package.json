@@ -1,0 +1,30 @@
+{
+  "name": "md-plus",
+  "version": "0.1.0",
+  "description": "Capa e ícone de página estilo Notion para o Obsidian",
+  "license": "0-BSD",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "dev": "bun esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && bun esbuild.config.mjs production",
+    "version": "bun version-bump.mjs && git add manifest.json versions.json",
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "check": "ultracite check",
+    "fix": "ultracite fix"
+  },
+  "devDependencies": {
+    "@codemirror/state": "^6",
+    "@codemirror/view": "^6",
+    "@types/node": "^22.15.17",
+    "esbuild": "0.25.5",
+    "jiti": "^2.6.1",
+    "lucide-static": "^1.56.0",
+    "obsidian": "1.12.3",
+    "oxfmt": "^0.71.0",
+    "oxlint": "^1.86.0",
+    "typescript": "^5.8.3",
+    "ultracite": "8.0.0"
+  }
+}
