@@ -120,12 +120,6 @@ const bleed = (header: HTMLElement, scroller: HTMLElement): void => {
   if (cover.style.width !== width) {
     cover.style.width = width;
   }
-
-  // Distância da coluna de texto até a borda direita: a pílula de ações se alinha a ela.
-  const contentRight = `${Math.max(0, scroller.clientWidth + left - header.clientWidth)}px`;
-  if (cover.style.getPropertyValue("--mdp-content-right") !== contentRight) {
-    cover.style.setProperty("--mdp-content-right", contentRight);
-  }
 };
 
 /**

@@ -51,11 +51,11 @@
   box-shadow: inset 0 0 0 2px var(--interactive-accent);
 }
 
-/* Pílula de ações da capa: aparece só ao passar o mouse, no canto superior esquerdo */
+/* Pílula de ações da capa: aparece só ao passar o mouse, no canto superior direito */
 .mdp-toolbar {
   position: absolute;
   top: 12px;
-  left: 12px;
+  right: 12px;
   display: flex;
   align-items: stretch;
   overflow: hidden;
@@ -117,8 +117,8 @@
 
 .mdp-credit {
   position: absolute;
-  top: 10px;
-  right: calc(var(--mdp-content-right, 0px) + 12px);
+  right: 12px;
+  bottom: 8px;
   font-size: 11px;
   color: #fff;
   opacity: 0.85;

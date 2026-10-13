@@ -52,15 +52,49 @@ const toolbarIconButton = (
 };
 
 /**
+ * Quantos px a capa pode deslizar na vertical: o quanto o fundo excede a
+ * moldura. É o que converte a distância arrastada em porcentagem.
+ */
+type OverflowMeasure = () => Promise<number>;
+
+/** O gradiente é desenhado mais alto que a capa; a sobra é o que dá para arrastar. */
+const GRADIENT_SCALE = 2.5;
+
+const gradientOverflow =
+  (cover: HTMLElement): OverflowMeasure =>
+  () =>
+    Promise.resolve(cover.clientHeight * (GRADIENT_SCALE - 1));
+
+/** Para fotos a sobra depende do tamanho real da imagem (background-size: cover). */
+const imageOverflow =
+  (cover: HTMLElement, url: string): OverflowMeasure =>
+  async () => {
+    const probe = new Image();
+    probe.src = url;
+    try {
+      await probe.decode();
+    } catch {
+      // Imagem que não carrega não tem o que arrastar.
+      return 0;
+    }
+    const frameHeight = cover.clientHeight;
+    const scale = Math.max(
+      cover.clientWidth / probe.naturalWidth,
+      frameHeight / probe.naturalHeight
+    );
+    return probe.naturalHeight * scale - frameHeight;
+  };
+
+/**
  * Reposicionamento vertical por arrasto. A distância arrastada é convertida em
- * porcentagem usando o quanto a imagem excede a moldura (background-size: cover).
+ * porcentagem usando o quanto o fundo excede a moldura (ver OverflowMeasure).
  */
 const attachReposition = (
   plugin: MdPlusPlugin,
   cover: HTMLElement,
   surface: HTMLElement,
   button: HTMLElement,
-  url: string,
+  measureOverflow: OverflowMeasure,
   initialPosition: number,
   sourcePath: string
 ): void => {
@@ -71,26 +105,12 @@ const attachReposition = (
   let startPosition = initialPosition;
   let current = initialPosition;
 
-  const measure = (): void => {
-    const probe = new Image();
-    probe.addEventListener("load", () => {
-      const frameWidth = cover.clientWidth;
-      const frameHeight = cover.clientHeight;
-      const scale = Math.max(
-        frameWidth / probe.naturalWidth,
-        frameHeight / probe.naturalHeight
-      );
-      overflow = probe.naturalHeight * scale - frameHeight;
-    });
-    probe.src = url;
-  };
-
   button.addEventListener("click", async () => {
     active = !active;
     cover.toggleClass("is-repositioning", active);
     button.setText(active ? "Concluir" : "Reposicionar");
     if (active) {
-      measure();
+      overflow = await measureOverflow();
       return;
     }
     if (Math.round(current) !== Math.round(initialPosition)) {
@@ -133,15 +153,19 @@ const buildCover = (
   cover.className = "mdp-cover";
 
   const source = resolveCoverSource(plugin.app, data.cover);
-  let surface: HTMLElement | null = null;
+  // Foto e gradiente ficam na mesma camada, então os dois podem ser reposicionados.
+  const surface = cover.createDiv({ cls: "mdp-cover-image" });
+  surface.style.backgroundPosition = `50% ${data.position}%`;
 
-  if (source?.kind === "gradient") {
-    cover.style.background = source.css;
-  } else if (source?.kind === "image") {
-    surface = cover.createDiv({ cls: "mdp-cover-image" });
+  let measureOverflow: OverflowMeasure;
+  if (source?.kind === "image") {
     // Aspas no caminho quebrariam a declaração CSS, então são escapadas.
     surface.style.backgroundImage = `url("${source.url.replaceAll('"', "%22")}")`;
-    surface.style.backgroundPosition = `50% ${data.position}%`;
+    measureOverflow = imageOverflow(cover, source.url);
+  } else {
+    surface.style.backgroundImage = source?.css ?? "";
+    surface.style.backgroundSize = `100% ${GRADIENT_SCALE * 100}%`;
+    measureOverflow = gradientOverflow(cover);
   }
 
   const toolbar = cover.createDiv({ cls: "mdp-toolbar" });
@@ -153,19 +177,15 @@ const buildCover = (
     await plugin.setCover(sourcePath, null);
   });
 
-  if (surface && source?.kind === "image") {
-    attachReposition(
-      plugin,
-      cover,
-      surface,
-      reposition,
-      source.url,
-      data.position,
-      sourcePath
-    );
-  } else {
-    reposition.hide();
-  }
+  attachReposition(
+    plugin,
+    cover,
+    surface,
+    reposition,
+    measureOverflow,
+    data.position,
+    sourcePath
+  );
 
   if (data.credit) {
     const credit = cover.createDiv({ cls: "mdp-credit" });
