@@ -105,14 +105,39 @@ const attachReposition = (
   let startPosition = initialPosition;
   let current = initialPosition;
 
+  const setActive = (value: boolean): void => {
+    active = value;
+    dragging = false;
+    cover.toggleClass("is-repositioning", value);
+    button.setText(value ? "Concluir" : "Reposicionar");
+  };
+
+  // Esc sai do modo sem salvar e devolve a capa à posição anterior.
+  const onKeydown = (event: KeyboardEvent): void => {
+    // O cabeçalho pode ter sido redesenhado no meio do caminho.
+    if (!cover.isConnected) {
+      document.removeEventListener("keydown", onKeydown, true);
+      return;
+    }
+    if (event.key !== "Escape") {
+      return;
+    }
+    event.preventDefault();
+    current = initialPosition;
+    surface.style.backgroundPosition = `50% ${current}%`;
+    setActive(false);
+    document.removeEventListener("keydown", onKeydown, true);
+  };
+
   button.addEventListener("click", async () => {
-    active = !active;
-    cover.toggleClass("is-repositioning", active);
-    button.setText(active ? "Concluir" : "Reposicionar");
-    if (active) {
+    if (!active) {
+      setActive(true);
+      document.addEventListener("keydown", onKeydown, true);
       overflow = await measureOverflow();
       return;
     }
+    document.removeEventListener("keydown", onKeydown, true);
+    setActive(false);
     if (Math.round(current) !== Math.round(initialPosition)) {
       await plugin.setPosition(sourcePath, Math.round(current));
     }
@@ -120,6 +145,14 @@ const attachReposition = (
 
   cover.addEventListener("pointerdown", (event) => {
     if (!active || overflow <= 0) {
+      return;
+    }
+    // Clique na pílula não pode virar arrasto: a captura do ponteiro
+    // roubaria o clique do botão "Concluir".
+    if (
+      event.target instanceof Element &&
+      event.target.closest(".mdp-toolbar")
+    ) {
       return;
     }
     dragging = true;
