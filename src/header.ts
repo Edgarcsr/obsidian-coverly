@@ -1,6 +1,7 @@
 import { setIcon } from "obsidian";
 
 import type MdPlusPlugin from "./main";
+import { drawPageIcon } from "./page-icon";
 import { resolveCoverSource } from "./note-data";
 import type { CoverData } from "./note-data";
 
@@ -290,18 +291,18 @@ export const buildHeader = (
     const icon = iconRow.createEl("button", {
       attr: { "aria-label": "Trocar ícone" },
       cls: "mdp-icon",
-      text: data.icon,
     });
+    drawPageIcon(plugin.app, icon, data.icon);
     icon.addEventListener("click", () => {
-      plugin.openIconPicker(sourcePath);
+      plugin.openIconPicker(sourcePath, icon);
     });
   }
 
   // Ações de adicionar aparecem só ao passar o mouse, para não poluir a nota.
   const addRow = header.createDiv({ cls: "mdp-add-row" });
   if (!data.icon) {
-    addButton(addRow, "smile", "Adicionar ícone", () => {
-      plugin.openIconPicker(sourcePath);
+    addButton(addRow, "smile", "Adicionar ícone", (button) => {
+      plugin.openIconPicker(sourcePath, button);
     });
   }
   if (!data.cover) {

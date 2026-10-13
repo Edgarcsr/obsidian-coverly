@@ -12,13 +12,22 @@ export interface MdPlusSettings {
   coverFade: number;
   /** Esconde do painel de propriedades só as que o plugin grava (capa e ícone). */
   hideProperties: boolean;
+  /** Última cor usada na aba Ícones, para abrir já com ela. */
+  iconColor: string;
+  /** Clicar num ícone mostra as variantes de cor antes de escolher. */
+  askIconColor: boolean;
+  /** Emojis usados por último, do mais recente para o mais antigo. */
+  recentEmojis: string[];
 }
 
 export const DEFAULT_SETTINGS: MdPlusSettings = {
+  askIconColor: false,
   coverFade: 0,
   coverHeight: 240,
   coverRadius: 0,
   hideProperties: false,
+  iconColor: "default",
+  recentEmojis: [],
   unsplashKey: "",
 };
 

@@ -1,13 +1,17 @@
 import { Notice, Plugin } from "obsidian";
-import type { Modal, TFile } from "obsidian";
+import type { TFile } from "obsidian";
 
 import { CoverPicker } from "./cover-picker";
-import { EmojiModal } from "./emoji-modal";
+import { IconPicker } from "./icon-picker";
+import { isImageIcon, parseLucide } from "./page-icon";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
-import type { CreditInfo } from "./note-data";
+import type { CoverData, CreditInfo } from "./note-data";
 import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
 import type { MdPlusSettings } from "./settings";
 import { HeaderManager } from "./view-header";
+
+/** Uma linha da grade de emojis. */
+const MAX_RECENT_EMOJIS = 12;
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
 
@@ -16,11 +20,6 @@ const COVER_VARS = [
   "--mdp-cover-radius",
   "--mdp-cover-fade",
 ] as const;
-
-/** Abre um modal sem deixar a chamada solta como efeito colateral. */
-const openModal = (modal: Modal): void => {
-  modal.open();
-};
 
 /** Remove chaves do frontmatter. `Reflect` evita o `delete` com chave dinâmica. */
 const removeKeys = (
@@ -38,8 +37,8 @@ const notify = (message: string): Notice => new Notice(message);
 export default class MdPlusPlugin extends Plugin {
   settings: MdPlusSettings = { ...DEFAULT_SETTINGS };
   private readonly headers = new HeaderManager(this);
-  /** Só um seletor de capa aberto por vez. */
-  private picker: CoverPicker | null = null;
+  /** Só um seletor (de capa ou de ícone) aberto por vez. */
+  private picker: CoverPicker | IconPicker | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -131,10 +130,7 @@ export default class MdPlusPlugin extends Plugin {
   /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */
   openCoverPicker(sourcePath: string, anchor: HTMLElement | null = null): void {
     this.picker?.close();
-    const file = this.app.vault.getFileByPath(sourcePath);
-    const { cover } = dataFromFrontmatter(
-      file ? this.app.metadataCache.getFileCache(file)?.frontmatter : null
-    );
+    const { cover } = this.noteData(sourcePath);
 
     const picker = new CoverPicker({
       anchor,
@@ -148,6 +144,54 @@ export default class MdPlusPlugin extends Plugin {
       plugin: this,
       sourcePath,
     });
+    this.showPicker(picker);
+  }
+
+  /** Põe o emoji no topo da seção Recentes. Ícones Lucide e imagens não entram. */
+  private async rememberEmoji(value: string): Promise<void> {
+    if (parseLucide(value) !== null || isImageIcon(this.app, value)) {
+      return;
+    }
+    this.settings.recentEmojis = [
+      value,
+      ...this.settings.recentEmojis.filter((emoji) => emoji !== value),
+    ].slice(0, MAX_RECENT_EMOJIS);
+    await this.saveSettings();
+  }
+
+  /** Abre o seletor de ícone ancorado em `anchor`; sem âncora, abre centralizado. */
+  openIconPicker(sourcePath: string, anchor: HTMLElement | null = null): void {
+    this.picker?.close();
+    const { icon } = this.noteData(sourcePath);
+    const picker = new IconPicker({
+      anchor,
+      app: this.app,
+      // Um ícone colorido abre o seletor na cor dele; senão, na última usada.
+      askColor: this.settings.askIconColor,
+      color: parseLucide(icon ?? "")?.color ?? this.settings.iconColor,
+      current: icon,
+      onAskColorChange: async (askColor) => {
+        this.settings.askIconColor = askColor;
+        await this.saveSettings();
+      },
+      onColorChange: async (color) => {
+        this.settings.iconColor = color;
+        await this.saveSettings();
+      },
+      onPick: async (value) => {
+        await this.setIcon(sourcePath, value);
+        await this.rememberEmoji(value);
+      },
+      onRemove: async () => {
+        await this.setIcon(sourcePath, null);
+      },
+      recentEmojis: this.settings.recentEmojis,
+      sourcePath,
+    });
+    this.showPicker(picker);
+  }
+
+  private showPicker(picker: CoverPicker | IconPicker): void {
     picker.onClose = () => {
       if (this.picker === picker) {
         this.picker = null;
@@ -157,11 +201,11 @@ export default class MdPlusPlugin extends Plugin {
     picker.open();
   }
 
-  openIconPicker(sourcePath: string): void {
-    const modal = new EmojiModal(this.app, async (emoji) => {
-      await this.setIcon(sourcePath, emoji);
-    });
-    openModal(modal);
+  private noteData(sourcePath: string): CoverData {
+    const file = this.app.vault.getFileByPath(sourcePath);
+    return dataFromFrontmatter(
+      file ? this.app.metadataCache.getFileCache(file)?.frontmatter : null
+    );
   }
 
   /** Grava a capa no frontmatter. `null` remove a capa e tudo que depende dela. */

@@ -1,0 +1,398 @@
+import { getIconIds, setIcon, setTooltip } from "obsidian";
+import type { App } from "obsidian";
+
+import { renderColorButton, showColorVariants } from "./color-palette";
+import type { ColorState } from "./color-palette";
+import { EMOJI_GROUPS } from "./emojis";
+import type { EmojiEntry } from "./emojis";
+import { renderIconUpload } from "./icon-upload";
+import type { IconUploadHandle } from "./icon-upload";
+import {
+  drawLucide,
+  isImageIcon,
+  lucideNames,
+  lucideValue,
+  parseLucide,
+} from "./page-icon";
+import { TabbedPopover, searchField } from "./popover";
+import type { PopoverTab } from "./popover";
+
+type Tab = "emoji" | "icons" | "upload";
+
+const TABS: PopoverTab<Tab>[] = [
+  { id: "emoji", label: "Emoji" },
+  { id: "icons", label: "Ícones" },
+  { id: "upload", label: "Fazer upload" },
+];
+
+/**
+ * São mais de mil ícones Lucide; desenhar todos de uma vez trava a abertura.
+ * A grade cresce em lotes conforme a rolagem chega ao fim.
+ */
+const BATCH = 120;
+
+const WHITESPACE = /\s+/gu;
+const DIACRITICS = /\p{Diacritic}/gu;
+
+/** Minúsculas e sem acento, para "coracao" encontrar "coração". */
+const normalize = (value: string): string =>
+  value.normalize("NFD").replaceAll(DIACRITICS, "").toLowerCase().trim();
+
+const randomItem = <T,>(items: readonly T[]): T | undefined =>
+  items[Math.floor(Math.random() * items.length)];
+
+const ALL_EMOJIS: EmojiEntry[] = EMOJI_GROUPS.flatMap((group) => group.emojis);
+
+/** Botão de uma opção da grade; o conteúdo (emoji ou SVG) fica com quem chama. */
+const optionButton = (
+  grid: HTMLElement,
+  label: string,
+  selected: boolean,
+  onClick: () => Promise<void>
+): HTMLElement => {
+  const button = grid.createEl("button", {
+    attr: { "aria-label": label },
+    cls: selected ? "mdp-icon-option is-selected" : "mdp-icon-option",
+  });
+  button.addEventListener("click", onClick);
+  return button;
+};
+
+/** Uma seção da aba Emoji, também usada como botão da barra de categorias. */
+interface EmojiSection {
+  name: string;
+  icon: string;
+  emojis: EmojiEntry[];
+}
+
+export interface IconPickerOptions {
+  app: App;
+  /** Nota dona do ícone; o upload vai para a pasta de anexos dela. */
+  sourcePath: string;
+  /** Botão que abriu o seletor; sem ele o popover abre centralizado. */
+  anchor: HTMLElement | null;
+  /** Ícone atual da nota, para marcar o selecionado e mostrar "Remover". */
+  current: string | undefined;
+  /** Cor com que a aba Ícones abre. */
+  color: string;
+  /** Clicar num ícone mostra as variantes de cor antes de escolher. */
+  askColor: boolean;
+  /** Emojis usados por último, para a seção Recentes. */
+  recentEmojis: readonly string[];
+  onPick: (value: string) => Promise<void>;
+  onColorChange: (color: string) => Promise<void>;
+  onAskColorChange: (askColor: boolean) => Promise<void>;
+  onRemove: () => Promise<void>;
+}
+
+const initialTab = (app: App, current: string): Tab => {
+  if (parseLucide(current) !== null) {
+    return "icons";
+  }
+  return current && isImageIcon(app, current) ? "upload" : "emoji";
+};
+
+/** Seletor de ícone da página: emoji, ícone Lucide ou imagem, como no Notion. */
+export class IconPicker extends TabbedPopover<Tab> {
+  private readonly options: IconPickerOptions;
+  private readonly colorState: ColorState;
+  private closeVariants: (() => void) | null = null;
+  private observer: IntersectionObserver | null = null;
+  private upload: IconUploadHandle | null = null;
+  private onBodyScroll: (() => void) | null = null;
+
+  private readonly onPaste = (event: ClipboardEvent): void => {
+    this.upload?.onPaste(event);
+  };
+
+  constructor(options: IconPickerOptions) {
+    super(
+      options.anchor,
+      TABS,
+      initialTab(options.app, options.current ?? ""),
+      "mdp-icon-picker"
+    );
+    this.options = options;
+    this.colorState = { askColor: options.askColor, color: options.color };
+  }
+
+  override open(): void {
+    super.open();
+    document.addEventListener("paste", this.onPaste, true);
+  }
+
+  override close(): void {
+    document.removeEventListener("paste", this.onPaste, true);
+    this.resetTab();
+    super.close();
+  }
+
+  protected hasRemove(): boolean {
+    return Boolean(this.options.current);
+  }
+
+  protected async remove(): Promise<void> {
+    await this.options.onRemove();
+  }
+
+  protected renderTab(tab: Tab): void {
+    this.resetTab();
+    switch (tab) {
+      case "emoji": {
+        this.renderEmoji();
+        break;
+      }
+      case "icons": {
+        this.renderIcons();
+        break;
+      }
+      case "upload": {
+        this.upload = renderIconUpload(this.body, {
+          app: this.options.app,
+          close: () => {
+            this.close();
+          },
+          pick: async (value) => {
+            await this.pick(value);
+          },
+          sourcePath: this.options.sourcePath,
+        });
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
+  /** Desfaz o que a aba anterior deixou ligado. */
+  private resetTab(): void {
+    this.observer?.disconnect();
+    this.observer = null;
+    this.upload?.dispose();
+    this.upload = null;
+    this.closeVariants?.();
+    this.closeVariants = null;
+    if (this.onBodyScroll) {
+      this.body.removeEventListener("scroll", this.onBodyScroll);
+      this.onBodyScroll = null;
+    }
+  }
+
+  /** Linha fixa no topo: filtro e botão de escolher ao acaso. */
+  private searchRow(
+    placeholder: string,
+    onRandom: () => void
+  ): { row: HTMLElement; input: HTMLInputElement } {
+    const row = this.body.createDiv({ cls: "mdp-picker-search is-row" });
+    const input = searchField(row, placeholder);
+    const random = row.createEl("button", { cls: "mdp-picker-square" });
+    setIcon(random, "shuffle");
+    setTooltip(random, "Aleatório");
+    random.addEventListener("click", onRandom);
+    return { input, row };
+  }
+
+  private emojiSections(): EmojiSection[] {
+    const recent = this.options.recentEmojis
+      .map((emoji) => ALL_EMOJIS.find((entry) => entry.emoji === emoji))
+      .filter((entry): entry is EmojiEntry => entry !== undefined);
+    const sections: EmojiSection[] = [...EMOJI_GROUPS];
+    if (recent.length > 0) {
+      sections.unshift({ emojis: recent, icon: "clock", name: "Recentes" });
+    }
+    return sections;
+  }
+
+  private renderEmoji(): void {
+    const sections = this.emojiSections();
+    let visible = ALL_EMOJIS;
+    const { input, row } = this.searchRow("Filtrar…", async () => {
+      const entry = randomItem(visible);
+      if (entry) {
+        await this.pick(entry.emoji);
+      }
+    });
+    const list = this.body.createDiv();
+    let titles: HTMLElement[] = [];
+
+    let buttons: HTMLElement[] = [];
+
+    // Marca na barra a seção que está no topo da rolagem.
+    const highlight = (): void => {
+      const top = this.body.scrollTop + row.offsetHeight + 4;
+      let active = 0;
+      for (const [index, title] of titles.entries()) {
+        if (title.offsetTop <= top) {
+          active = index;
+        }
+      }
+      for (const [index, button] of buttons.entries()) {
+        button.toggleClass("is-active", titles.length > 1 && index === active);
+      }
+    };
+
+    const filter = (): void => {
+      const query = normalize(input.value);
+      list.empty();
+      if (!query) {
+        visible = ALL_EMOJIS;
+        titles = sections.map((section) =>
+          this.emojiSection(list, section.name, section.emojis)
+        );
+        highlight();
+        return;
+      }
+      titles = [];
+      highlight();
+      visible = ALL_EMOJIS.filter((entry) =>
+        normalize(entry.keywords).includes(query)
+      );
+      if (visible.length === 0) {
+        list.createDiv({
+          cls: "mdp-picker-hint is-empty",
+          text: "Nenhum emoji encontrado.",
+        });
+        return;
+      }
+      this.emojiSection(list, "Resultados", visible);
+    };
+
+    // Barra de categorias no rodapé: cada botão rola até a sua seção.
+    this.footer.show();
+    const bar = this.footer.createDiv({ cls: "mdp-emoji-bar" });
+    buttons = sections.map((section, index) => {
+      const button = bar.createEl("button", { cls: "mdp-emoji-bar-btn" });
+      setIcon(button, section.icon);
+      setTooltip(button, section.name, { placement: "top" });
+      button.addEventListener("click", () => {
+        if (input.value) {
+          input.value = "";
+          filter();
+        }
+        const title = titles[index];
+        if (title) {
+          this.body.scrollTop = title.offsetTop - row.offsetHeight;
+        }
+      });
+      return button;
+    });
+
+    this.onBodyScroll = highlight;
+    this.body.addEventListener("scroll", highlight, { passive: true });
+    input.addEventListener("input", filter);
+    filter();
+    input.focus();
+  }
+
+  /** Desenha uma seção de emojis e devolve o título, usado como âncora da rolagem. */
+  private emojiSection(
+    parent: HTMLElement,
+    title: string,
+    entries: readonly EmojiEntry[]
+  ): HTMLElement {
+    const titleEl = parent.createDiv({
+      cls: "mdp-picker-section-title",
+      text: title,
+    });
+    const grid = parent.createDiv({ cls: "mdp-icon-grid is-emoji" });
+    for (const entry of entries) {
+      optionButton(
+        grid,
+        entry.keywords,
+        entry.emoji === this.options.current,
+        async () => {
+          await this.pick(entry.emoji);
+        }
+      ).setText(entry.emoji);
+    }
+    return titleEl;
+  }
+
+  private renderIcons(): void {
+    const all = lucideNames(getIconIds());
+    const selected = parseLucide(this.options.current ?? "")?.name;
+    let matches = all;
+    let shown = 0;
+
+    const { input, row } = this.searchRow("Filtrar ícones…", async () => {
+      const name = randomItem(matches);
+      if (name) {
+        await this.pick(lucideValue(name, this.colorState.color));
+      }
+    });
+    this.body.createDiv({ cls: "mdp-picker-section-title", text: "Ícones" });
+    const grid = this.body.createDiv({ cls: "mdp-icon-grid is-lucide" });
+    renderColorButton({
+      grid,
+      onAskColorChange: this.options.onAskColorChange,
+      onColorChange: this.options.onColorChange,
+      row,
+      state: this.colorState,
+    });
+    const status = this.body.createDiv({
+      cls: "mdp-picker-hint is-empty",
+      text: "Nenhum ícone encontrado.",
+    });
+    const sentinel = this.body.createDiv({ cls: "mdp-icon-sentinel" });
+
+    const more = (): void => {
+      const next = matches.slice(shown, shown + BATCH);
+      for (const name of next) {
+        const button = optionButton(grid, name, name === selected, async () => {
+          await this.pickIcon(button, name);
+        });
+        drawLucide(button, name);
+      }
+      shown += next.length;
+    };
+
+    const filter = (): void => {
+      // Os nomes do Lucide são em inglês e com hífen: "arrow up" acha "arrow-up".
+      const query = normalize(input.value).replaceAll(WHITESPACE, "-");
+      matches = query ? all.filter((name) => name.includes(query)) : all;
+      this.closeVariants?.();
+      grid.empty();
+      shown = 0;
+      status.toggle(matches.length === 0);
+      more();
+    };
+
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          more();
+        }
+      },
+      { root: this.body, rootMargin: "200px" }
+    );
+    this.observer.observe(sentinel);
+
+    input.addEventListener("input", filter);
+    filter();
+    input.focus();
+  }
+
+  /** Com "Perguntar sempre", mostra o ícone nas cores; senão, usa a cor atual. */
+  private async pickIcon(button: HTMLElement, name: string): Promise<void> {
+    if (!this.colorState.askColor) {
+      await this.pick(lucideValue(name, this.colorState.color));
+      return;
+    }
+    this.closeVariants?.();
+    this.closeVariants = showColorVariants(
+      this.body,
+      button,
+      name,
+      this.colorState,
+      async (color) => {
+        await this.pick(lucideValue(name, color));
+      }
+    );
+  }
+
+  private async pick(value: string): Promise<void> {
+    this.close();
+    await this.options.onPick(value);
+  }
+}

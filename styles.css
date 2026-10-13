@@ -363,7 +363,9 @@ body.mdp-hide-properties
   margin-left: auto;
 }
 
+/* Posicionado, para o offsetTop das seções contar a partir dele (barra de categorias) */
 .mdp-picker-body {
+  position: relative;
   flex: 1;
   min-height: 0;
   padding: 0 16px 16px;
@@ -578,44 +580,378 @@ body.mdp-hide-properties
 }
 
 /* ---------- Seletor de emoji ---------- */
-.mdp-emoji-modal .modal {
-  width: min(440px, 92vw);
+/* Busca com lupa: a borda é do contêiner, então o tema não tem como cortá-la */
+.mdp-search-field {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  background-color: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
-.mdp-emoji-remove {
-  width: 100%;
-  margin-bottom: 4px;
+.mdp-search-field:focus-within {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--interactive-accent) 25%, transparent);
 }
 
-.mdp-emoji-group-title {
-  margin: 14px 0 6px;
-  font-size: var(--font-ui-smaller);
+.mdp-search-field-icon {
+  display: flex;
+  color: var(--text-faint);
+}
+
+.mdp-search-field-icon .svg-icon {
+  width: 15px;
+  height: 15px;
+}
+
+/*
+ * O campo interno não tem visual próprio. Temas desenham uma linha embaixo
+ * do input no foco (borda ou sombra), com seletores de foco que venceriam
+ * uma regra comum, por isso o !important aqui.
+ */
+.mdp-picker .mdp-search-field input,
+.mdp-picker .mdp-search-field input:hover,
+.mdp-picker .mdp-search-field input:focus,
+.mdp-picker .mdp-search-field input:focus-visible {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mdp-picker .mdp-search-field input::placeholder {
+  color: var(--text-faint);
+}
+
+/* Busca + botão quadrado ao lado, como no Notion */
+.mdp-picker-search.is-row {
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mdp-picker .mdp-picker-square {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
 }
 
-.mdp-emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-  gap: 4px;
+.mdp-picker .mdp-picker-square:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
 }
 
-.mdp-emoji-modal .mdp-emoji-option {
-  padding: 4px;
-  font-size: 24px;
+.mdp-picker .mdp-picker-square .svg-icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* Botão discreto, sem fundo (Cancelar) */
+.mdp-picker .mdp-picker-ghost {
+  height: 32px;
+  padding: 0 10px;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
   background: transparent;
   border: none;
   border-radius: 6px;
+  box-shadow: none;
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease;
 }
 
-.mdp-emoji-modal .mdp-emoji-option:hover {
+.mdp-picker .mdp-picker-ghost:hover {
   background: var(--background-modifier-hover);
-  transform: scale(1.12);
+}
+
+/* ---------- Seletor de ícone (mesmo popover do seletor de capa, mais estreito) ---------- */
+.mdp-picker.mdp-icon-picker {
+  width: min(410px, calc(100vw - 16px));
+}
+
+.mdp-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 2px;
+}
+
+.mdp-icon-picker .mdp-picker-search + .mdp-icon-grid {
+  margin-top: 2px;
+}
+
+.mdp-picker .mdp-icon-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.mdp-picker .mdp-icon-option:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.mdp-picker .mdp-icon-option.is-selected {
+  background: var(--background-modifier-active-hover);
+}
+
+.mdp-picker .mdp-icon-option .svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Na grade de ícones a cor vem da paleta, aplicada na própria grade */
+.mdp-picker .mdp-icon-grid.is-lucide .mdp-icon-option,
+.mdp-picker .mdp-icon-grid.is-lucide .mdp-icon-option:hover {
+  color: inherit;
+}
+
+/* Bolinha de cor: no botão ao lado da busca e em cada opção da paleta */
+.mdp-color-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.mdp-color-palette {
+  position: absolute;
+  top: calc(100% - 4px);
+  right: 0;
+  padding: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+}
+
+.mdp-color-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 28px);
+  gap: 4px;
+}
+
+/* Opção livre: anel com o espectro até alguém escolher uma cor */
+.mdp-color-dot.is-custom {
+  background: conic-gradient(
+    #ef4444,
+    #eab308,
+    #22c55e,
+    #06b6d4,
+    #3b82f6,
+    #a855f7,
+    #ec4899,
+    #ef4444
+  );
+}
+
+/* "Perguntar sempre", separado das cores por uma linha */
+.mdp-color-ask {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 2px;
+  margin-top: 6px;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* Variantes de cor do ícone clicado, logo abaixo dele */
+.mdp-color-variants {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 34px);
+  gap: 2px;
+  padding: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+}
+
+.mdp-picker .mdp-color-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.mdp-picker .mdp-color-swatch:hover {
+  background: var(--background-modifier-hover);
+}
+
+.mdp-picker .mdp-color-swatch.is-selected {
+  box-shadow: inset 0 0 0 1.5px var(--text-muted);
+}
+
+/* Barra de categorias da aba Emoji, fixa no rodapé do popover */
+.mdp-picker-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mdp-emoji-bar {
+  display: flex;
+  justify-content: space-around;
+  padding: 4px 8px;
+}
+
+.mdp-picker .mdp-emoji-bar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text-faint);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.mdp-picker .mdp-emoji-bar-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.mdp-picker .mdp-emoji-bar-btn.is-active {
+  color: var(--text-normal);
+  background: var(--background-modifier-active-hover);
+}
+
+.mdp-picker .mdp-emoji-bar-btn .svg-icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* Marca o fim da grade de ícones; ao aparecer na rolagem, carrega o próximo lote */
+.mdp-icon-sentinel {
+  height: 1px;
+}
+
+/* Ícone Lucide no lugar do emoji: mesmo tamanho visual, na cor do texto */
+.mdp-header .mdp-icon.is-lucide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mdp-header .mdp-icon.is-lucide .svg-icon {
+  width: 64px;
+  height: 70px;
+  stroke-width: 1.5;
+}
+
+/* Aba Fazer upload do ícone: botão largo, dica e rodapé com Cancelar/Salvar */
+.mdp-icon-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0 4px;
+  border: 1px dashed transparent;
+  border-radius: 6px;
+}
+
+.mdp-icon-upload.is-over {
+  border-color: var(--interactive-accent);
+}
+
+.mdp-picker .mdp-icon-upload-btn {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  font-size: var(--font-ui-medium);
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.mdp-picker .mdp-icon-upload-btn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.mdp-icon-upload-icon {
+  display: flex;
+}
+
+.mdp-icon-upload-preview {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.mdp-icon-upload-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 14px;
+}
+
+.mdp-icon-upload-footer .mdp-picker-primary {
+  width: auto;
+}
+
+/* Imagem no lugar do emoji, no mesmo tamanho */
+.mdp-header .mdp-icon.is-image img {
+  display: block;
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 /* ---------- Animações ---------- */
