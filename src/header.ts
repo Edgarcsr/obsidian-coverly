@@ -7,7 +7,7 @@ import type { CoverData } from "./note-data";
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
-/** Ação discreta acima do título ("Adicionar ícone"), com ícone Lucide e rótulo. */
+/** Ação discreta acima do título ("Adicionar ícone"). Os ícones são os Lucide que já vêm no Obsidian. */
 const addButton = (
   parent: HTMLElement,
   iconId: string,
@@ -149,7 +149,7 @@ const buildCover = (
     plugin.openCoverPicker(sourcePath);
   });
   const reposition = toolbarButton(toolbar, "Reposicionar");
-  toolbarIconButton(toolbar, "md-plus-trash", "Remover capa", async () => {
+  toolbarIconButton(toolbar, "trash-2", "Remover capa", async () => {
     await plugin.setCover(sourcePath, null);
   });
 
@@ -215,12 +215,12 @@ export const buildHeader = (
   // Ações de adicionar aparecem só ao passar o mouse, para não poluir a nota.
   const addRow = header.createDiv({ cls: "mdp-add-row" });
   if (!data.icon) {
-    addButton(addRow, "md-plus-smile", "Adicionar ícone", () => {
+    addButton(addRow, "smile", "Adicionar ícone", () => {
       plugin.openIconPicker(sourcePath);
     });
   }
   if (!data.cover) {
-    addButton(addRow, "md-plus-image", "Adicionar capa", () => {
+    addButton(addRow, "image", "Adicionar capa", () => {
       plugin.openCoverPicker(sourcePath);
     });
   }

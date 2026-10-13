@@ -1,9 +1,8 @@
-import { Notice, Plugin, addIcon } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 import type { Modal, TFile } from "obsidian";
 
 import { CoverModal } from "./cover-modal";
 import { EmojiModal } from "./emoji-modal";
-import { ICONS } from "./icons";
 import { COVER_KEYS, FM } from "./note-data";
 import type { CreditInfo } from "./note-data";
 import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
@@ -39,9 +38,6 @@ export default class MdPlusPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
     this.applyCoverHeight();
-    for (const [id, svg] of Object.entries(ICONS)) {
-      addIcon(id, svg);
-    }
 
     this.addSettingTab(new MdPlusSettingTab(this.app, this));
     this.registerHeaderSync();
