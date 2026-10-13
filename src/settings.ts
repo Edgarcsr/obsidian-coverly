@@ -10,7 +10,7 @@ export interface MdPlusSettings {
   coverRadius: number;
   /** Quanto da altura da capa, de baixo para cima, some em degradê. 0 = sem degradê. */
   coverFade: number;
-  /** Esconde o painel de propriedades em todas as notas. */
+  /** Esconde do painel de propriedades só as que o plugin grava (capa e ícone). */
   hideProperties: boolean;
 }
 
@@ -98,9 +98,9 @@ export class MdPlusSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Ocultar propriedades")
+      .setName("Ocultar propriedades da capa")
       .setDesc(
-        "Esconde o painel de propriedades no topo de todas as notas, não só das que têm capa."
+        "Esconde do painel de propriedades só as que este plugin grava (capa e ícone). Tags e as demais continuam visíveis."
       )
       .addToggle((toggle) =>
         toggle

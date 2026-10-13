@@ -1,5 +1,10 @@
-/* ---------- Propriedades ocultas, só se o usuário ligar a opção ---------- */
-body.mdp-hide-properties .metadata-container {
+/* ---------- Propriedades do plugin ocultas, só se o usuário ligar a opção; as demais continuam visíveis ---------- */
+body.mdp-hide-properties .metadata-property[data-property-key="cover"],
+body.mdp-hide-properties .metadata-property[data-property-key="cover-position"],
+body.mdp-hide-properties .metadata-property[data-property-key="cover-credit"],
+body.mdp-hide-properties
+  .metadata-property[data-property-key="cover-credit-url"],
+body.mdp-hide-properties .metadata-property[data-property-key="icon"] {
   display: none !important;
 }
 
