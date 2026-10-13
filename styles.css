@@ -51,14 +51,11 @@
   box-shadow: inset 0 0 0 2px var(--interactive-accent);
 }
 
-/*
- * Pílula de ações da capa: aparece só ao passar o mouse, no canto inferior
- * direito, alinhada à margem direita do texto (--mdp-content-right vem do JS).
- */
+/* Pílula de ações da capa: aparece só ao passar o mouse, no canto superior esquerdo */
 .mdp-toolbar {
   position: absolute;
-  right: calc(var(--mdp-content-right, 0px) + 12px);
-  bottom: 12px;
+  top: 12px;
+  left: 12px;
   display: flex;
   align-items: stretch;
   overflow: hidden;
@@ -68,7 +65,7 @@
   box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
   backdrop-filter: blur(8px);
   opacity: 0;
-  transform: translateY(4px);
+  transform: translateY(-4px);
   transition:
     opacity 0.18s ease,
     transform 0.18s ease;
@@ -139,8 +136,13 @@
   padding-left: 4px;
 }
 
-.has-cover .mdp-icon-row {
+.has-cover.has-icon .mdp-icon-row {
   margin-top: calc(var(--mdp-icon-overlap) * -1);
+}
+
+/* Com capa e sem ícone, os botões de adicionar ficam logo abaixo da capa */
+.has-cover:not(.has-icon) .mdp-add-row {
+  margin-top: 12px;
 }
 
 .mdp-icon {

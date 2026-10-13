@@ -194,14 +194,17 @@ export const buildHeader = (
   const header = document.createElement("div");
   header.addClass("mdp-header");
   header.toggleClass("has-cover", Boolean(data.cover));
+  header.toggleClass("has-icon", Boolean(data.icon));
   header.toggleClass("is-entering", entering);
 
   if (data.cover) {
     header.append(buildCover(plugin, data, sourcePath));
   }
 
-  const iconRow = header.createDiv({ cls: "mdp-icon-row" });
+  // A linha do ícone só existe com ícone: ela sobe sobre a capa, e vazia
+  // arrastaria junto os botões de adicionar.
   if (data.icon) {
+    const iconRow = header.createDiv({ cls: "mdp-icon-row" });
     const icon = iconRow.createEl("button", {
       attr: { "aria-label": "Trocar ícone" },
       cls: "mdp-icon",
