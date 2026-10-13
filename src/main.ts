@@ -1,9 +1,9 @@
 import { Notice, Plugin } from "obsidian";
 import type { Modal, TFile } from "obsidian";
 
-import { CoverModal } from "./cover-modal";
+import { CoverPicker } from "./cover-picker";
 import { EmojiModal } from "./emoji-modal";
-import { COVER_KEYS, FM } from "./note-data";
+import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CreditInfo } from "./note-data";
 import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
 import type { MdPlusSettings } from "./settings";
@@ -34,6 +34,8 @@ const notify = (message: string): Notice => new Notice(message);
 export default class MdPlusPlugin extends Plugin {
   settings: MdPlusSettings = { ...DEFAULT_SETTINGS };
   private readonly headers = new HeaderManager(this);
+  /** Só um seletor de capa aberto por vez. */
+  private picker: CoverPicker | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -75,6 +77,7 @@ export default class MdPlusPlugin extends Plugin {
   }
 
   onunload(): void {
+    this.picker?.close();
     this.headers.destroy();
     document.body.style.removeProperty(COVER_HEIGHT_VAR);
   }
@@ -112,16 +115,33 @@ export default class MdPlusPlugin extends Plugin {
     );
   }
 
-  openCoverPicker(sourcePath: string): void {
-    const modal = new CoverModal(
-      this.app,
-      this,
-      sourcePath,
-      async (value, credit) => {
-        await this.setCover(sourcePath, value, credit);
-      }
+  /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */
+  openCoverPicker(sourcePath: string, anchor: HTMLElement | null = null): void {
+    this.picker?.close();
+    const file = this.app.vault.getFileByPath(sourcePath);
+    const { cover } = dataFromFrontmatter(
+      file ? this.app.metadataCache.getFileCache(file)?.frontmatter : null
     );
-    openModal(modal);
+
+    const picker = new CoverPicker({
+      anchor,
+      current: cover,
+      onPick: async (value, credit) => {
+        await this.setCover(sourcePath, value, credit);
+      },
+      onRemove: async () => {
+        await this.setCover(sourcePath, null);
+      },
+      plugin: this,
+      sourcePath,
+    });
+    picker.onClose = () => {
+      if (this.picker === picker) {
+        this.picker = null;
+      }
+    };
+    this.picker = picker;
+    picker.open();
   }
 
   openIconPicker(sourcePath: string): void {

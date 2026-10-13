@@ -12,12 +12,15 @@ const addButton = (
   parent: HTMLElement,
   iconId: string,
   label: string,
-  onClick: () => void
+  // Recebe o próprio botão, para servir de âncora a popovers.
+  onClick: (button: HTMLElement) => void
 ): void => {
   const button = parent.createEl("button", { cls: "mdp-add-btn" });
   setIcon(button.createSpan({ cls: "mdp-add-btn-icon" }), iconId);
   button.createSpan({ text: label });
-  button.addEventListener("click", onClick);
+  button.addEventListener("click", () => {
+    onClick(button);
+  });
 };
 
 /** Segmento de texto da pílula de ações da capa. */
@@ -218,8 +221,9 @@ const buildCover = (
 
   // Pílula normal, visível ao passar o mouse.
   const toolbar = cover.createDiv({ cls: "mdp-toolbar is-idle" });
-  toolbarButton(toolbar, "Alterar", () => {
-    plugin.openCoverPicker(sourcePath);
+  const change = toolbarButton(toolbar, "Alterar");
+  change.addEventListener("click", () => {
+    plugin.openCoverPicker(sourcePath, change);
   });
   const start = toolbarButton(toolbar, "Reposicionar");
   toolbarIconButton(toolbar, "trash-2", "Remover capa", async () => {
@@ -301,8 +305,8 @@ export const buildHeader = (
     });
   }
   if (!data.cover) {
-    addButton(addRow, "image", "Adicionar capa", () => {
-      plugin.openCoverPicker(sourcePath);
+    addButton(addRow, "image", "Adicionar capa", (button) => {
+      plugin.openCoverPicker(sourcePath, button);
     });
   }
 

@@ -36,7 +36,57 @@ export interface GradientPreset {
   css: string;
 }
 
-export const GRADIENTS: GradientPreset[] = [
+export interface GallerySection {
+  title: string;
+  items: GradientPreset[];
+}
+
+/** Cor sólida no mesmo formato dos gradientes, para caber na mesma camada da capa. */
+const solid = (color: string): string => `linear-gradient(${color}, ${color})`;
+
+const COLORS_AND_GRADIENTS: GradientPreset[] = [
+  { css: solid("#e8555a"), id: "red", name: "Vermelho" },
+  { css: solid("#f7be4f"), id: "yellow", name: "Amarelo" },
+  { css: solid("#1f96d1"), id: "blue", name: "Azul" },
+  { css: solid("#fdefe3"), id: "cream", name: "Creme" },
+  {
+    css: "linear-gradient(180deg, #5fd4d6 0%, #e8b7a8 100%)",
+    id: "lagoon",
+    name: "Lagoa",
+  },
+  {
+    css: "linear-gradient(135deg, #ff3d8b 0%, #ff2477 100%)",
+    id: "magenta",
+    name: "Magenta",
+  },
+  {
+    css: "linear-gradient(160deg, #d9674c 0%, #f61c0a 100%)",
+    id: "fire",
+    name: "Fogo",
+  },
+  {
+    css: "radial-gradient(circle at 30% 25%, #f5c2b8 0%, transparent 55%), linear-gradient(180deg, #fbe3dc 0%, #8fc4dc 100%)",
+    id: "haze",
+    name: "Névoa",
+  },
+  {
+    css: "radial-gradient(circle at 12% 88%, #f2a6d6 0%, transparent 45%), linear-gradient(120deg, #2a5ea8 0%, #8e3a6f 55%, #e2381c 100%)",
+    id: "nebula",
+    name: "Nebulosa",
+  },
+  {
+    css: "linear-gradient(160deg, #5d3fd3 0%, #c0466c 100%)",
+    id: "violet",
+    name: "Violeta",
+  },
+  {
+    css: "linear-gradient(135deg, #1f4167 0%, #c9a08a 100%)",
+    id: "dusk",
+    name: "Crepúsculo",
+  },
+];
+
+const PASTEL: GradientPreset[] = [
   {
     css: "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)",
     id: "ocean",
@@ -98,6 +148,17 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Brasa",
   },
 ];
+
+/** Seções da aba Galeria, na ordem em que aparecem. */
+export const GALLERY: GallerySection[] = [
+  { items: COLORS_AND_GRADIENTS, title: "Cor e gradiente" },
+  { items: PASTEL, title: "Pastel" },
+];
+
+/** Todas as capas prontas. Os ids ficam gravados na nota como `gradient:<id>`. */
+export const GRADIENTS: GradientPreset[] = GALLERY.flatMap(
+  (section) => section.items
+);
 
 export type CoverSource =
   | { kind: "gradient"; css: string }
