@@ -31,7 +31,7 @@
   position: relative;
   height: var(--mdp-cover-height, 240px);
   overflow: hidden;
-  background-color: var(--background-modifier-hover);
+  border-radius: var(--mdp-cover-radius, 0);
   background-repeat: no-repeat;
   background-size: cover;
   transition: height 0.25s ease;
@@ -44,9 +44,17 @@
 .mdp-cover-image {
   position: absolute;
   inset: 0;
+  background-color: var(--background-modifier-hover);
   background-size: cover;
   background-repeat: no-repeat;
   transition: background-position 0.08s linear;
+
+  /* Degradê de baixo para cima; só a imagem some, a pílula e o crédito ficam nítidos */
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--mdp-cover-fade, 0%)),
+    transparent
+  );
 }
 
 .mdp-cover.is-repositioning {

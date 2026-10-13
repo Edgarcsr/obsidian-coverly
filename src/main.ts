@@ -11,7 +11,11 @@ import { HeaderManager } from "./view-header";
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
 
-const COVER_HEIGHT_VAR = "--mdp-cover-height";
+const COVER_VARS = [
+  "--mdp-cover-height",
+  "--mdp-cover-radius",
+  "--mdp-cover-fade",
+] as const;
 
 /** Abre um modal sem deixar a chamada solta como efeito colateral. */
 const openModal = (modal: Modal): void => {
@@ -39,7 +43,7 @@ export default class MdPlusPlugin extends Plugin {
 
   async onload(): Promise<void> {
     await this.loadSettings();
-    this.applyCoverHeight();
+    this.applyCoverStyle();
 
     this.addSettingTab(new MdPlusSettingTab(this.app, this));
     this.registerHeaderSync();
@@ -79,7 +83,9 @@ export default class MdPlusPlugin extends Plugin {
   onunload(): void {
     this.picker?.close();
     this.headers.destroy();
-    document.body.style.removeProperty(COVER_HEIGHT_VAR);
+    for (const name of COVER_VARS) {
+      document.body.style.removeProperty(name);
+    }
   }
 
   /** Mantém o cabeçalho em dia com a nota aberta, o modo da view e o frontmatter. */
@@ -108,11 +114,13 @@ export default class MdPlusPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  applyCoverHeight(): void {
-    document.body.style.setProperty(
-      COVER_HEIGHT_VAR,
-      `${this.settings.coverHeight}px`
-    );
+  /** Passa altura, cantos e degradê da capa para o CSS, que os lê como variáveis. */
+  applyCoverStyle(): void {
+    const { coverFade, coverHeight, coverRadius } = this.settings;
+    const { style } = document.body;
+    style.setProperty("--mdp-cover-height", `${coverHeight}px`);
+    style.setProperty("--mdp-cover-radius", `${coverRadius}px`);
+    style.setProperty("--mdp-cover-fade", `${coverFade}%`);
   }
 
   /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */
