@@ -132,46 +132,6 @@ export const dataFromFrontmatter = (
   };
 };
 
-const unquote = (value: string): string => {
-  const first = value.charAt(0);
-  if (
-    (first === '"' || first === "'") &&
-    value.endsWith(first) &&
-    value.length >= 2
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
-};
-
-const PROPERTY_LINE = /^(?<key>[\w-]+):\s*(?<value>.*)$/u;
-
-/**
- * Lê o frontmatter direto do texto do editor. Usado pelo Live Preview, que
- * precisa reagir a cada mudança do documento antes do cache de metadados
- * do Obsidian ser atualizado.
- */
-export const parseFrontmatterText = (
-  source: string
-): Record<string, unknown> | null => {
-  const lines = source.split("\n");
-  if (lines[0]?.trim() !== "---") {
-    return null;
-  }
-
-  const result: Record<string, unknown> = {};
-  for (const line of lines.slice(1)) {
-    if (line.trim() === "---") {
-      return result;
-    }
-    const match = PROPERTY_LINE.exec(line.trimEnd());
-    if (match?.groups?.key) {
-      result[match.groups.key] = unquote((match.groups.value ?? "").trim());
-    }
-  }
-  return null;
-};
-
 const URL_PATTERN = /^https?:\/\//u;
 
 export const resolveCoverSource = (

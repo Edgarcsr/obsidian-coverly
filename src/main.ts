@@ -1,15 +1,14 @@
 import { Notice, Plugin, addIcon } from "obsidian";
-import type { MarkdownPostProcessorContext, Modal, TFile } from "obsidian";
+import type { Modal, TFile } from "obsidian";
 
 import { CoverModal } from "./cover-modal";
 import { EmojiModal } from "./emoji-modal";
-import { buildHeader } from "./header";
 import { ICONS } from "./icons";
-import { coverLivePreview } from "./live-preview";
-import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
+import { COVER_KEYS, FM } from "./note-data";
 import type { CreditInfo } from "./note-data";
 import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
 import type { MdPlusSettings } from "./settings";
+import { HeaderManager } from "./view-header";
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
 
@@ -35,6 +34,7 @@ const notify = (message: string): Notice => new Notice(message);
 
 export default class MdPlusPlugin extends Plugin {
   settings: MdPlusSettings = { ...DEFAULT_SETTINGS };
+  private readonly headers = new HeaderManager(this);
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -44,10 +44,7 @@ export default class MdPlusPlugin extends Plugin {
     }
 
     this.addSettingTab(new MdPlusSettingTab(this.app, this));
-    this.registerEditorExtension(coverLivePreview(this));
-    this.registerMarkdownPostProcessor((el, ctx) => {
-      this.renderReadingHeader(el, ctx);
-    });
+    this.registerHeaderSync();
 
     this.addCommand({
       callback: () => {
@@ -81,9 +78,24 @@ export default class MdPlusPlugin extends Plugin {
     });
   }
 
-  // oxlint-disable-next-line class-methods-use-this
   onunload(): void {
+    this.headers.destroy();
     document.body.style.removeProperty(COVER_HEIGHT_VAR);
+  }
+
+  /** Mantém o cabeçalho em dia com a nota aberta, o modo da view e o frontmatter. */
+  private registerHeaderSync(): void {
+    const { workspace, metadataCache } = this.app;
+    const schedule = (): void => {
+      this.headers.schedule();
+    };
+
+    workspace.onLayoutReady(schedule);
+    this.registerEvent(workspace.on("layout-change", schedule));
+    this.registerEvent(workspace.on("active-leaf-change", schedule));
+    this.registerEvent(workspace.on("file-open", schedule));
+    this.registerEvent(workspace.on("css-change", schedule));
+    this.registerEvent(metadataCache.on("changed", schedule));
   }
 
   async loadSettings(): Promise<void> {
@@ -180,26 +192,5 @@ export default class MdPlusPlugin extends Plugin {
       return null;
     }
     return file.path;
-  }
-
-  /** Modo de leitura: a capa entra antes do conteúdo da primeira seção. */
-  private renderReadingHeader(
-    el: HTMLElement,
-    ctx: MarkdownPostProcessorContext
-  ): void {
-    const section = ctx.getSectionInfo(el);
-    if (!section || section.lineStart !== 0) {
-      return;
-    }
-    if (el.querySelector(":scope > .mdp-header")) {
-      return;
-    }
-
-    const frontmatter = this.app.metadataCache.getCache(
-      ctx.sourcePath
-    )?.frontmatter;
-    el.prepend(
-      buildHeader(this, dataFromFrontmatter(frontmatter), ctx.sourcePath)
-    );
   }
 }

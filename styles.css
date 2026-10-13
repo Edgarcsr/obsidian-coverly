@@ -8,19 +8,30 @@
   --mdp-icon-overlap: 36px;
 
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
+/* No modo Fonte o markdown aparece cru, sem capa */
+.markdown-source-view:not(.is-live-preview) .mdp-header {
+  display: none;
+}
+
+/*
+ * A capa vai de borda a borda do painel. As margens negativas e a largura são
+ * calculadas em view-header.ts, porque dependem do padding de cada tema.
+ */
 .mdp-cover {
   position: relative;
   height: var(--mdp-cover-height, 240px);
-  border-radius: 10px;
   overflow: hidden;
   background-color: var(--background-modifier-hover);
   background-repeat: no-repeat;
   background-size: cover;
-  animation: mdp-fade-in 0.45s ease both;
   transition: height 0.25s ease;
+}
+
+.mdp-header.is-entering .mdp-cover {
+  animation: mdp-fade-in 0.45s ease both;
 }
 
 .mdp-cover-image {
@@ -95,10 +106,13 @@
   border-radius: 14px;
   box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
   cursor: pointer;
-  animation: mdp-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.mdp-header.is-entering .mdp-icon {
+  animation: mdp-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 
 .mdp-icon:hover {
@@ -122,7 +136,10 @@
   transition: opacity 0.2s ease;
 }
 
-.mdp-header:hover .mdp-add-row {
+/* Como no Notion: aparecem ao passar o mouse pelo cabeçalho ou pelo título */
+.mdp-header:hover .mdp-add-row,
+.mdp-header:has(+ .inline-title:hover) .mdp-add-row,
+.mdp-add-row:focus-within {
   opacity: 1;
 }
 

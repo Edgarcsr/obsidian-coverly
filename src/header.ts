@@ -158,16 +158,19 @@ const buildCover = (
 };
 
 /**
- * Monta capa + ícone. É o mesmo DOM para o Live Preview (widget) e para o
- * modo de leitura, então o visual e as interações ficam idênticos nos dois.
+ * Monta capa + ícone. É o mesmo DOM para o modo de edição e o de leitura,
+ * então o visual e as interações ficam idênticos nos dois.
  */
 export const buildHeader = (
   plugin: MdPlusPlugin,
   data: CoverData,
-  sourcePath: string
+  sourcePath: string,
+  entering: boolean
 ): HTMLElement => {
   const header = document.createElement("div");
-  header.className = data.cover ? "mdp-header has-cover" : "mdp-header";
+  header.addClass("mdp-header");
+  header.toggleClass("has-cover", Boolean(data.cover));
+  header.toggleClass("is-entering", entering);
 
   if (data.cover) {
     header.append(buildCover(plugin, data, sourcePath));

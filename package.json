@@ -15,8 +15,6 @@
     "fix": "ultracite fix"
   },
   "devDependencies": {
-    "@codemirror/state": "^6",
-    "@codemirror/view": "^6",
     "@types/node": "^22.15.17",
     "esbuild": "0.25.5",
     "jiti": "^2.6.1",
