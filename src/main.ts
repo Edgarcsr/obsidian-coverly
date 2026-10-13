@@ -86,6 +86,7 @@ export default class MdPlusPlugin extends Plugin {
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);
     }
+    document.body.removeClass("mdp-hide-properties");
   }
 
   /** Mantém o cabeçalho em dia com a nota aberta, o modo da view e o frontmatter. */
@@ -121,6 +122,10 @@ export default class MdPlusPlugin extends Plugin {
     style.setProperty("--mdp-cover-height", `${coverHeight}px`);
     style.setProperty("--mdp-cover-radius", `${coverRadius}px`);
     style.setProperty("--mdp-cover-fade", `${coverFade}%`);
+    document.body.toggleClass(
+      "mdp-hide-properties",
+      this.settings.hideProperties
+    );
   }
 
   /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */

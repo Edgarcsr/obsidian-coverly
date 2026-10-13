@@ -1,5 +1,5 @@
-/* ---------- Propriedades do frontmatter ficam ocultas: o plugin cuida delas ---------- */
-.metadata-container {
+/* ---------- Propriedades ocultas, só se o usuário ligar a opção ---------- */
+body.mdp-hide-properties .metadata-container {
   display: none !important;
 }
 

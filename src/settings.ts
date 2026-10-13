@@ -10,12 +10,15 @@ export interface MdPlusSettings {
   coverRadius: number;
   /** Quanto da altura da capa, de baixo para cima, some em degradê. 0 = sem degradê. */
   coverFade: number;
+  /** Esconde o painel de propriedades em todas as notas. */
+  hideProperties: boolean;
 }
 
 export const DEFAULT_SETTINGS: MdPlusSettings = {
   coverFade: 0,
   coverHeight: 240,
   coverRadius: 0,
+  hideProperties: false,
   unsplashKey: "",
 };
 
@@ -89,6 +92,21 @@ export class MdPlusSettingTab extends PluginSettingTab {
           .setDynamicTooltip()
           .onChange(async (value) => {
             this.plugin.settings.coverFade = value;
+            this.plugin.applyCoverStyle();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Ocultar propriedades")
+      .setDesc(
+        "Esconde o painel de propriedades no topo de todas as notas, não só das que têm capa."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.hideProperties)
+          .onChange(async (value) => {
+            this.plugin.settings.hideProperties = value;
             this.plugin.applyCoverStyle();
             await this.plugin.saveSettings();
           })
