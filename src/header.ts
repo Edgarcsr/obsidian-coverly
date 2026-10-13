@@ -89,11 +89,18 @@ const imageOverflow =
  * Reposicionamento vertical por arrasto. A distância arrastada é convertida em
  * porcentagem usando o quanto o fundo excede a moldura (ver OverflowMeasure).
  */
+/** Botões que entram e saem do modo de reposicionar. */
+interface RepositionControls {
+  start: HTMLElement;
+  save: HTMLElement;
+  cancel: HTMLElement;
+}
+
 const attachReposition = (
   plugin: MdPlusPlugin,
   cover: HTMLElement,
   surface: HTMLElement,
-  button: HTMLElement,
+  controls: RepositionControls,
   measureOverflow: OverflowMeasure,
   initialPosition: number,
   sourcePath: string
@@ -105,39 +112,48 @@ const attachReposition = (
   let startPosition = initialPosition;
   let current = initialPosition;
 
-  const setActive = (value: boolean): void => {
-    active = value;
-    dragging = false;
-    cover.toggleClass("is-repositioning", value);
-    button.setText(value ? "Concluir" : "Reposicionar");
+  const setPosition = (position: number): void => {
+    current = position;
+    surface.style.backgroundPosition = `50% ${position}%`;
   };
 
-  // Esc sai do modo sem salvar e devolve a capa à posição anterior.
+  const exit = (): void => {
+    active = false;
+    dragging = false;
+    cover.removeClass("is-repositioning");
+    // oxlint-disable-next-line no-use-before-define
+    document.removeEventListener("keydown", onKeydown, true);
+  };
+
+  // Cancelar (ou Esc) sai sem salvar e devolve a capa à posição anterior.
+  const cancel = (): void => {
+    setPosition(initialPosition);
+    exit();
+  };
+
   const onKeydown = (event: KeyboardEvent): void => {
     // O cabeçalho pode ter sido redesenhado no meio do caminho.
     if (!cover.isConnected) {
       document.removeEventListener("keydown", onKeydown, true);
       return;
     }
-    if (event.key !== "Escape") {
-      return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cancel();
     }
-    event.preventDefault();
-    current = initialPosition;
-    surface.style.backgroundPosition = `50% ${current}%`;
-    setActive(false);
-    document.removeEventListener("keydown", onKeydown, true);
   };
 
-  button.addEventListener("click", async () => {
-    if (!active) {
-      setActive(true);
-      document.addEventListener("keydown", onKeydown, true);
-      overflow = await measureOverflow();
-      return;
-    }
-    document.removeEventListener("keydown", onKeydown, true);
-    setActive(false);
+  controls.start.addEventListener("click", async () => {
+    active = true;
+    cover.addClass("is-repositioning");
+    document.addEventListener("keydown", onKeydown, true);
+    overflow = await measureOverflow();
+  });
+
+  controls.cancel.addEventListener("click", cancel);
+
+  controls.save.addEventListener("click", async () => {
+    exit();
     if (Math.round(current) !== Math.round(initialPosition)) {
       await plugin.setPosition(sourcePath, Math.round(current));
     }
@@ -148,7 +164,7 @@ const attachReposition = (
       return;
     }
     // Clique na pílula não pode virar arrasto: a captura do ponteiro
-    // roubaria o clique do botão "Concluir".
+    // roubaria o clique de "Salvar posição" e "Cancelar".
     if (
       event.target instanceof Element &&
       event.target.closest(".mdp-toolbar")
@@ -166,8 +182,7 @@ const attachReposition = (
       return;
     }
     const delta = event.clientY - startY;
-    current = clamp(startPosition - (delta * 100) / overflow, 0, 100);
-    surface.style.backgroundPosition = `50% ${current}%`;
+    setPosition(clamp(startPosition - (delta * 100) / overflow, 0, 100));
   });
 
   const stop = (): void => {
@@ -201,20 +216,30 @@ const buildCover = (
     measureOverflow = gradientOverflow(cover);
   }
 
-  const toolbar = cover.createDiv({ cls: "mdp-toolbar" });
+  // Pílula normal, visível ao passar o mouse.
+  const toolbar = cover.createDiv({ cls: "mdp-toolbar is-idle" });
   toolbarButton(toolbar, "Alterar", () => {
     plugin.openCoverPicker(sourcePath);
   });
-  const reposition = toolbarButton(toolbar, "Reposicionar");
+  const start = toolbarButton(toolbar, "Reposicionar");
   toolbarIconButton(toolbar, "trash-2", "Remover capa", async () => {
     await plugin.setCover(sourcePath, null);
+  });
+
+  // Pílula e dica do modo de reposicionar; o CSS troca uma pela outra.
+  const editbar = cover.createDiv({ cls: "mdp-toolbar is-editing" });
+  const save = toolbarButton(editbar, "Salvar posição");
+  const cancel = toolbarButton(editbar, "Cancelar");
+  cover.createDiv({
+    cls: "mdp-reposition-hint",
+    text: "Arraste a imagem para reposicionar",
   });
 
   attachReposition(
     plugin,
     cover,
     surface,
-    reposition,
+    { cancel, save, start },
     measureOverflow,
     data.position,
     sourcePath
