@@ -303,6 +303,14 @@
     color 0.12s ease;
 }
 
+.mdp-picker .mdp-picker-tab-icon {
+  width: 11px;
+  height: 11px;
+  margin-right: 5px;
+  vertical-align: -1px;
+  fill: currentColor;
+}
+
 .mdp-picker .mdp-picker-tab:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);

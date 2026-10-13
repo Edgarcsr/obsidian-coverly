@@ -44,14 +44,18 @@ const gradient = (id: string, name: string, css: string): GradientPreset => ({
 const solid = (id: string, name: string, color: string): GradientPreset =>
   gradient(id, name, `linear-gradient(${color}, ${color})`);
 
-/** Obra do MET. `image` é o caminho da versão "web-large" (~100 a 300 KB). */
+/**
+ * Obra do MET. `image` é o caminho da versão "web-large", que tem só ~600 px
+ * de largura: serve para a grade, mas fica borrada na capa. A capa usa a
+ * "original" (~2000 a 4000 px, de 1 a 3 MB).
+ */
 const met = (
   objectId: string,
   image: string,
   title: string,
   artist: string
 ): ArtworkPreset => {
-  const url = `https://images.metmuseum.org/CRDImages/${image}`;
+  const base = "https://images.metmuseum.org/CRDImages/";
   return {
     credit: {
       name: `${artist}, ${title} · The Met`,
@@ -60,8 +64,8 @@ const met = (
     id: `met-${objectId}`,
     kind: "artwork",
     name: `${title}, ${artist}`,
-    thumb: url,
-    url,
+    thumb: `${base}${image}`,
+    url: `${base}${image.replace("/web-large/", "/original/")}`,
   };
 };
 

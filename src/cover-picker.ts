@@ -11,13 +11,18 @@ type Tab = "gallery" | "upload" | "link" | "unsplash";
 interface TabInfo {
   id: Tab;
   label: string;
+  /** Caminho SVG (viewBox 32×32) mostrado antes do nome da aba. */
+  icon?: string;
 }
+
+/** Símbolo oficial do Unsplash, como o Notion mostra na aba. */
+const UNSPLASH_LOGO = "M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z";
 
 const TABS: TabInfo[] = [
   { id: "gallery", label: "Galeria" },
   { id: "upload", label: "Carregar" },
   { id: "link", label: "Link" },
-  { id: "unsplash", label: "Unsplash" },
+  { icon: UNSPLASH_LOGO, id: "unsplash", label: "Unsplash" },
 ];
 
 const URL_PATTERN = /^https?:\/\//u;
@@ -162,8 +167,16 @@ export class CoverPicker {
       const button = this.tabsEl.createEl("button", {
         cls:
           tab.id === this.tab ? "mdp-picker-tab is-active" : "mdp-picker-tab",
-        text: tab.label,
       });
+      if (tab.icon) {
+        button
+          .createSvg("svg", {
+            attr: { "aria-hidden": "true", viewBox: "0 0 32 32" },
+            cls: "mdp-picker-tab-icon",
+          })
+          .createSvg("path", { attr: { d: tab.icon } });
+      }
+      button.createSpan({ text: tab.label });
       button.addEventListener("click", () => {
         this.tab = tab.id;
         this.renderTabs();
