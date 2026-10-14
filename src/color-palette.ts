@@ -184,7 +184,8 @@ export const showColorVariants = (
   onPick: (color: string) => Promise<void>
 ): (() => void) => {
   const ids = iconColors().map((color) => color.id);
-  if (isCustomColor(state.color)) {
+  // A cor atual continua à mão mesmo sendo de outra paleta ou personalizada.
+  if (!ids.includes(state.color)) {
     ids.push(state.color);
   }
 

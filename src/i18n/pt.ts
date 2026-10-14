@@ -118,7 +118,7 @@ export const pt = {
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
   "settings.colorPalette.desc":
-    "Cores oferecidas para os ícones. As notas já gravadas mantêm a cor escolhida, só no tom da paleta ativa.",
+    "Cores oferecidas no seletor de ícones. Os ícones já escolhidos mantêm a cor que têm.",
   "settings.colorPalette.name": "Cores dos ícones",
   "settings.colorPalette.notion": "Cores do Notion",
   "settings.colorPalette.tailwind": "Cores atuais (Tailwind)",

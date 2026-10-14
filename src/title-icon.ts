@@ -2,7 +2,6 @@ import type { App } from "obsidian";
 
 import {
   drawLucide,
-  getColorPalette,
   iconColorCss,
   iconImageSource,
   parseLucide,
@@ -82,7 +81,7 @@ export const paintTitleIcon = (
     }
     return;
   }
-  const key = `${getColorPalette()}\n${twemoji}\n${value}`;
+  const key = `${twemoji}\n${value}`;
   if (title.getAttribute(KEY_ATTR) === key) {
     return;
   }

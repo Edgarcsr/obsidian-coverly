@@ -2,7 +2,7 @@ import { MarkdownView } from "obsidian";
 
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
-import { drawPageIcon, getColorPalette } from "./page-icon";
+import { drawPageIcon } from "./page-icon";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
 
 const ICON_CLASS = "mdp-inline-icon";
@@ -148,7 +148,7 @@ export class NoteIconDecorator {
     }
 
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${getColorPalette()}\n${this.plugin.settings.twemoji}\n${value}`;
+    const key = `${this.plugin.settings.twemoji}\n${value}`;
     const placed =
       existing?.dataset.key === key && existing.nextElementSibling === before;
     if (placed) {

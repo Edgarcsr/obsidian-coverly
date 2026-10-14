@@ -116,7 +116,7 @@ export const en: Messages = {
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
   "settings.colorPalette.desc":
-    "Colors offered for icons. Notes already saved keep their chosen color, just in the shade of the active palette.",
+    "Colors offered in the icon picker. Icons already chosen keep the color they have.",
   "settings.colorPalette.name": "Icon colors",
   "settings.colorPalette.notion": "Notion colors",
   "settings.colorPalette.tailwind": "Current colors (Tailwind)",

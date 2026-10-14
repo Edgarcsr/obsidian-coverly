@@ -166,7 +166,6 @@ export class CoverlySettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.colorPalette = value as ColorPalette;
             setColorPalette(this.plugin.settings.colorPalette);
-            this.plugin.refreshHeaders();
             await this.plugin.saveSettings();
           })
       );
