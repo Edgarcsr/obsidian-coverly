@@ -1176,11 +1176,11 @@
 }
 
 /*
- * Na nota selecionada da árvore o fundo vira a cor de destaque e o texto muda
- * de cor; o ícone Lucide acompanha o texto em vez de manter a cor escolhida
- * (que vem inline, por isso o !important).
+ * Enquanto a nota é arrastada na árvore, o Obsidian pinta a linha com a cor de
+ * destaque e o texto com a cor sobre ela; o ícone Lucide acompanha o texto em
+ * vez de manter a cor escolhida (que vem inline, por isso o !important).
  */
-.nav-file-title.is-active .mdp-inline-icon.is-lucide {
+.nav-file-title.is-being-dragged .mdp-inline-icon.is-lucide {
   color: inherit !important;
 }
 
