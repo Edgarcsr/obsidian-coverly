@@ -1360,6 +1360,11 @@
   color: var(--text-accent);
 }
 
+/* Na prévia nativa (Ctrl + mouse), a capa fica mais baixa para caber no popover */
+.hover-popover .mdp-header {
+  --mdp-cover-height: 120px;
+}
+
 /* ---------- Prévia dos links (cartão no estilo do Notion) ---------- */
 
 .mdp-link-card {

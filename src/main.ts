@@ -9,6 +9,7 @@ import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { NoteIconDecorator } from "./note-icons";
 import { isImageIcon, parseLucide } from "./page-icon";
+import { PopoverHeaders } from "./popover-header";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
 import { TocManager } from "./toc";
@@ -49,6 +50,7 @@ export default class CoverlyPlugin extends Plugin {
   private readonly noteIcons = new NoteIconDecorator(this);
   private readonly toc = new TocManager(this);
   private readonly linkPreview = new LinkPreview(this);
+  private readonly popoverHeaders = new PopoverHeaders(this);
   /** Só um seletor (de capa ou de ícone) aberto por vez. */
   private picker: CoverPicker | IconPicker | null = null;
 
@@ -68,6 +70,7 @@ export default class CoverlyPlugin extends Plugin {
     this.addSettingTab(new CoverlySettingTab(this.app, this));
     this.registerHeaderSync();
     this.linkPreview.register();
+    this.popoverHeaders.register();
 
     this.addCommand({
       callback: () => {
@@ -107,6 +110,7 @@ export default class CoverlyPlugin extends Plugin {
     this.noteIcons.destroy();
     this.toc.destroy();
     this.linkPreview.destroy();
+    this.popoverHeaders.destroy();
     void closeTwemojiCache();
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);

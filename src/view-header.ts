@@ -5,12 +5,12 @@ import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 
-type Mode = "source" | "preview";
+export type Mode = "source" | "preview";
 
-const MODES: Mode[] = ["source", "preview"];
+export const MODES: Mode[] = ["source", "preview"];
 
 /** Onde o cabeçalho mora em cada modo da view. */
-interface Slot {
+export interface Slot {
   /** Contêiner que rola: a capa é esticada até as bordas dele. */
   scroller: HTMLElement;
   /** Elemento que recebe o cabeçalho, logo antes do título inline. */
@@ -27,18 +27,34 @@ interface ViewState {
   resize: ResizeObserver;
 }
 
-const findSlot = (view: MarkdownView, mode: Mode): Slot | null => {
+const VIEW_SELECTOR = ".markdown-source-view, .markdown-preview-view";
+
+/**
+ * Primeiro elemento de `selector` que é a própria nota, e não uma nota
+ * embutida (`![[...]]`) no conteúdo dela, que tem as mesmas classes.
+ */
+const outermost = (root: HTMLElement, selector: string): HTMLElement | null => {
+  for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+    const outer = el.parentElement?.closest(VIEW_SELECTOR);
+    if (!outer || !root.contains(outer)) {
+      return el;
+    }
+  }
+  return null;
+};
+
+/** Procura o lugar do cabeçalho dentro de `root`: o conteúdo de uma view ou um popover. */
+export const findSlot = (root: HTMLElement, mode: Mode): Slot | null => {
   if (mode === "source") {
-    const scroller = view.contentEl.querySelector<HTMLElement>(
-      ".markdown-source-view .cm-scroller"
-    );
+    const scroller = outermost(
+      root,
+      ".markdown-source-view"
+    )?.querySelector<HTMLElement>(".cm-scroller");
     const sizer = scroller?.querySelector<HTMLElement>(":scope > .cm-sizer");
     return scroller && sizer ? { parent: sizer, scroller, sizer } : null;
   }
 
-  const scroller = view.contentEl.querySelector<HTMLElement>(
-    ".markdown-preview-view"
-  );
+  const scroller = outermost(root, ".markdown-preview-view");
   const sizer = scroller?.querySelector<HTMLElement>(
     ":scope > .markdown-preview-sizer"
   );
@@ -51,7 +67,7 @@ const findSlot = (view: MarkdownView, mode: Mode): Slot | null => {
 };
 
 /** O cabeçalho entra antes do título inline; sem título, no começo do conteúdo. */
-const anchorIn = (parent: HTMLElement): Node | null => {
+export const anchorIn = (parent: HTMLElement): Node | null => {
   const title = parent.querySelector(":scope > .inline-title");
   if (title) {
     return title;
@@ -61,7 +77,7 @@ const anchorIn = (parent: HTMLElement): Node | null => {
   return pusher ? pusher.nextSibling : parent.firstChild;
 };
 
-const isPlaced = (header: HTMLElement, parent: HTMLElement): boolean => {
+export const isPlaced = (header: HTMLElement, parent: HTMLElement): boolean => {
   if (header.parentElement !== parent) {
     return false;
   }
@@ -95,7 +111,7 @@ const disposeState = (state: ViewState): void => {
  * padding e a largura de leitura do tema. A conta parte da margem atual, então
  * chamadas repetidas convergem sem precisar zerar o estilo (evita tremer na rolagem).
  */
-const bleed = (header: HTMLElement, scroller: HTMLElement): void => {
+export const bleed = (header: HTMLElement, scroller: HTMLElement): void => {
   const cover = header.querySelector<HTMLElement>(":scope > .mdp-cover");
   if (!cover || scroller.clientWidth === 0) {
     return;
@@ -193,7 +209,7 @@ export class HeaderManager {
     state.path = file.path;
 
     for (const mode of MODES) {
-      const slot = findSlot(view, mode);
+      const slot = findSlot(view.contentEl, mode);
       if (!slot) {
         continue;
       }

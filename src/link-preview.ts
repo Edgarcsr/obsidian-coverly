@@ -1,5 +1,5 @@
 import { Component, MarkdownRenderer, getLinkpath } from "obsidian";
-import type { Events, TFile } from "obsidian";
+import type { App, Events, TFile } from "obsidian";
 
 import { paintCover } from "./header";
 import type CoverlyPlugin from "./main";
@@ -16,14 +16,14 @@ const MARGIN = 8;
 const MAX_PREVIEW_CHARS = 1500;
 
 /** O que o Obsidian manda no evento `hover-link`. */
-interface HoverLinkInfo {
+export interface HoverLinkInfo {
   event: MouseEvent;
   targetEl: HTMLElement;
   linktext: string;
   sourcePath: string;
 }
 
-const isHoverLinkInfo = (value: unknown): value is HoverLinkInfo => {
+export const isHoverLinkInfo = (value: unknown): value is HoverLinkInfo => {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -33,6 +33,24 @@ const isHoverLinkInfo = (value: unknown): value is HoverLinkInfo => {
     info.targetEl instanceof HTMLElement &&
     typeof info.linktext === "string"
   );
+};
+
+/**
+ * Nota markdown apontada por um `hover-link`, ou `null`. O explorador manda o
+ * caminho exato; tentar por ele primeiro evita que `getLinkpath` corte nomes
+ * com "#" ou "^", que num link marcariam seção.
+ */
+export const resolveHoverFile = (
+  app: App,
+  info: HoverLinkInfo
+): TFile | null => {
+  const file =
+    app.vault.getFileByPath(info.linktext) ??
+    app.metadataCache.getFirstLinkpathDest(
+      getLinkpath(info.linktext),
+      info.sourcePath
+    );
+  return file?.extension === "md" ? file : null;
 };
 
 /** A prévia nativa do Obsidian (plugin "Pré-visualização de página") já está aberta. */
@@ -110,16 +128,8 @@ export class LinkPreview {
       return;
     }
 
-    const { metadataCache, vault } = this.plugin.app;
-    // O explorador manda o caminho exato; tentar por ele primeiro evita que
-    // `getLinkpath` corte nomes com "#" ou "^", que num link marcariam seção.
-    const file =
-      vault.getFileByPath(info.linktext) ??
-      metadataCache.getFirstLinkpathDest(
-        getLinkpath(info.linktext),
-        info.sourcePath
-      );
-    if (file?.extension !== "md") {
+    const file = resolveHoverFile(this.plugin.app, info);
+    if (!file) {
       return;
     }
 
