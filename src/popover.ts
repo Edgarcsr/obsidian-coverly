@@ -1,5 +1,7 @@
 import { setIcon } from "obsidian";
 
+import { t } from "./i18n";
+
 /**
  * Campo de busca com lupa. A borda fica no contêiner, não no `input`, para os
  * estilos de campo do Obsidian e dos temas não a cortarem.
@@ -139,7 +141,7 @@ export abstract class TabbedPopover<T extends string> {
     if (this.hasRemove()) {
       const remove = this.tabsEl.createEl("button", {
         cls: "mdp-picker-tab mdp-picker-remove",
-        text: "Remover",
+        text: t("common.remove"),
       });
       remove.addEventListener("click", async () => {
         this.close();

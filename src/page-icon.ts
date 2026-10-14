@@ -1,6 +1,7 @@
 import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
+import type { MessageKey } from "./i18n";
 import { drawEmoji } from "./twemoji";
 
 /**
@@ -16,7 +17,7 @@ export const URL_PATTERN = /^https?:\/\//u;
 
 export interface IconColor {
   id: string;
-  label: string;
+  label: MessageKey;
   css: string;
 }
 
@@ -25,25 +26,25 @@ export interface IconColor {
  * cores do Tailwind no tom 500. Os ids são os nomes do Tailwind.
  */
 export const ICON_COLORS: IconColor[] = [
-  { css: "var(--text-muted)", id: "default", label: "Padrão" },
-  { css: "#6b7280", id: "gray", label: "Cinza" },
-  { css: "#ef4444", id: "red", label: "Vermelho" },
-  { css: "#f97316", id: "orange", label: "Laranja" },
-  { css: "#f59e0b", id: "amber", label: "Âmbar" },
-  { css: "#eab308", id: "yellow", label: "Amarelo" },
-  { css: "#84cc16", id: "lime", label: "Lima" },
-  { css: "#22c55e", id: "green", label: "Verde" },
-  { css: "#10b981", id: "emerald", label: "Esmeralda" },
-  { css: "#14b8a6", id: "teal", label: "Verde-azulado" },
-  { css: "#06b6d4", id: "cyan", label: "Ciano" },
-  { css: "#0ea5e9", id: "sky", label: "Céu" },
-  { css: "#3b82f6", id: "blue", label: "Azul" },
-  { css: "#6366f1", id: "indigo", label: "Anil" },
-  { css: "#8b5cf6", id: "violet", label: "Violeta" },
-  { css: "#a855f7", id: "purple", label: "Roxo" },
-  { css: "#d946ef", id: "fuchsia", label: "Fúcsia" },
-  { css: "#ec4899", id: "pink", label: "Rosa" },
-  { css: "#f43f5e", id: "rose", label: "Rosé" },
+  { css: "var(--text-muted)", id: "default", label: "color.default" },
+  { css: "#6b7280", id: "gray", label: "color.gray" },
+  { css: "#ef4444", id: "red", label: "color.red" },
+  { css: "#f97316", id: "orange", label: "color.orange" },
+  { css: "#f59e0b", id: "amber", label: "color.amber" },
+  { css: "#eab308", id: "yellow", label: "color.yellow" },
+  { css: "#84cc16", id: "lime", label: "color.lime" },
+  { css: "#22c55e", id: "green", label: "color.green" },
+  { css: "#10b981", id: "emerald", label: "color.emerald" },
+  { css: "#14b8a6", id: "teal", label: "color.teal" },
+  { css: "#06b6d4", id: "cyan", label: "color.cyan" },
+  { css: "#0ea5e9", id: "sky", label: "color.sky" },
+  { css: "#3b82f6", id: "blue", label: "color.blue" },
+  { css: "#6366f1", id: "indigo", label: "color.indigo" },
+  { css: "#8b5cf6", id: "violet", label: "color.violet" },
+  { css: "#a855f7", id: "purple", label: "color.purple" },
+  { css: "#d946ef", id: "fuchsia", label: "color.fuchsia" },
+  { css: "#ec4899", id: "pink", label: "color.pink" },
+  { css: "#f43f5e", id: "rose", label: "color.rose" },
 ];
 
 export const DEFAULT_ICON_COLOR = "default";

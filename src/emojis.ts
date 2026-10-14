@@ -1,10 +1,12 @@
 import EMOJI_DATA from "./emoji-data.json";
+import { getLocale, t } from "./i18n";
+import type { Locale, MessageKey } from "./i18n";
 
 export interface EmojiEntry {
   emoji: string;
-  /** Nome do emoji em português, mostrado na dica ao passar o mouse. */
+  /** Nome do emoji no idioma atual, mostrado na dica ao passar o mouse. */
   name: string;
-  /** Nome e palavras-chave em português, mais o nome em inglês, para o filtro. */
+  /** Nome e palavras-chave no idioma atual (com o nome no outro idioma), para o filtro. */
   keywords: string;
 }
 
@@ -19,27 +21,53 @@ export interface EmojiGroup {
  * Grupos do Unicode, na ordem de emoji-data.json (gerado por
  * scripts/build-emojis.ts a partir do emojibase).
  */
-const GROUPS: readonly Omit<EmojiGroup, "emojis">[] = [
-  { icon: "smile", name: "Sorrisos e emoção" },
-  { icon: "hand", name: "Pessoas e corpo" },
-  { icon: "leaf", name: "Animais e natureza" },
-  { icon: "apple", name: "Comida e bebida" },
-  { icon: "plane", name: "Viagens e lugares" },
-  { icon: "trophy", name: "Atividades" },
-  { icon: "lightbulb", name: "Objetos" },
-  { icon: "heart", name: "Símbolos" },
-  { icon: "flag", name: "Bandeiras" },
+const GROUPS: readonly { icon: string; label: MessageKey }[] = [
+  { icon: "smile", label: "emojiGroup.smileys" },
+  { icon: "hand", label: "emojiGroup.people" },
+  { icon: "leaf", label: "emojiGroup.nature" },
+  { icon: "apple", label: "emojiGroup.food" },
+  { icon: "plane", label: "emojiGroup.travel" },
+  { icon: "trophy", label: "emojiGroup.activities" },
+  { icon: "lightbulb", label: "emojiGroup.objects" },
+  { icon: "heart", label: "emojiGroup.symbols" },
+  { icon: "flag", label: "emojiGroup.flags" },
 ];
 
-/** Todos os emojis da aba Emoji, em grupos na ordem em que aparecem. */
-export const EMOJI_GROUPS: EmojiGroup[] = GROUPS.map((group, index) => ({
-  ...group,
-  emojis: (EMOJI_DATA[index] ?? []).map(
-    ([emoji = "", name = "", keywords = ""]) => ({
-      emoji,
-      keywords,
-      // "rosto risonho" → "Rosto risonho"
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-    })
-  ),
-}));
+/** Em emoji-data.json cada emoji é [emoji, nome pt, busca pt, nome en, busca en]. */
+const COLUMNS: Record<Locale, { name: number; keywords: number }> = {
+  en: { keywords: 4, name: 3 },
+  pt: { keywords: 2, name: 1 },
+};
+
+/** Só o primeiro caractere em maiúscula: "rosto risonho" → "Rosto risonho". */
+const capitalize = (text: string): string =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
+const cache = new Map<Locale, EmojiEntry[][]>();
+
+/** Emojis de cada grupo no idioma atual, montados uma vez por idioma. */
+const entriesByGroup = (locale: Locale): EmojiEntry[][] => {
+  let groups = cache.get(locale);
+  if (!groups) {
+    const column = COLUMNS[locale];
+    groups = GROUPS.map((_, index) =>
+      (EMOJI_DATA[index] ?? []).map((row) => ({
+        emoji: row[0] ?? "",
+        keywords: row[column.keywords] ?? "",
+        name: capitalize(row[column.name] ?? ""),
+      }))
+    );
+    cache.set(locale, groups);
+  }
+  return groups;
+};
+
+/** Os grupos da aba Emoji, na ordem em que aparecem, com os nomes no idioma atual. */
+export const emojiGroups = (): EmojiGroup[] => {
+  const entries = entriesByGroup(getLocale());
+  return GROUPS.map((group, index) => ({
+    emojis: entries[index] ?? [],
+    icon: group.icon,
+    name: t(group.label),
+  }));
+};

@@ -1,5 +1,6 @@
 import { setIcon } from "obsidian";
 
+import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { resolveCoverSource } from "./note-data";
 import type { CoverData } from "./note-data";
@@ -222,22 +223,22 @@ const buildCover = (
 
   // Pílula normal, visível ao passar o mouse.
   const toolbar = cover.createDiv({ cls: "mdp-toolbar is-idle" });
-  const change = toolbarButton(toolbar, "Alterar");
+  const change = toolbarButton(toolbar, t("header.change"));
   change.addEventListener("click", () => {
     plugin.openCoverPicker(sourcePath, change);
   });
-  const start = toolbarButton(toolbar, "Reposicionar");
-  toolbarIconButton(toolbar, "trash-2", "Remover capa", async () => {
+  const start = toolbarButton(toolbar, t("header.reposition"));
+  toolbarIconButton(toolbar, "trash-2", t("command.removeCover"), async () => {
     await plugin.setCover(sourcePath, null);
   });
 
   // Pílula e dica do modo de reposicionar; o CSS troca uma pela outra.
   const editbar = cover.createDiv({ cls: "mdp-toolbar is-editing" });
-  const save = toolbarButton(editbar, "Salvar posição");
-  const cancel = toolbarButton(editbar, "Cancelar");
+  const save = toolbarButton(editbar, t("header.savePosition"));
+  const cancel = toolbarButton(editbar, t("common.cancel"));
   cover.createDiv({
     cls: "mdp-reposition-hint",
-    text: "Arraste a imagem para reposicionar",
+    text: t("header.repositionHint"),
   });
 
   attachReposition(
@@ -289,7 +290,7 @@ export const buildHeader = (
   if (data.icon) {
     const iconRow = header.createDiv({ cls: "mdp-icon-row" });
     const icon = iconRow.createEl("button", {
-      attr: { "aria-label": "Trocar ícone" },
+      attr: { "aria-label": t("header.changeIcon") },
       cls: "mdp-icon",
     });
     drawPageIcon(plugin.app, icon, data.icon, plugin.settings.twemoji);
@@ -301,12 +302,12 @@ export const buildHeader = (
   // Ações de adicionar aparecem só ao passar o mouse, para não poluir a nota.
   const addRow = header.createDiv({ cls: "mdp-add-row" });
   if (!data.icon) {
-    addButton(addRow, "smile", "Adicionar ícone", (button) => {
+    addButton(addRow, "smile", t("header.addIcon"), (button) => {
       plugin.openIconPicker(sourcePath, button);
     });
   }
   if (!data.cover) {
-    addButton(addRow, "image", "Adicionar capa", (button) => {
+    addButton(addRow, "image", t("header.addCover"), (button) => {
       plugin.openCoverPicker(sourcePath, button);
     });
   }

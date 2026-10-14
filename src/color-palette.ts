@@ -1,6 +1,12 @@
 import { setTooltip } from "obsidian";
 
-import { ICON_COLORS, drawLucide, iconColorCss, isCustomColor } from "./page-icon";
+import { t } from "./i18n";
+import {
+  ICON_COLORS,
+  drawLucide,
+  iconColorCss,
+  isCustomColor,
+} from "./page-icon";
 
 /** Cor e preferência da aba Ícones, compartilhadas entre a paleta e a grade. */
 export interface ColorState {
@@ -73,7 +79,7 @@ const placeFixed = (
 export const renderColorButton = (options: ColorPaletteOptions): void => {
   const { row, grid, state } = options;
   const button = row.createEl("button", { cls: "mdp-picker-square" });
-  setTooltip(button, "Cor do ícone");
+  setTooltip(button, t("color.tooltip"));
   const dot = button.createSpan({ cls: "mdp-color-dot" });
 
   const palette = row.createDiv({ cls: "mdp-color-palette" });
@@ -105,7 +111,7 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
           ? "mdp-color-swatch is-selected"
           : "mdp-color-swatch",
     });
-    setTooltip(swatch, color.label);
+    setTooltip(swatch, t(color.label));
     swatch.createSpan({ cls: "mdp-color-dot" }).style.background = color.css;
     swatch.addEventListener("click", async () => {
       await apply(color.id, swatch);
@@ -120,7 +126,7 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
       ? "mdp-color-swatch is-selected"
       : "mdp-color-swatch",
   });
-  setTooltip(custom, "Escolher outra cor");
+  setTooltip(custom, t("color.custom"));
   const customDot = custom.createSpan({ cls: "mdp-color-dot is-custom" });
   // Invisível, mas com posição: o seletor do sistema abre ancorado nele, e
   // com display: none abriria no canto da janela.
@@ -150,7 +156,7 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
   });
 
   const ask = palette.createDiv({ cls: "mdp-color-ask" });
-  ask.createSpan({ text: "Perguntar sempre" });
+  ask.createSpan({ text: t("color.askAlways") });
   toggle(ask, state.askColor, async (enabled) => {
     state.askColor = enabled;
     await options.onAskColorChange(enabled);

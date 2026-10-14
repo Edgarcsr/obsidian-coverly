@@ -2,7 +2,7 @@
   "id": "coverly",
   "name": "Coverly",
   "version": "0.1.0",
-  "minAppVersion": "1.6.0",
+  "minAppVersion": "1.8.7",
   "description": "Capas e ícones de página no estilo Notion para suas notas.",
   "author": "Edgar Ribeiro",
   "isDesktopOnly": true

@@ -1,5 +1,6 @@
 import { requestUrl } from "obsidian";
 
+import { t } from "./i18n";
 import type { CreditInfo } from "./note-data";
 
 export interface UnsplashPhoto {
@@ -47,15 +48,13 @@ export const searchUnsplash = async (
   });
 
   if (res.status === 401) {
-    throw new Error("Access Key do Unsplash inválida.");
+    throw new Error(t("unsplash.invalidKey"));
   }
   if (res.status === 403 || res.status === 429) {
-    throw new Error(
-      "Limite de requisições do Unsplash atingido. O plano gratuito permite 50 por hora."
-    );
+    throw new Error(t("unsplash.rateLimit"));
   }
   if (res.status !== 200) {
-    throw new Error(`Falha na busca do Unsplash (HTTP ${res.status}).`);
+    throw new Error(t("unsplash.searchFailed", { status: res.status }));
   }
 
   const results = (res.json?.results ?? []) as UnsplashResult[];

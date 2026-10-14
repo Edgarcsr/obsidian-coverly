@@ -1,3 +1,4 @@
+import type { MessageKey } from "./i18n";
 import type { CreditInfo } from "./note-data";
 
 /**
@@ -8,10 +9,18 @@ import type { CreditInfo } from "./note-data";
  * acervos (API Open Access do MET e Wikimedia Commons), nunca de cópias do Notion.
  */
 
+/** Ids dos gradientes: o nome de cada um é a chave `gradient.<id>` do i18n. */
+type GradientId = MessageKey extends infer K
+  ? K extends `gradient.${infer Id}`
+    ? Id
+    : never
+  : never;
+
 export interface GradientPreset {
   kind: "gradient";
-  id: string;
-  name: string;
+  id: GradientId;
+  /** Chave do nome no i18n. */
+  name: MessageKey;
   css: string;
 }
 
@@ -29,20 +38,21 @@ export interface ArtworkPreset {
 export type GalleryItem = GradientPreset | ArtworkPreset;
 
 export interface GallerySection {
-  title: string;
+  /** Chave do título no i18n. */
+  title: MessageKey;
   items: GalleryItem[];
 }
 
-const gradient = (id: string, name: string, css: string): GradientPreset => ({
+const gradient = (id: GradientId, css: string): GradientPreset => ({
   css,
   id,
   kind: "gradient",
-  name,
+  name: `gradient.${id}` as const,
 });
 
 /** Cor sólida no mesmo formato dos gradientes, para caber na mesma camada da capa. */
-const solid = (id: string, name: string, color: string): GradientPreset =>
-  gradient(id, name, `linear-gradient(${color}, ${color})`);
+const solid = (id: GradientId, color: string): GradientPreset =>
+  gradient(id, `linear-gradient(${color}, ${color})`);
 
 /**
  * Obra do MET. `image` é o caminho da versão "web-large", que tem só ~600 px
@@ -91,41 +101,23 @@ const commons = (
 };
 
 const COLORS_AND_GRADIENTS: GalleryItem[] = [
-  solid("red", "Vermelho", "#e8555a"),
-  solid("yellow", "Amarelo", "#f7be4f"),
-  solid("blue", "Azul", "#1f96d1"),
-  solid("cream", "Creme", "#fdefe3"),
-  gradient(
-    "lagoon",
-    "Lagoa",
-    "linear-gradient(180deg, #5fd4d6 0%, #e8b7a8 100%)"
-  ),
-  gradient(
-    "magenta",
-    "Magenta",
-    "linear-gradient(135deg, #ff3d8b 0%, #ff2477 100%)"
-  ),
-  gradient("fire", "Fogo", "linear-gradient(160deg, #d9674c 0%, #f61c0a 100%)"),
+  solid("red", "#e8555a"),
+  solid("yellow", "#f7be4f"),
+  solid("blue", "#1f96d1"),
+  solid("cream", "#fdefe3"),
+  gradient("lagoon", "linear-gradient(180deg, #5fd4d6 0%, #e8b7a8 100%)"),
+  gradient("magenta", "linear-gradient(135deg, #ff3d8b 0%, #ff2477 100%)"),
+  gradient("fire", "linear-gradient(160deg, #d9674c 0%, #f61c0a 100%)"),
   gradient(
     "haze",
-    "Névoa",
     "radial-gradient(circle at 30% 25%, #f5c2b8 0%, transparent 55%), linear-gradient(180deg, #fbe3dc 0%, #8fc4dc 100%)"
   ),
   gradient(
     "nebula",
-    "Nebulosa",
     "radial-gradient(circle at 12% 88%, #f2a6d6 0%, transparent 45%), linear-gradient(120deg, #2a5ea8 0%, #8e3a6f 55%, #e2381c 100%)"
   ),
-  gradient(
-    "violet",
-    "Violeta",
-    "linear-gradient(160deg, #5d3fd3 0%, #c0466c 100%)"
-  ),
-  gradient(
-    "dusk",
-    "Crepúsculo",
-    "linear-gradient(135deg, #1f4167 0%, #c9a08a 100%)"
-  ),
+  gradient("violet", "linear-gradient(160deg, #5d3fd3 0%, #c0466c 100%)"),
+  gradient("dusk", "linear-gradient(135deg, #1f4167 0%, #c9a08a 100%)"),
 ];
 
 const JAPANESE_PRINTS: GalleryItem[] = [
@@ -385,73 +377,32 @@ const ASIAN_ART: GalleryItem[] = [
 ];
 
 const PASTEL: GalleryItem[] = [
-  gradient(
-    "ocean",
-    "Oceano",
-    "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)"
-  ),
+  gradient("ocean", "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)"),
   gradient(
     "sunset",
-    "Pôr do sol",
     "linear-gradient(120deg, #ff9a9e 0%, #fecfef 60%, #fad0c4 100%)"
   ),
-  gradient(
-    "forest",
-    "Floresta",
-    "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)"
-  ),
-  gradient(
-    "lavender",
-    "Lavanda",
-    "linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)"
-  ),
-  gradient(
-    "peach",
-    "Pêssego",
-    "linear-gradient(120deg, #ffecd2 0%, #fcb69f 100%)"
-  ),
-  gradient(
-    "night",
-    "Noite",
-    "linear-gradient(120deg, #2c3e50 0%, #4ca1af 100%)"
-  ),
-  gradient(
-    "sand",
-    "Areia",
-    "linear-gradient(120deg, #f6d365 0%, #fda085 100%)"
-  ),
-  gradient(
-    "mint",
-    "Menta",
-    "linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%)"
-  ),
-  gradient(
-    "aurora",
-    "Aurora",
-    "linear-gradient(120deg, #43e97b 0%, #38f9d7 100%)"
-  ),
-  gradient("rose", "Rosa", "linear-gradient(120deg, #fbc2eb 0%, #a6c1ee 100%)"),
-  gradient(
-    "slate",
-    "Ardósia",
-    "linear-gradient(120deg, #bdc3c7 0%, #2c3e50 100%)"
-  ),
-  gradient(
-    "ember",
-    "Brasa",
-    "linear-gradient(120deg, #f12711 0%, #f5af19 100%)"
-  ),
+  gradient("forest", "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)"),
+  gradient("lavender", "linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)"),
+  gradient("peach", "linear-gradient(120deg, #ffecd2 0%, #fcb69f 100%)"),
+  gradient("night", "linear-gradient(120deg, #2c3e50 0%, #4ca1af 100%)"),
+  gradient("sand", "linear-gradient(120deg, #f6d365 0%, #fda085 100%)"),
+  gradient("mint", "linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%)"),
+  gradient("aurora", "linear-gradient(120deg, #43e97b 0%, #38f9d7 100%)"),
+  gradient("rose", "linear-gradient(120deg, #fbc2eb 0%, #a6c1ee 100%)"),
+  gradient("slate", "linear-gradient(120deg, #bdc3c7 0%, #2c3e50 100%)"),
+  gradient("ember", "linear-gradient(120deg, #f12711 0%, #f5af19 100%)"),
 ];
 
 /** Seções da aba Galeria, na ordem em que aparecem. */
 export const GALLERY: GallerySection[] = [
-  { items: COLORS_AND_GRADIENTS, title: "Cor e gradiente" },
-  { items: JAPANESE_PRINTS, title: "Gravuras japonesas · Museu MET" },
-  { items: RIJKSMUSEUM_WORKS, title: "Rijksmuseum" },
-  { items: POMOLOGICAL_WATERCOLORS, title: "Aquarelas pomológicas do USDA" },
-  { items: ASIAN_ART, title: "Museu Nacional de Arte Asiática" },
-  { items: HUDSON_RIVER_SCHOOL, title: "Museu MET · Hudson River School" },
-  { items: PASTEL, title: "Pastel" },
+  { items: COLORS_AND_GRADIENTS, title: "gallery.colorsAndGradients" },
+  { items: JAPANESE_PRINTS, title: "gallery.japanesePrints" },
+  { items: RIJKSMUSEUM_WORKS, title: "gallery.rijksmuseum" },
+  { items: POMOLOGICAL_WATERCOLORS, title: "gallery.pomological" },
+  { items: ASIAN_ART, title: "gallery.asianArt" },
+  { items: HUDSON_RIVER_SCHOOL, title: "gallery.hudson" },
+  { items: PASTEL, title: "gallery.pastel" },
 ];
 
 /** Gradientes conhecidos, para resolver `gradient:<id>` gravado nas notas. */

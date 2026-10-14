@@ -2,6 +2,7 @@ import { Notice, Plugin } from "obsidian";
 import type { TFile } from "obsidian";
 
 import { CoverPicker } from "./cover-picker";
+import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
@@ -51,6 +52,7 @@ export default class CoverlyPlugin extends Plugin {
 
   async onload(): Promise<void> {
     await this.loadSettings();
+    setLanguage(this.settings.language);
     this.applyCoverStyle();
     // Antes do primeiro desenho, para os emojis já baixados aparecerem na hora.
     const pluginDir =
@@ -72,7 +74,7 @@ export default class CoverlyPlugin extends Plugin {
         }
       },
       id: "change-cover",
-      name: "Alterar capa",
+      name: t("command.changeCover"),
     });
     this.addCommand({
       callback: () => {
@@ -82,7 +84,7 @@ export default class CoverlyPlugin extends Plugin {
         }
       },
       id: "change-icon",
-      name: "Alterar ícone",
+      name: t("command.changeIcon"),
     });
     this.addCommand({
       callback: async () => {
@@ -92,7 +94,7 @@ export default class CoverlyPlugin extends Plugin {
         }
       },
       id: "remove-cover",
-      name: "Remover capa",
+      name: t("command.removeCover"),
     });
   }
 
@@ -292,7 +294,7 @@ export default class CoverlyPlugin extends Plugin {
   private activeNotePath(): string | null {
     const file: TFile | null = this.app.workspace.getActiveFile();
     if (!file) {
-      notify("Abra uma nota primeiro.");
+      notify(t("notice.openNote"));
       return null;
     }
     return file.path;

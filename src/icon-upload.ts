@@ -2,6 +2,7 @@ import { Notice, setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import { firstImage, saveImageAttachment } from "./attachments";
+import { t } from "./i18n";
 import { URL_PATTERN } from "./page-icon";
 
 /** Imagem escolhida na aba, à espera de "Salvar". */
@@ -50,7 +51,7 @@ export const renderIconUpload = (
   const choose = zone.createEl("button", { cls: "mdp-icon-upload-btn" });
   zone.createDiv({
     cls: "mdp-picker-hint",
-    text: "ou Ctrl+V para colar uma imagem ou link",
+    text: t("iconUpload.pasteHint"),
   });
   const input = zone.createEl("input", {
     attr: { accept: "image/*" },
@@ -61,11 +62,11 @@ export const renderIconUpload = (
   const footer = body.createDiv({ cls: "mdp-icon-upload-footer" });
   const cancel = footer.createEl("button", {
     cls: "mdp-picker-ghost",
-    text: "Cancelar",
+    text: t("common.cancel"),
   });
   const save = footer.createEl("button", {
     cls: "mdp-picker-primary is-accent",
-    text: "Salvar",
+    text: t("common.save"),
   });
 
   const render = (): void => {
@@ -77,11 +78,11 @@ export const renderIconUpload = (
         attr: { alt: "", src: source },
         cls: "mdp-icon-upload-preview",
       });
-      choose.createSpan({ text: "Trocar imagem" });
+      choose.createSpan({ text: t("iconUpload.change") });
       return;
     }
     setIcon(choose.createSpan({ cls: "mdp-icon-upload-icon" }), "image");
-    choose.createSpan({ text: "Carregar uma imagem" });
+    choose.createSpan({ text: t("iconUpload.choose") });
   };
 
   const stageFile = (file: File): void => {
@@ -139,7 +140,11 @@ export const renderIconUpload = (
       await context.pick(value);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "";
-      notify(`Não foi possível salvar a imagem. ${reason}`.trim());
+      notify(
+        reason
+          ? t("notice.saveFailedReason", { reason })
+          : t("notice.saveFailed")
+      );
     }
   });
 

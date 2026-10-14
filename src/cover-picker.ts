@@ -2,6 +2,7 @@ import { Notice } from "obsidian";
 
 import { firstImage, saveImageAttachment } from "./attachments";
 import { GALLERY } from "./gallery";
+import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import type { CreditInfo } from "./note-data";
 import { TabbedPopover, searchField } from "./popover";
@@ -14,10 +15,10 @@ type Tab = "gallery" | "upload" | "link" | "unsplash";
 /** Símbolo oficial do Unsplash, como o Notion mostra na aba. */
 const UNSPLASH_LOGO = "M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z";
 
-const TABS: PopoverTab<Tab>[] = [
-  { id: "gallery", label: "Galeria" },
-  { id: "upload", label: "Carregar" },
-  { id: "link", label: "Link" },
+const tabs = (): PopoverTab<Tab>[] => [
+  { id: "gallery", label: t("tab.gallery") },
+  { id: "upload", label: t("tab.upload") },
+  { id: "link", label: t("tab.link") },
   { icon: UNSPLASH_LOGO, id: "unsplash", label: "Unsplash" },
 ];
 
@@ -64,7 +65,7 @@ export class CoverPicker extends TabbedPopover<Tab> {
   };
 
   constructor(options: CoverPickerOptions) {
-    super(options.anchor, TABS, "gallery", "mdp-cover-picker");
+    super(options.anchor, tabs(), "gallery", "mdp-cover-picker");
     this.options = options;
     this.current = options.current;
   }
@@ -115,14 +116,15 @@ export class CoverPicker extends TabbedPopover<Tab> {
     for (const section of GALLERY) {
       this.body.createDiv({
         cls: "mdp-picker-section-title",
-        text: section.title,
+        text: t(section.title),
       });
       const grid = this.body.createDiv({ cls: "mdp-picker-grid" });
       for (const item of section.items) {
         const value =
           item.kind === "gradient" ? `gradient:${item.id}` : item.url;
+        const label = item.kind === "gradient" ? t(item.name) : item.name;
         const tile = grid.createEl("button", {
-          attr: { "aria-label": item.name, title: item.name },
+          attr: { "aria-label": label, title: label },
           cls:
             value === this.current
               ? "mdp-picker-tile is-selected"
@@ -133,7 +135,7 @@ export class CoverPicker extends TabbedPopover<Tab> {
         } else {
           // Imagem com carregamento preguiçoso: só baixa ao rolar até ela.
           tile.createEl("img", {
-            attr: { alt: item.name, loading: "lazy", src: item.thumb },
+            attr: { alt: label, loading: "lazy", src: item.thumb },
           });
         }
         tile.addEventListener("click", async () => {
@@ -154,11 +156,11 @@ export class CoverPicker extends TabbedPopover<Tab> {
     const zone = this.body.createDiv({ cls: "mdp-picker-upload" });
     const button = zone.createEl("button", {
       cls: "mdp-picker-primary",
-      text: "Carregar arquivo",
+      text: t("cover.uploadButton"),
     });
     zone.createDiv({
       cls: "mdp-picker-hint",
-      text: "Arraste uma imagem para cá ou Ctrl+V para colar uma imagem. Imagens com mais de 1500 pixels de largura funcionam melhor.",
+      text: t("cover.uploadHint"),
     });
     const input = zone.createEl("input", {
       attr: { accept: "image/*" },
@@ -194,7 +196,7 @@ export class CoverPicker extends TabbedPopover<Tab> {
 
   private async upload(file: File): Promise<void> {
     if (!file.type.startsWith("image/")) {
-      notify("Escolha um arquivo de imagem.");
+      notify(t("notice.chooseImage"));
       return;
     }
     try {
@@ -206,7 +208,7 @@ export class CoverPicker extends TabbedPopover<Tab> {
       await this.choose(path);
       this.close();
     } catch (error) {
-      notify(`Não foi possível salvar a imagem: ${errorMessage(error)}`);
+      notify(t("notice.saveFailedReason", { reason: errorMessage(error) }));
     }
   }
 
@@ -214,16 +216,16 @@ export class CoverPicker extends TabbedPopover<Tab> {
     const form = this.body.createDiv({ cls: "mdp-picker-link" });
     const input = form.createEl("input", {
       cls: "mdp-picker-input",
-      placeholder: "Cole o link da imagem…",
+      placeholder: t("cover.linkPlaceholder"),
       type: "url",
     });
     const submit = form.createEl("button", {
       cls: "mdp-picker-primary is-accent",
-      text: "Enviar",
+      text: t("cover.linkSubmit"),
     });
     form.createDiv({
       cls: "mdp-picker-hint",
-      text: "Funciona com qualquer imagem da web.",
+      text: t("cover.linkHint"),
     });
     submit.disabled = true;
 
@@ -253,17 +255,17 @@ export class CoverPicker extends TabbedPopover<Tab> {
     if (!accessKey) {
       this.body.createDiv({
         cls: "mdp-picker-hint is-empty",
-        text: "Cole sua Access Key do Unsplash nas configurações do plugin para buscar fotos.",
+        text: t("cover.unsplashNoKey"),
       });
       return;
     }
 
     const search = this.body.createDiv({ cls: "mdp-picker-search" });
-    const input = searchField(search, "Pesquise uma imagem e tecle Enter…");
+    const input = searchField(search, t("cover.unsplashPlaceholder"));
     const grid = this.body.createDiv({ cls: "mdp-picker-photos" });
     const status = this.body.createDiv({
       cls: "mdp-picker-hint is-empty",
-      text: "Fotos de alta resolução do Unsplash.",
+      text: t("cover.unsplashHint"),
     });
 
     const run = async (): Promise<void> => {
@@ -272,12 +274,12 @@ export class CoverPicker extends TabbedPopover<Tab> {
         return;
       }
       grid.empty();
-      status.setText("Buscando…");
+      status.setText(t("cover.searching"));
       status.show();
       try {
         const photos = await searchUnsplash(accessKey, query);
         if (photos.length === 0) {
-          status.setText("Nenhuma foto encontrada.");
+          status.setText(t("cover.noPhotos"));
           return;
         }
         status.hide();
@@ -303,7 +305,9 @@ export class CoverPicker extends TabbedPopover<Tab> {
     accessKey: string
   ): void {
     const card = grid.createEl("button", {
-      attr: { "aria-label": `Foto de ${photo.photographer.name}` },
+      attr: {
+        "aria-label": t("cover.photoBy", { name: photo.photographer.name }),
+      },
       cls: "mdp-picker-photo",
     });
     card.createEl("img", {

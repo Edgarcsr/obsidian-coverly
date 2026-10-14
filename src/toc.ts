@@ -1,6 +1,7 @@
 import { MarkdownView } from "obsidian";
 import type { HeadingCache } from "obsidian";
 
+import { getLocale, t } from "./i18n";
 import type CoverlyPlugin from "./main";
 
 /** Abaixo disso a nota não tem o que navegar e o sumário fica oculto. */
@@ -107,7 +108,7 @@ const buildToc = (
     const item = panel.createDiv({
       attr: { "data-depth": String(depth) },
       cls: "mdp-toc-item",
-      text: plainText(heading.heading) || "Sem título",
+      text: plainText(heading.heading) || t("toc.untitled"),
     });
     item.addEventListener("click", () => {
       view.currentMode.applyScroll(heading.position.start.line);
@@ -202,9 +203,10 @@ export class TocManager {
       return;
     }
 
-    const key = JSON.stringify(
-      headings.map((h) => [h.level, h.heading, h.position.start.line])
-    );
+    const key = JSON.stringify([
+      getLocale(),
+      headings.map((h) => [h.level, h.heading, h.position.start.line]),
+    ]);
     if (state?.key === key && state.el.parentElement === view.contentEl) {
       updateActive(view, state);
       return;

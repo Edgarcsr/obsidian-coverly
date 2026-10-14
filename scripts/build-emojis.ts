@@ -1,7 +1,8 @@
 /**
- * Gera src/emoji-data.json a partir do emojibase (nomes e palavras-chave em
- * português, mais o nome em inglês) e mantém só os emojis que existem no
- * Twemoji, para que todos apareçam no estilo do X.
+ * Gera src/emoji-data.json a partir do emojibase e mantém só os emojis que
+ * existem no Twemoji, para que todos apareçam no estilo do X. Cada emoji vira
+ * [emoji, nome pt, busca pt, nome en, busca en]. A busca em português inclui
+ * o nome em inglês e vice-versa, para achar por qualquer um dos dois.
  *
  * Uso: bun scripts/build-emojis.ts
  */
@@ -24,7 +25,11 @@ const TWEMOJI_DIR = path.join(
   "svg"
 );
 
-const englishLabel = new Map(en.map((entry) => [entry.hexcode, entry.label]));
+const englishEntry = new Map(en.map((entry) => [entry.hexcode, entry]));
+
+/** Junta os termos sem repetir nem deixar vazios. */
+const words = (terms: (string | undefined)[]): string =>
+  [...new Set(terms)].filter(Boolean).join(" ");
 
 const hasTwemoji = (emoji: string): boolean =>
   existsSync(path.join(TWEMOJI_DIR, `${twemojiCode(emoji)}.svg`));
@@ -42,16 +47,13 @@ const groups = GROUPS.map((group) =>
       return ok;
     })
     .map((entry) => {
-      const keywords = new Set([
-        entry.label,
-        ...(entry.tags ?? []),
-        englishLabel.get(entry.hexcode) ?? "",
-      ]);
-      // [emoji, nome mostrado na dica, texto usado pelo filtro]
+      const english = englishEntry.get(entry.hexcode);
       return [
         entry.unicode,
         entry.label,
-        [...keywords].filter(Boolean).join(" "),
+        words([entry.label, ...(entry.tags ?? []), english?.label]),
+        english?.label ?? entry.label,
+        words([english?.label, ...(english?.tags ?? [])]),
       ];
     })
 );

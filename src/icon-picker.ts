@@ -4,8 +4,9 @@ import type { App } from "obsidian";
 import { renderColorButton, showColorVariants } from "./color-palette";
 import type { ColorState } from "./color-palette";
 import { EmojiGrid } from "./emoji-grid";
-import { EMOJI_GROUPS } from "./emojis";
-import type { EmojiEntry } from "./emojis";
+import { emojiGroups } from "./emojis";
+import type { EmojiEntry, EmojiGroup } from "./emojis";
+import { t } from "./i18n";
 import { renderIconUpload } from "./icon-upload";
 import type { IconUploadHandle } from "./icon-upload";
 import { normalize, searchLucide } from "./lucide-search";
@@ -22,10 +23,10 @@ import { drawEmoji } from "./twemoji";
 
 type Tab = "emoji" | "icons" | "upload";
 
-const TABS: PopoverTab<Tab>[] = [
-  { id: "emoji", label: "Emoji" },
-  { id: "icons", label: "Ícones" },
-  { id: "upload", label: "Fazer upload" },
+const tabs = (): PopoverTab<Tab>[] => [
+  { id: "emoji", label: t("tab.emoji") },
+  { id: "icons", label: t("tab.icons") },
+  { id: "upload", label: t("tab.uploadIcon") },
 ];
 
 /**
@@ -36,8 +37,6 @@ const BATCH = 120;
 
 const randomItem = <T>(items: readonly T[]): T | undefined =>
   items[Math.floor(Math.random() * items.length)];
-
-const ALL_EMOJIS: EmojiEntry[] = EMOJI_GROUPS.flatMap((group) => group.emojis);
 
 /** Botão de uma opção da grade; o conteúdo (emoji ou SVG) fica com quem chama. */
 const optionButton = (
@@ -99,6 +98,10 @@ export class IconPicker extends TabbedPopover<Tab> {
   private upload: IconUploadHandle | null = null;
   private onBodyScroll: (() => void) | null = null;
   private grids: EmojiGrid[] = [];
+  private readonly groups: EmojiGroup[] = emojiGroups();
+  private readonly allEmojis: EmojiEntry[] = this.groups.flatMap(
+    (group) => group.emojis
+  );
 
   private readonly onPaste = (event: ClipboardEvent): void => {
     this.upload?.onPaste(event);
@@ -107,7 +110,7 @@ export class IconPicker extends TabbedPopover<Tab> {
   constructor(options: IconPickerOptions) {
     super(
       options.anchor,
-      TABS,
+      tabs(),
       initialTab(options.app, options.current ?? ""),
       "mdp-icon-picker"
     );
@@ -191,31 +194,38 @@ export class IconPicker extends TabbedPopover<Tab> {
     const input = searchField(row, placeholder);
     const random = row.createEl("button", { cls: "mdp-picker-square" });
     setIcon(random, "shuffle");
-    setTooltip(random, "Aleatório");
+    setTooltip(random, t("iconPicker.random"));
     random.addEventListener("click", onRandom);
     return { input, row };
   }
 
   private emojiSections(): EmojiSection[] {
     const recent = this.options.recentEmojis
-      .map((emoji) => ALL_EMOJIS.find((entry) => entry.emoji === emoji))
+      .map((emoji) => this.allEmojis.find((entry) => entry.emoji === emoji))
       .filter((entry): entry is EmojiEntry => entry !== undefined);
-    const sections: EmojiSection[] = [...EMOJI_GROUPS];
+    const sections: EmojiSection[] = [...this.groups];
     if (recent.length > 0) {
-      sections.unshift({ emojis: recent, icon: "clock", name: "Recentes" });
+      sections.unshift({
+        emojis: recent,
+        icon: "clock",
+        name: t("iconPicker.recent"),
+      });
     }
     return sections;
   }
 
   private renderEmoji(): void {
     const sections = this.emojiSections();
-    let visible = ALL_EMOJIS;
-    const { input, row } = this.searchRow("Filtrar…", async () => {
-      const entry = randomItem(visible);
-      if (entry) {
-        await this.pick(entry.emoji);
+    let visible = this.allEmojis;
+    const { input, row } = this.searchRow(
+      t("iconPicker.filterEmoji"),
+      async () => {
+        const entry = randomItem(visible);
+        if (entry) {
+          await this.pick(entry.emoji);
+        }
       }
-    });
+    );
 
     /*
      * Duas grades virtualizadas: a completa, montada uma vez e só oculta
@@ -235,7 +245,7 @@ export class IconPicker extends TabbedPopover<Tab> {
     const results = new EmojiGrid(this.body, this.body, make);
     const empty = this.body.createDiv({
       cls: "mdp-picker-hint is-empty",
-      text: "Nenhum emoji encontrado.",
+      text: t("iconPicker.noEmoji"),
     });
     this.grids = [full, results];
     let searching = false;
@@ -261,15 +271,17 @@ export class IconPicker extends TabbedPopover<Tab> {
       const query = normalize(input.value);
       searching = Boolean(query);
       visible = searching
-        ? ALL_EMOJIS.filter((entry) =>
+        ? this.allEmojis.filter((entry) =>
             normalize(entry.keywords).includes(query)
           )
-        : ALL_EMOJIS;
+        : this.allEmojis;
       full.toggle(!searching);
       results.toggle(searching && visible.length > 0);
       empty.toggle(searching && visible.length === 0);
       if (searching) {
-        results.setSections([{ entries: visible, title: "Resultados" }]);
+        results.setSections([
+          { entries: visible, title: t("iconPicker.results") },
+        ]);
       }
       highlight();
     };
@@ -325,13 +337,19 @@ export class IconPicker extends TabbedPopover<Tab> {
     let matches = all;
     let shown = 0;
 
-    const { input, row } = this.searchRow("Filtrar ícones…", async () => {
-      const name = randomItem(matches);
-      if (name) {
-        await this.pick(lucideValue(name, this.colorState.color));
+    const { input, row } = this.searchRow(
+      t("iconPicker.filterIcons"),
+      async () => {
+        const name = randomItem(matches);
+        if (name) {
+          await this.pick(lucideValue(name, this.colorState.color));
+        }
       }
+    );
+    this.body.createDiv({
+      cls: "mdp-picker-section-title",
+      text: t("tab.icons"),
     });
-    this.body.createDiv({ cls: "mdp-picker-section-title", text: "Ícones" });
     const grid = this.body.createDiv({ cls: "mdp-icon-grid is-lucide" });
     renderColorButton({
       grid,
@@ -342,7 +360,7 @@ export class IconPicker extends TabbedPopover<Tab> {
     });
     const status = this.body.createDiv({
       cls: "mdp-picker-hint is-empty",
-      text: "Nenhum ícone encontrado.",
+      text: t("iconPicker.noIcons"),
     });
     const sentinel = this.body.createDiv({ cls: "mdp-icon-sentinel" });
 

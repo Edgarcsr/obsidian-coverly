@@ -1,9 +1,13 @@
 import type { App } from "obsidian";
 import { PluginSettingTab, Setting } from "obsidian";
 
+import { setLanguage, t } from "./i18n";
+import type { Language } from "./i18n";
 import type CoverlyPlugin from "./main";
 
 export interface CoverlySettings {
+  /** Idioma da interface: um fixo ou "auto", que segue o do Obsidian. */
+  language: Language;
   unsplashKey: string;
   coverHeight: number;
   /** Raio dos cantos da capa, em pixels. 0 = cantos retos. */
@@ -31,6 +35,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverRadius: 0,
   coverShade: 0,
   iconColor: "default",
+  language: "auto",
   recentEmojis: [],
   toc: true,
   twemoji: true,
@@ -50,14 +55,31 @@ export class CoverlySettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("Chave de acesso do Unsplash")
-      .setDesc(
-        "Access Key da sua aplicação em unsplash.com/developers. Necessária apenas para a aba Unsplash."
-      )
+      .setName(t("settings.language.name"))
+      .setDesc(t("settings.language.desc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("auto", t("settings.language.auto"))
+          .addOption("pt", "Português")
+          .addOption("en", "English")
+          .setValue(this.plugin.settings.language)
+          .onChange(async (value) => {
+            this.plugin.settings.language = value as Language;
+            setLanguage(this.plugin.settings.language);
+            this.plugin.refreshHeaders();
+            await this.plugin.saveSettings();
+            // Redesenha esta tela já no novo idioma.
+            this.display();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.unsplashKey.name"))
+      .setDesc(t("settings.unsplashKey.desc"))
       .addText((text) => {
         text.inputEl.type = "password";
         text
-          .setPlaceholder("Cole a Access Key")
+          .setPlaceholder(t("settings.unsplashKey.placeholder"))
           .setValue(this.plugin.settings.unsplashKey)
           .onChange(async (value) => {
             this.plugin.settings.unsplashKey = value.trim();
@@ -66,8 +88,8 @@ export class CoverlySettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Altura da capa")
-      .setDesc("Altura padrão da capa em pixels.")
+      .setName(t("settings.coverHeight.name"))
+      .setDesc(t("settings.coverHeight.desc"))
       .addSlider((slider) =>
         slider
           .setLimits(120, 400, 10)
@@ -81,8 +103,8 @@ export class CoverlySettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Cantos arredondados")
-      .setDesc("Raio dos cantos da capa em pixels. Zero deixa os cantos retos.")
+      .setName(t("settings.coverRadius.name"))
+      .setDesc(t("settings.coverRadius.desc"))
       .addSlider((slider) =>
         slider
           .setLimits(0, 40, 2)
@@ -96,10 +118,8 @@ export class CoverlySettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Degradê na parte de baixo")
-      .setDesc(
-        "Quanto da capa, de baixo para cima, some em degradê até a nota. Zero desliga o efeito."
-      )
+      .setName(t("settings.coverFade.name"))
+      .setDesc(t("settings.coverFade.desc"))
       .addSlider((slider) =>
         slider
           .setLimits(0, 100, 5)
@@ -113,10 +133,8 @@ export class CoverlySettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Sombra na parte de baixo")
-      .setDesc(
-        "Quanto da capa, de baixo para cima, escurece em degradê preto. Destaca o ícone e o crédito sobre imagens claras. Zero desliga o efeito."
-      )
+      .setName(t("settings.coverShade.name"))
+      .setDesc(t("settings.coverShade.desc"))
       .addSlider((slider) =>
         slider
           .setLimits(0, 100, 5)
@@ -130,10 +148,8 @@ export class CoverlySettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Emojis no estilo do X")
-      .setDesc(
-        "Desenha os emojis com o Twemoji. As imagens são baixadas do jsDelivr (cdn.jsdelivr.net) na primeira vez que aparecem e ficam guardadas na pasta do plugin; nada da nota é enviado. Desligado, usa os emojis do sistema."
-      )
+      .setName(t("settings.twemoji.name"))
+      .setDesc(t("settings.twemoji.desc"))
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.twemoji)
@@ -145,10 +161,8 @@ export class CoverlySettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Sumário na lateral")
-      .setDesc(
-        "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles."
-      )
+      .setName(t("settings.toc.name"))
+      .setDesc(t("settings.toc.desc"))
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.toc).onChange(async (value) => {
           this.plugin.settings.toc = value;
