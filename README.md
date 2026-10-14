@@ -6,7 +6,7 @@
 
 <p>
   <a href="https://github.com/Edgarcsr/obsidian-coverly/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/downloads/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/downloads/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="Downloads"></picture></a>
-  <a href="https://obsidian.md"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Obsidian-1.8.7%2B-FFE58A.svg?logo=obsidian&variant=outline&mode=dark"><img src="https://shieldcn.dev/badge/Obsidian-1.8.7%2B-7c3aed.svg?logo=obsidian&variant=outline&mode=light" alt="Obsidian 1.8.7+"></picture></a>
+  <a href="https://obsidian.md"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Obsidian-1.13.0%2B-FFE58A.svg?logo=obsidian&variant=outline&mode=dark"><img src="https://shieldcn.dev/badge/Obsidian-1.13.0%2B-7c3aed.svg?logo=obsidian&variant=outline&mode=light" alt="Obsidian 1.13.0+"></picture></a>
   <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/license/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="License"></picture></a>
 </p>
 

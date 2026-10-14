@@ -1,5 +1,5 @@
-import type { App, SettingControl, SettingDefinitionItem } from "obsidian";
-import { PluginSettingTab, Setting } from "obsidian";
+import type { App, SettingDefinitionItem } from "obsidian";
+import { PluginSettingTab } from "obsidian";
 
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
@@ -129,61 +129,6 @@ export class CoverlySettingTab extends PluginSettingTab {
     await this.applyChange(key as ControlKey, value);
   }
 
-  /** Fallback for Obsidian < 1.13: renders the same definitions imperatively. */
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-
-    for (const def of this.getSettingDefinitions()) {
-      if ("control" in def && def.control) {
-        this.renderControl(def.name, def.desc, def.control);
-      }
-    }
-  }
-
-  private renderControl(
-    name: string,
-    desc: string | DocumentFragment | undefined,
-    control: SettingControl<ControlKey>
-  ): void {
-    const setting = new Setting(this.containerEl)
-      .setName(name)
-      .setDesc(desc ?? "");
-    const current = this.getControlValue(control.key);
-    const save = (value: unknown): void => {
-      void this.setControlValue(control.key, value);
-    };
-
-    if (control.type === "dropdown") {
-      setting.addDropdown((dropdown) =>
-        dropdown
-          .addOptions(control.options)
-          .setValue(current as string)
-          .onChange(save)
-      );
-    } else if (control.type === "slider") {
-      setting.addSlider((slider) =>
-        slider
-          .setLimits(control.min, control.max, control.step)
-          .setValue(current as number)
-          .setDynamicTooltip()
-          .onChange(save)
-      );
-    } else if (control.type === "toggle") {
-      setting.addToggle((toggle) =>
-        toggle.setValue(current as boolean).onChange(save)
-      );
-    } else if (control.type === "secret") {
-      setting.addText((text) => {
-        text.inputEl.type = "password";
-        text
-          .setPlaceholder(t("settings.unsplashKey.placeholder"))
-          .setValue(current as string)
-          .onChange(save);
-      });
-    }
-  }
-
   private async applyChange(key: ControlKey, value: unknown): Promise<void> {
     const { plugin } = this;
     const { settings } = plugin;
@@ -210,16 +155,7 @@ export class CoverlySettingTab extends PluginSettingTab {
     await plugin.saveSettings();
     if (key === "language") {
       // Redesenha esta tela já no novo idioma.
-      this.redraw();
-    }
-  }
-
-  private redraw(): void {
-    // `update()` só existe a partir do Obsidian 1.13; antes, `display()` redesenha.
-    if (typeof this.update === "function") {
       this.update();
-    } else {
-      this.display();
     }
   }
 }
