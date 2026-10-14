@@ -969,9 +969,9 @@
   width: auto;
 }
 
-/* ---------- Ícone em miniatura: título da aba e explorador de arquivos ---------- */
+/* ---------- Ícone em miniatura: explorador de arquivos e título da aba ---------- */
 .mdp-inline-icon {
-  --mdp-inline-size: 16px;
+  --mdp-inline-size: 14px;
 
   display: inline-flex;
   flex-shrink: 0;
@@ -994,10 +994,36 @@
   margin-inline-end: 6px;
 }
 
-.view-header-title-container .mdp-inline-icon {
-  --mdp-inline-size: 18px;
+/*
+ * Título da barra superior: o ícone é um ::before do próprio título (ver
+ * title-icon.ts), então some e aparece junto com ele em temas que o escondem.
+ */
+.view-header-title[data-mdp-icon]::before {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 6px;
+  vertical-align: -2px;
+  content: "";
+  background: var(--mdp-title-icon-image) center / contain no-repeat;
+}
 
-  align-self: center;
+.view-header-title[data-mdp-icon="text"]::before {
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+  vertical-align: -1px;
+  content: attr(data-mdp-icon-text);
+  background: none;
+}
+
+.view-header-title[data-mdp-icon="mask"]::before {
+  background: var(--mdp-title-icon-color);
+  mask: var(--mdp-title-icon-image) center / contain no-repeat;
+}
+
+.view-header-title[data-mdp-icon="image"]::before {
+  border-radius: 3px;
 }
 
 .mdp-inline-icon .mdp-twemoji,

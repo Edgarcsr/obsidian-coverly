@@ -3,12 +3,14 @@ import { MarkdownView } from "obsidian";
 import type MdPlusPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 import { drawPageIcon } from "./page-icon";
+import { clearTitleIcon, paintTitleIcon } from "./title-icon";
 
 const ICON_CLASS = "mdp-inline-icon";
 
 /**
  * Ícone da nota, em miniatura, onde o nome dela aparece fora do cabeçalho:
- * no título da barra superior da aba e no explorador de arquivos, como no Notion.
+ * no título da barra superior da aba (ver title-icon.ts) e no explorador de
+ * arquivos, como no Notion.
  *
  * O Obsidian redesenha esses lugares por conta própria (ao rolar a árvore,
  * abrir pastas, trocar de nota), então cada contêiner é observado e o
@@ -18,6 +20,8 @@ const ICON_CLASS = "mdp-inline-icon";
 export class NoteIconDecorator {
   private readonly plugin: MdPlusPlugin;
   private readonly observers = new Map<HTMLElement, MutationObserver>();
+  /** Títulos das abas com ícone, para limpar ao descarregar o plugin. */
+  private readonly titles = new Set<HTMLElement>();
   private frame: number | null = null;
 
   constructor(plugin: MdPlusPlugin) {
@@ -47,6 +51,10 @@ export class NoteIconDecorator {
     for (const icon of document.querySelectorAll(`.${ICON_CLASS}`)) {
       icon.remove();
     }
+    for (const title of this.titles) {
+      clearTitleIcon(title);
+    }
+    this.titles.clear();
   }
 
   private decorateAll(): void {
@@ -82,7 +90,18 @@ export class NoteIconDecorator {
       }
       alive.add(container);
       this.observe(container);
-      this.place(container, title, view.file?.path ?? "");
+      this.titles.add(title);
+      paintTitleIcon(
+        this.plugin.app,
+        title,
+        this.iconFor(view.file?.path ?? ""),
+        this.plugin.settings.twemoji
+      );
+    }
+    for (const title of this.titles) {
+      if (!title.isConnected) {
+        this.titles.delete(title);
+      }
     }
 
     // Contêineres de abas fechadas não precisam mais ser observados.

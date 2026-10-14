@@ -97,7 +97,7 @@ export const drawLucide = (el: HTMLElement, name: string): void => {
 };
 
 /** Endereço da imagem do ícone, ou `null` se o ícone não for uma imagem. */
-const imageSource = (app: App, value: string): string | null => {
+export const iconImageSource = (app: App, value: string): string | null => {
   if (URL_PATTERN.test(value)) {
     return value;
   }
@@ -107,7 +107,7 @@ const imageSource = (app: App, value: string): string | null => {
 
 /** O ícone é uma imagem (link ou arquivo do vault), não emoji nem Lucide. */
 export const isImageIcon = (app: App, value: string): boolean =>
-  imageSource(app, value) !== null;
+  iconImageSource(app, value) !== null;
 
 /**
  * Desenha o ícone da página, emoji, Lucide ou imagem, dentro de `el`. Com
@@ -120,7 +120,7 @@ export const drawPageIcon = (
   twemoji: boolean
 ): void => {
   const lucide = parseLucide(value);
-  const image = lucide === null ? imageSource(app, value) : null;
+  const image = lucide === null ? iconImageSource(app, value) : null;
   el.toggleClass("is-lucide", lucide !== null);
   el.toggleClass("is-image", image !== null);
   if (lucide !== null) {
