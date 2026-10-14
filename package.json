@@ -1,8 +1,8 @@
 {
   "name": "coverly",
   "version": "0.1.0",
-  "description": "Capas e ícones de página no estilo Notion para o Obsidian",
-  "license": "0-BSD",
+  "description": "Notion-style page covers and icons for Obsidian",
+  "license": "MIT",
   "type": "module",
   "main": "main.js",
   "scripts": {
