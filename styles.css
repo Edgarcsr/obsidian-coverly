@@ -969,6 +969,45 @@
   width: auto;
 }
 
+/* ---------- Ícone em miniatura: título da aba e explorador de arquivos ---------- */
+.mdp-inline-icon {
+  --mdp-inline-size: 16px;
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--mdp-inline-size);
+  height: var(--mdp-inline-size);
+  margin-right: 6px;
+  font-size: calc(var(--mdp-inline-size) - 2px);
+  line-height: 1;
+}
+
+.view-header-title-container .mdp-inline-icon {
+  --mdp-inline-size: 18px;
+
+  align-self: center;
+}
+
+.mdp-inline-icon .mdp-twemoji,
+.mdp-inline-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mdp-inline-icon.is-image img {
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.mdp-inline-icon.is-lucide .svg-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.5;
+}
+
 /* Imagem no lugar do emoji, no mesmo tamanho */
 .mdp-header .mdp-icon.is-image img {
   display: block;

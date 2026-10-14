@@ -5,6 +5,7 @@ import { CoverPicker } from "./cover-picker";
 import { IconPicker } from "./icon-picker";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
+import { NoteIconDecorator } from "./note-icons";
 import { isImageIcon, parseLucide } from "./page-icon";
 import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
 import type { MdPlusSettings } from "./settings";
@@ -37,6 +38,7 @@ const notify = (message: string): Notice => new Notice(message);
 export default class MdPlusPlugin extends Plugin {
   settings: MdPlusSettings = { ...DEFAULT_SETTINGS };
   private readonly headers = new HeaderManager(this);
+  private readonly noteIcons = new NoteIconDecorator(this);
   /** Só um seletor (de capa ou de ícone) aberto por vez. */
   private picker: CoverPicker | IconPicker | null = null;
 
@@ -82,16 +84,21 @@ export default class MdPlusPlugin extends Plugin {
   onunload(): void {
     this.picker?.close();
     this.headers.destroy();
+    this.noteIcons.destroy();
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);
     }
   }
 
-  /** Mantém o cabeçalho em dia com a nota aberta, o modo da view e o frontmatter. */
+  /**
+   * Mantém o cabeçalho e os ícones do título e do explorador em dia com a
+   * nota aberta, o modo da view e o frontmatter.
+   */
   private registerHeaderSync(): void {
     const { workspace, metadataCache } = this.app;
     const schedule = (): void => {
       this.headers.schedule();
+      this.noteIcons.schedule();
     };
 
     workspace.onLayoutReady(schedule);
@@ -100,6 +107,8 @@ export default class MdPlusPlugin extends Plugin {
     this.registerEvent(workspace.on("file-open", schedule));
     this.registerEvent(workspace.on("css-change", schedule));
     this.registerEvent(metadataCache.on("changed", schedule));
+    // No início o cache pode ainda não estar pronto quando o layout fica.
+    this.registerEvent(metadataCache.on("resolved", schedule));
   }
 
   async loadSettings(): Promise<void> {
@@ -113,9 +122,10 @@ export default class MdPlusPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  /** Redesenha os cabeçalhos abertos depois de uma mudança nas configurações. */
+  /** Redesenha cabeçalhos e ícones depois de uma mudança nas configurações. */
   refreshHeaders(): void {
     this.headers.schedule();
+    this.noteIcons.schedule();
   }
 
   /** Passa altura, cantos e degradê da capa para o CSS, que os lê como variáveis. */
