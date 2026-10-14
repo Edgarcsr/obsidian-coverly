@@ -1,6 +1,17 @@
-# Coverly
+<div align="center">
 
-Notion-style page covers and icons for your Obsidian notes.
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/glow.svg?title=Coverly&subtitle=Notion-style%20page%20covers%20and%20icons%20for%20Obsidian&logo=lu:Image&theme=violet&mode=dark"><img src="https://shieldcn.dev/header/glow.svg?title=Coverly&subtitle=Notion-style%20page%20covers%20and%20icons%20for%20Obsidian&logo=lu:Image&theme=violet&mode=light" alt="Coverly" width="100%"></picture>
+
+<p>
+  <a href="https://github.com/Edgarcsr/obsidian-coverly/releases/latest"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/release/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/release/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="Latest release"></picture></a>
+  <a href="https://github.com/Edgarcsr/obsidian-coverly/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/downloads/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/downloads/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="Downloads"></picture></a>
+  <a href="https://github.com/Edgarcsr/obsidian-coverly/actions"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/ci/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="CI status"></picture></a>
+  <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/license/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="License"></picture></a>
+  <a href="https://obsidian.md"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Obsidian-1.8.7%2B-7c3aed.svg?logo=obsidian&variant=outline&mode=dark"><img src="https://shieldcn.dev/badge/Obsidian-1.8.7%2B-7c3aed.svg?logo=obsidian&variant=outline&mode=light" alt="Obsidian 1.8.7+"></picture></a>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/platform-desktop-gray.svg?logo=lu:Monitor&variant=outline&mode=dark"><img src="https://shieldcn.dev/badge/platform-desktop-gray.svg?logo=lu:Monitor&variant=outline&mode=light" alt="Desktop only"></picture>
+</p>
+
+</div>
 
 ## Features
 
