@@ -345,6 +345,13 @@ export class IconPicker extends TabbedPopover<Tab> {
         drawLucide(button, name);
       }
       shown += next.length;
+      // O observer só avisa quando a visibilidade do sentinela muda. Se ele
+      // continuou à vista (ex.: o filtro foi apagado), não haveria novo aviso
+      // e a grade pararia no primeiro lote; observar de novo força um aviso.
+      if (this.observer && next.length > 0) {
+        this.observer.unobserve(sentinel);
+        this.observer.observe(sentinel);
+      }
     };
 
     const filter = (): void => {
