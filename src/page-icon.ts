@@ -182,9 +182,10 @@ export const drawPageIcon = (
   const image = lucide === null ? iconImageSource(app, value) : null;
   el.toggleClass("is-lucide", lucide !== null);
   el.toggleClass("is-image", image !== null);
+  el.toggleClass("mdp-tinted", lucide !== null);
   if (lucide !== null) {
     drawLucide(el, lucide.name);
-    el.style.color = iconColorCss(lucide.color);
+    el.style.setProperty("--mdp-icon-color", iconColorCss(lucide.color));
   } else if (image === null) {
     drawEmoji(el, value, twemoji);
   } else {

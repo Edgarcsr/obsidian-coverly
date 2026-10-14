@@ -20,7 +20,7 @@
     "emojibase-data": "17.0.0",
     "esbuild": "0.25.5",
     "jiti": "^2.6.1",
-    "obsidian": "1.12.3",
+    "obsidian": "1.14.4",
     "oxfmt": "^0.71.0",
     "oxlint": "^1.86.0",
     "typescript": "^5.8.3",

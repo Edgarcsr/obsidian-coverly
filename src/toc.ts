@@ -36,6 +36,7 @@ interface TocState {
 
 const disposeState = (view: MarkdownView, state: TocState): void => {
   view.contentEl.removeEventListener("scroll", state.onScroll, true);
+  view.contentEl.removeClass("mdp-has-toc");
   state.el.remove();
 };
 
@@ -91,6 +92,7 @@ const buildToc = (
   // Os níveis ficam relativos ao menor título da nota: só H2 e H3 viram 1 e 2.
   const minLevel = Math.min(...headings.map((h) => h.level));
 
+  view.contentEl.addClass("mdp-has-toc");
   const el = view.contentEl.createDiv({ cls: "mdp-toc" });
   const linesEl = el.createDiv({ cls: "mdp-toc-lines" });
   const panel = el.createDiv({ cls: "mdp-toc-panel" });

@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import type { App, SettingControl, SettingDefinitionItem } from "obsidian";
 import { PluginSettingTab, Setting } from "obsidian";
 
 import { setLanguage, t } from "./i18n";
@@ -50,6 +50,18 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   unsplashKey: "",
 };
 
+type ControlKey =
+  | "language"
+  | "unsplashKey"
+  | "coverHeight"
+  | "coverRadius"
+  | "coverFade"
+  | "coverShade"
+  | "colorPalette"
+  | "twemoji"
+  | "toc"
+  | "linkPreview";
+
 export class CoverlySettingTab extends PluginSettingTab {
   private readonly plugin: CoverlyPlugin;
 
@@ -58,152 +70,156 @@ export class CoverlySettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
+  /** Declarative definition (Obsidian 1.13+): also feeds the settings search. */
+  // oxlint-disable-next-line class-methods-use-this
+  getSettingDefinitions(): SettingDefinitionItem<ControlKey>[] {
+    const slider = (key: ControlKey, max: number, step: number, min = 0) =>
+      ({ key, max, min, step, type: "slider" }) as const;
+    const named = (key: ControlKey) => ({
+      desc: t(`settings.${key}.desc`),
+      name: t(`settings.${key}.name`),
+    });
+
+    return [
+      {
+        ...named("language"),
+        control: {
+          key: "language",
+          options: {
+            auto: t("settings.language.auto"),
+            en: "English",
+            pt: "Português",
+          },
+          type: "dropdown",
+        },
+      },
+      {
+        ...named("unsplashKey"),
+        control: { key: "unsplashKey", type: "secret" },
+      },
+      { ...named("coverHeight"), control: slider("coverHeight", 400, 10, 120) },
+      { ...named("coverRadius"), control: slider("coverRadius", 40, 2) },
+      { ...named("coverFade"), control: slider("coverFade", 100, 5) },
+      { ...named("coverShade"), control: slider("coverShade", 100, 5) },
+      {
+        ...named("colorPalette"),
+        control: {
+          key: "colorPalette",
+          options: {
+            notion: t("settings.colorPalette.notion"),
+            tailwind: t("settings.colorPalette.tailwind"),
+          },
+          type: "dropdown",
+        },
+      },
+      { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
+      { ...named("toc"), control: { key: "toc", type: "toggle" } },
+      {
+        ...named("linkPreview"),
+        control: { key: "linkPreview", type: "toggle" },
+      },
+    ];
+  }
+
+  getControlValue(key: string): unknown {
+    return this.plugin.settings[key as ControlKey];
+  }
+
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    await this.applyChange(key as ControlKey, value);
+  }
+
+  /** Fallback for Obsidian < 1.13: renders the same definitions imperatively. */
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl)
-      .setName(t("settings.language.name"))
-      .setDesc(t("settings.language.desc"))
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("auto", t("settings.language.auto"))
-          .addOption("pt", "Português")
-          .addOption("en", "English")
-          .setValue(this.plugin.settings.language)
-          .onChange(async (value) => {
-            this.plugin.settings.language = value as Language;
-            setLanguage(this.plugin.settings.language);
-            this.plugin.refreshHeaders();
-            await this.plugin.saveSettings();
-            // Redesenha esta tela já no novo idioma.
-            this.display();
-          })
-      );
+    for (const def of this.getSettingDefinitions()) {
+      if ("control" in def && def.control) {
+        this.renderControl(def.name, def.desc, def.control);
+      }
+    }
+  }
 
-    new Setting(containerEl)
-      .setName(t("settings.unsplashKey.name"))
-      .setDesc(t("settings.unsplashKey.desc"))
-      .addText((text) => {
+  private renderControl(
+    name: string,
+    desc: string | DocumentFragment | undefined,
+    control: SettingControl<ControlKey>
+  ): void {
+    const setting = new Setting(this.containerEl)
+      .setName(name)
+      .setDesc(desc ?? "");
+    const current = this.getControlValue(control.key);
+    const save = (value: unknown): void => {
+      void this.setControlValue(control.key, value);
+    };
+
+    if (control.type === "dropdown") {
+      setting.addDropdown((dropdown) =>
+        dropdown
+          .addOptions(control.options)
+          .setValue(current as string)
+          .onChange(save)
+      );
+    } else if (control.type === "slider") {
+      setting.addSlider((slider) =>
+        slider
+          .setLimits(control.min, control.max, control.step)
+          .setValue(current as number)
+          .setDynamicTooltip()
+          .onChange(save)
+      );
+    } else if (control.type === "toggle") {
+      setting.addToggle((toggle) =>
+        toggle.setValue(current as boolean).onChange(save)
+      );
+    } else if (control.type === "secret") {
+      setting.addText((text) => {
         text.inputEl.type = "password";
         text
           .setPlaceholder(t("settings.unsplashKey.placeholder"))
-          .setValue(this.plugin.settings.unsplashKey)
-          .onChange(async (value) => {
-            this.plugin.settings.unsplashKey = value.trim();
-            await this.plugin.saveSettings();
-          });
+          .setValue(current as string)
+          .onChange(save);
       });
+    }
+  }
 
-    new Setting(containerEl)
-      .setName(t("settings.coverHeight.name"))
-      .setDesc(t("settings.coverHeight.desc"))
-      .addSlider((slider) =>
-        slider
-          .setLimits(120, 400, 10)
-          .setValue(this.plugin.settings.coverHeight)
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.coverHeight = value;
-            this.plugin.applyCoverStyle();
-            await this.plugin.saveSettings();
-          })
-      );
+  private async applyChange(key: ControlKey, value: unknown): Promise<void> {
+    const { plugin } = this;
+    const { settings } = plugin;
 
-    new Setting(containerEl)
-      .setName(t("settings.coverRadius.name"))
-      .setDesc(t("settings.coverRadius.desc"))
-      .addSlider((slider) =>
-        slider
-          .setLimits(0, 40, 2)
-          .setValue(this.plugin.settings.coverRadius)
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.coverRadius = value;
-            this.plugin.applyCoverStyle();
-            await this.plugin.saveSettings();
-          })
-      );
+    if (key === "language") {
+      settings.language = value as Language;
+      setLanguage(settings.language);
+      plugin.refreshHeaders();
+    } else if (key === "unsplashKey") {
+      settings.unsplashKey = String(value).trim();
+    } else if (key === "colorPalette") {
+      settings.colorPalette = value as ColorPalette;
+      setColorPalette(settings.colorPalette);
+    } else if (key === "linkPreview") {
+      settings.linkPreview = value as boolean;
+    } else if (key === "twemoji" || key === "toc") {
+      settings[key] = value as boolean;
+      plugin.refreshHeaders();
+    } else {
+      settings[key] = value as number;
+      plugin.applyCoverStyle();
+    }
 
-    new Setting(containerEl)
-      .setName(t("settings.coverFade.name"))
-      .setDesc(t("settings.coverFade.desc"))
-      .addSlider((slider) =>
-        slider
-          .setLimits(0, 100, 5)
-          .setValue(this.plugin.settings.coverFade)
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.coverFade = value;
-            this.plugin.applyCoverStyle();
-            await this.plugin.saveSettings();
-          })
-      );
+    await plugin.saveSettings();
+    if (key === "language") {
+      // Redesenha esta tela já no novo idioma.
+      this.redraw();
+    }
+  }
 
-    new Setting(containerEl)
-      .setName(t("settings.coverShade.name"))
-      .setDesc(t("settings.coverShade.desc"))
-      .addSlider((slider) =>
-        slider
-          .setLimits(0, 100, 5)
-          .setValue(this.plugin.settings.coverShade)
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.coverShade = value;
-            this.plugin.applyCoverStyle();
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.colorPalette.name"))
-      .setDesc(t("settings.colorPalette.desc"))
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("tailwind", t("settings.colorPalette.tailwind"))
-          .addOption("notion", t("settings.colorPalette.notion"))
-          .setValue(this.plugin.settings.colorPalette)
-          .onChange(async (value) => {
-            this.plugin.settings.colorPalette = value as ColorPalette;
-            setColorPalette(this.plugin.settings.colorPalette);
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.twemoji.name"))
-      .setDesc(t("settings.twemoji.desc"))
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.twemoji)
-          .onChange(async (value) => {
-            this.plugin.settings.twemoji = value;
-            this.plugin.refreshHeaders();
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.toc.name"))
-      .setDesc(t("settings.toc.desc"))
-      .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.toc).onChange(async (value) => {
-          this.plugin.settings.toc = value;
-          this.plugin.refreshHeaders();
-          await this.plugin.saveSettings();
-        })
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.linkPreview.name"))
-      .setDesc(t("settings.linkPreview.desc"))
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.linkPreview)
-          .onChange(async (value) => {
-            this.plugin.settings.linkPreview = value;
-            await this.plugin.saveSettings();
-          })
-      );
+  private redraw(): void {
+    // `update()` só existe a partir do Obsidian 1.13; antes, `display()` redesenha.
+    if (typeof this.update === "function") {
+      this.update();
+    } else {
+      this.display();
+    }
   }
 }

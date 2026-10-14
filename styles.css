@@ -5,6 +5,7 @@
  * então lá elas continuam aparecendo e podem ser editadas.
  */
 :is(.markdown-source-view, .markdown-preview-view)
+  .metadata-container
   .metadata-property:is(
     [data-property-key="cover"],
     [data-property-key="cover-position"],
@@ -12,20 +13,16 @@
     [data-property-key="cover-credit-url"],
     [data-property-key="icon"]
   ) {
-  display: none !important;
+  display: none;
 }
 
-/* Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar propriedade" */
-:is(.markdown-source-view, .markdown-preview-view)
-  .metadata-container:not(
-    :has(
-      .metadata-property:not([data-property-key="cover"]):not(
-          [data-property-key="cover-position"]
-        ):not([data-property-key="cover-credit"]):not(
-          [data-property-key="cover-credit-url"]
-        ):not([data-property-key="icon"])
-    )
-  ) {
+/*
+ * Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar
+ * propriedade". O plugin marca a nota com .mdp-props-empty (ver properties.ts).
+ */
+.mdp-props-empty
+  :is(.markdown-source-view, .markdown-preview-view)
+  .metadata-container {
   display: none;
 }
 
@@ -296,7 +293,7 @@
 
 /* Como no Notion: aparecem ao passar o mouse pelo cabeçalho ou pelo título */
 .mdp-header:hover .mdp-add-row,
-.mdp-header:has(+ .inline-title:hover) .mdp-add-row,
+.mdp-header.is-title-hover .mdp-add-row,
 .mdp-add-row:focus-within {
   opacity: 1;
 }
@@ -725,23 +722,23 @@
 /*
  * O campo interno não tem visual próprio. Temas desenham uma linha embaixo
  * do input no foco (borda ou sombra), com seletores de foco que venceriam
- * uma regra comum, por isso o !important aqui.
+ * uma regra comum, por isso o prefixo `body` (mais especificidade) aqui.
  */
-.mdp-picker .mdp-search-field input,
-.mdp-picker .mdp-search-field input:hover,
-.mdp-picker .mdp-search-field input:focus,
-.mdp-picker .mdp-search-field input:focus-visible {
+body .mdp-picker .mdp-search-field input,
+body .mdp-picker .mdp-search-field input:hover,
+body .mdp-picker .mdp-search-field input:focus,
+body .mdp-picker .mdp-search-field input:focus-visible {
   flex: 1;
   min-width: 0;
   height: 100%;
   padding: 0;
   font-size: var(--font-ui-small);
   color: var(--text-normal);
-  background: transparent !important;
-  border: none !important;
+  background: transparent;
+  border: none;
   border-radius: 0;
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none;
+  box-shadow: none;
 }
 
 .mdp-picker .mdp-search-field input::placeholder {
@@ -1178,10 +1175,14 @@
 /*
  * Enquanto a nota é arrastada na árvore, o Obsidian pinta a linha com a cor de
  * destaque e o texto com a cor sobre ela; o ícone Lucide acompanha o texto em
- * vez de manter a cor escolhida (que vem inline, por isso o !important).
+ * vez de manter a cor escolhida (que vem da variável --mdp-icon-color).
  */
-.nav-file-title.is-being-dragged .mdp-inline-icon.is-lucide {
-  color: inherit !important;
+.mdp-tinted {
+  color: var(--mdp-icon-color);
+}
+
+.nav-file-title.is-being-dragged .mdp-inline-icon.mdp-tinted {
+  color: inherit;
 }
 
 .mdp-inline-icon.is-lucide .svg-icon {
@@ -1247,7 +1248,7 @@
  * seção atual fica em destaque. Com o mouse por cima, um cartão com os títulos
  * aparece no lugar dos traços.
  */
-.view-content:has(> .mdp-toc) {
+.view-content.mdp-has-toc {
   position: relative;
 }
 

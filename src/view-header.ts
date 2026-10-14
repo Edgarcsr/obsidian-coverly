@@ -4,6 +4,7 @@ import { buildHeader } from "./header";
 import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
+import { markEmptyProperties } from "./properties";
 
 export type Mode = "source" | "preview";
 
@@ -175,6 +176,7 @@ export class HeaderManager {
     for (const [view, state] of this.states) {
       if (!alive.has(view)) {
         disposeState(state);
+        view.contentEl.removeClass("mdp-props-empty");
         this.states.delete(view);
       }
     }
@@ -185,8 +187,9 @@ export class HeaderManager {
       window.cancelAnimationFrame(this.frame);
       this.frame = null;
     }
-    for (const state of this.states.values()) {
+    for (const [view, state] of this.states) {
       disposeState(state);
+      view.contentEl.removeClass("mdp-props-empty");
     }
     this.states.clear();
   }
@@ -199,9 +202,10 @@ export class HeaderManager {
       return;
     }
 
-    const data = dataFromFrontmatter(
-      this.plugin.app.metadataCache.getFileCache(file)?.frontmatter
-    );
+    const frontmatter =
+      this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+    const data = dataFromFrontmatter(frontmatter);
+    markEmptyProperties(view.contentEl, frontmatter);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
     const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
@@ -213,7 +217,7 @@ export class HeaderManager {
       if (!slot) {
         continue;
       }
-      this.watch(state, slot);
+      this.watch(state, slot, mode);
 
       let header = state.headers[mode];
       if (
@@ -248,7 +252,7 @@ export class HeaderManager {
     return state;
   }
 
-  private watch(state: ViewState, slot: Slot): void {
+  private watch(state: ViewState, slot: Slot, mode: Mode): void {
     // Observar o mesmo elemento de novo é inofensivo para o ResizeObserver.
     state.resize.observe(slot.scroller);
     if (state.observed.has(slot.sizer)) {
@@ -260,5 +264,15 @@ export class HeaderManager {
     observer.observe(slot.sizer, { childList: true });
     state.mutations.push(observer);
     state.observed.add(slot.sizer);
+
+    // O botão de adicionar também aparece ao passar o mouse pelo título (que vem depois do cabeçalho).
+    const toggleTitleHover = (hover: boolean) => (event: Event) => {
+      const { target } = event;
+      if (target instanceof Element && target.closest(".inline-title")) {
+        state.headers[mode]?.toggleClass("is-title-hover", hover);
+      }
+    };
+    slot.sizer.addEventListener("mouseover", toggleTitleHover(true));
+    slot.sizer.addEventListener("mouseout", toggleTitleHover(false));
   }
 }

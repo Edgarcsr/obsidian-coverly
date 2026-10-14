@@ -4,6 +4,7 @@ import { buildHeader } from "./header";
 import { isHoverLinkInfo, resolveHoverFile } from "./link-preview";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
+import { markEmptyProperties } from "./properties";
 import { MODES, anchorIn, bleed, findSlot, isPlaced } from "./view-header";
 import type { Mode, Slot } from "./view-header";
 
@@ -144,9 +145,9 @@ export class PopoverHeaders {
     if (!file) {
       return;
     }
-    const data = dataFromFrontmatter(
-      app.metadataCache.getFileCache(file)?.frontmatter
-    );
+    const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
+    const data = dataFromFrontmatter(frontmatter);
+    markEmptyProperties(popover, frontmatter);
     if (!data.cover && !data.icon) {
       return;
     }
