@@ -2,7 +2,7 @@ import { Notice } from "obsidian";
 
 import { firstImage, saveImageAttachment } from "./attachments";
 import { GALLERY } from "./gallery";
-import type MdPlusPlugin from "./main";
+import type CoverlyPlugin from "./main";
 import type { CreditInfo } from "./note-data";
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
@@ -26,7 +26,7 @@ const URL_PATTERN = /^https?:\/\//u;
 export type CoverPick = (value: string, credit?: CreditInfo) => Promise<void>;
 
 export interface CoverPickerOptions {
-  plugin: MdPlusPlugin;
+  plugin: CoverlyPlugin;
   sourcePath: string;
   /** Botão que abriu o seletor; sem ele o popover abre centralizado. */
   anchor: HTMLElement | null;

@@ -1,9 +1,9 @@
 {
-  "id": "md-plus",
-  "name": "MD Plus",
+  "id": "coverly",
+  "name": "Coverly",
   "version": "0.1.0",
   "minAppVersion": "1.6.0",
-  "description": "Capa e ícone de página estilo Notion.",
+  "description": "Capas e ícones de página no estilo Notion para suas notas.",
   "author": "Edgar Ribeiro",
   "isDesktopOnly": true
 }

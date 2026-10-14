@@ -1,6 +1,6 @@
 import { MarkdownView } from "obsidian";
 
-import type MdPlusPlugin from "./main";
+import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 import { drawPageIcon } from "./page-icon";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
@@ -18,13 +18,13 @@ const ICON_CLASS = "mdp-inline-icon";
  * que impede o observer de disparar a si mesmo sem fim.
  */
 export class NoteIconDecorator {
-  private readonly plugin: MdPlusPlugin;
+  private readonly plugin: CoverlyPlugin;
   private readonly observers = new Map<HTMLElement, MutationObserver>();
   /** Títulos das abas com ícone, para limpar ao descarregar o plugin. */
   private readonly titles = new Set<HTMLElement>();
   private frame: number | null = null;
 
-  constructor(plugin: MdPlusPlugin) {
+  constructor(plugin: CoverlyPlugin) {
     this.plugin = plugin;
   }
 

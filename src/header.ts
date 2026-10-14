@@ -1,6 +1,6 @@
 import { setIcon } from "obsidian";
 
-import type MdPlusPlugin from "./main";
+import type CoverlyPlugin from "./main";
 import { resolveCoverSource } from "./note-data";
 import type { CoverData } from "./note-data";
 import { drawPageIcon } from "./page-icon";
@@ -101,7 +101,7 @@ interface RepositionControls {
 }
 
 const attachReposition = (
-  plugin: MdPlusPlugin,
+  plugin: CoverlyPlugin,
   cover: HTMLElement,
   surface: HTMLElement,
   controls: RepositionControls,
@@ -197,7 +197,7 @@ const attachReposition = (
 };
 
 const buildCover = (
-  plugin: MdPlusPlugin,
+  plugin: CoverlyPlugin,
   data: CoverData,
   sourcePath: string
 ): HTMLElement => {
@@ -269,7 +269,7 @@ const buildCover = (
  * então o visual e as interações ficam idênticos nos dois.
  */
 export const buildHeader = (
-  plugin: MdPlusPlugin,
+  plugin: CoverlyPlugin,
   data: CoverData,
   sourcePath: string,
   entering: boolean

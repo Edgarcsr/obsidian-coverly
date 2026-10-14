@@ -1,7 +1,7 @@
 {
-  "name": "md-plus",
+  "name": "coverly",
   "version": "0.1.0",
-  "description": "Capa e ícone de página estilo Notion para o Obsidian",
+  "description": "Capas e ícones de página no estilo Notion para o Obsidian",
   "license": "0-BSD",
   "type": "module",
   "main": "main.js",

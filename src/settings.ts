@@ -1,9 +1,9 @@
 import type { App } from "obsidian";
 import { PluginSettingTab, Setting } from "obsidian";
 
-import type MdPlusPlugin from "./main";
+import type CoverlyPlugin from "./main";
 
-export interface MdPlusSettings {
+export interface CoverlySettings {
   unsplashKey: string;
   coverHeight: number;
   /** Raio dos cantos da capa, em pixels. 0 = cantos retos. */
@@ -22,7 +22,7 @@ export interface MdPlusSettings {
   twemoji: boolean;
 }
 
-export const DEFAULT_SETTINGS: MdPlusSettings = {
+export const DEFAULT_SETTINGS: CoverlySettings = {
   askIconColor: false,
   coverFade: 0,
   coverHeight: 240,
@@ -34,10 +34,10 @@ export const DEFAULT_SETTINGS: MdPlusSettings = {
   unsplashKey: "",
 };
 
-export class MdPlusSettingTab extends PluginSettingTab {
-  private readonly plugin: MdPlusPlugin;
+export class CoverlySettingTab extends PluginSettingTab {
+  private readonly plugin: CoverlyPlugin;
 
-  constructor(app: App, plugin: MdPlusPlugin) {
+  constructor(app: App, plugin: CoverlyPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }

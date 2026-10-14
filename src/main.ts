@@ -7,8 +7,8 @@ import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { NoteIconDecorator } from "./note-icons";
 import { isImageIcon, parseLucide } from "./page-icon";
-import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
-import type { MdPlusSettings } from "./settings";
+import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
+import type { CoverlySettings } from "./settings";
 import { HeaderManager } from "./view-header";
 
 /** Uma linha da grade de emojis. */
@@ -36,8 +36,8 @@ const removeKeys = (
 /** Aviso ao usuário. Devolve a notificação para não ser um efeito colateral solto. */
 const notify = (message: string): Notice => new Notice(message);
 
-export default class MdPlusPlugin extends Plugin {
-  settings: MdPlusSettings = { ...DEFAULT_SETTINGS };
+export default class CoverlyPlugin extends Plugin {
+  settings: CoverlySettings = { ...DEFAULT_SETTINGS };
   private readonly headers = new HeaderManager(this);
   private readonly noteIcons = new NoteIconDecorator(this);
   /** Só um seletor (de capa ou de ícone) aberto por vez. */
@@ -47,7 +47,7 @@ export default class MdPlusPlugin extends Plugin {
     await this.loadSettings();
     this.applyCoverStyle();
 
-    this.addSettingTab(new MdPlusSettingTab(this.app, this));
+    this.addSettingTab(new CoverlySettingTab(this.app, this));
     this.registerHeaderSync();
 
     this.addCommand({
@@ -115,7 +115,7 @@ export default class MdPlusPlugin extends Plugin {
   async loadSettings(): Promise<void> {
     this.settings = {
       ...DEFAULT_SETTINGS,
-      ...((await this.loadData()) as Partial<MdPlusSettings> | null),
+      ...((await this.loadData()) as Partial<CoverlySettings> | null),
     };
   }
 

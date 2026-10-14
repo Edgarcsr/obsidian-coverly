@@ -23,7 +23,7 @@ interface UnsplashResult {
 const API = "https://api.unsplash.com";
 
 /** Parâmetro de atribuição exigido pelas diretrizes da API do Unsplash. */
-const UTM = "utm_source=md-plus&utm_medium=referral";
+const UTM = "utm_source=coverly&utm_medium=referral";
 
 const headers = (accessKey: string): Record<string, string> => ({
   "Accept-Version": "v1",

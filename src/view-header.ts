@@ -1,7 +1,7 @@
 import { MarkdownView } from "obsidian";
 
 import { buildHeader } from "./header";
-import type MdPlusPlugin from "./main";
+import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 
 type Mode = "source" | "preview";
@@ -128,11 +128,11 @@ const bleed = (header: HTMLElement, scroller: HTMLElement): void => {
  * consegue ocupar o topo inteiro como no Notion.
  */
 export class HeaderManager {
-  private readonly plugin: MdPlusPlugin;
+  private readonly plugin: CoverlyPlugin;
   private readonly states = new Map<MarkdownView, ViewState>();
   private frame: number | null = null;
 
-  constructor(plugin: MdPlusPlugin) {
+  constructor(plugin: CoverlyPlugin) {
     this.plugin = plugin;
   }
 
