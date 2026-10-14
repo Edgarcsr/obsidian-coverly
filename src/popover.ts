@@ -21,6 +21,10 @@ export const searchField = (
 
 /** Distância entre o botão que abriu e o popover. */
 const GAP = 6;
+/** Altura máxima do popover, a mesma do CSS (`.mdp-picker`). */
+const MAX_HEIGHT = 480;
+/** Abaixo disso de espaço embaixo do botão, o popover abre acima dele. */
+const MIN_BELOW = 240;
 /** Espaço mínimo entre o popover e as bordas da janela. */
 const MARGIN = 8;
 
@@ -163,24 +167,27 @@ export abstract class TabbedPopover<T extends string> {
   }
 
   /**
-   * Abre abaixo do botão. Se o botão está na metade direita da janela, o
-   * popover se alinha pela direita dele; senão, pela esquerda. Sem espaço
-   * embaixo, abre acima.
+   * Abre embaixo do botão, começando na borda esquerda dele. Em vez de subir
+   * por cima do botão, encolhe para caber no espaço de baixo (o corpo rola);
+   * só abre acima se embaixo sobrar muito pouco.
    */
   private place(): void {
+    this.el.style.maxHeight = "";
     const width = this.el.offsetWidth;
-    const height = this.el.offsetHeight;
+    let height = this.el.offsetHeight;
     let left = (window.innerWidth - width) / 2;
     let top = window.innerHeight * 0.15;
 
     if (this.anchor?.isConnected) {
       const rect = this.anchor.getBoundingClientRect();
-      const onRightHalf = rect.left + rect.width / 2 > window.innerWidth / 2;
-      left = onRightHalf ? rect.right - width : rect.left;
-      top = rect.bottom + GAP;
-      if (top + height > window.innerHeight - MARGIN) {
-        top = rect.top - GAP - height;
-      }
+      const below = window.innerHeight - rect.bottom - GAP - MARGIN;
+      const above = rect.top - GAP - MARGIN;
+      const useAbove = below < MIN_BELOW && above > below;
+      const room = Math.min(useAbove ? above : below, MAX_HEIGHT);
+      this.el.style.maxHeight = `${Math.max(room, 0)}px`;
+      height = Math.min(height, room);
+      left = rect.left;
+      top = useAbove ? rect.top - GAP - height : rect.bottom + GAP;
     }
 
     this.el.style.left = `${clamp(left, MARGIN, window.innerWidth - width - MARGIN)}px`;
