@@ -1,10 +1,10 @@
 {
-  "id": "coverly",
-  "name": "Coverly",
-  "version": "0.4.3",
-  "minAppVersion": "1.8.7",
-  "description": "Add Notion-style covers and icons to your notes.",
-  "author": "Edgar Ribeiro",
-  "isDesktopOnly": true,
-  "authorUrl": "https://github.com/Edgarcsr"
+	"id": "coverly",
+	"name": "Coverly",
+	"version": "0.4.4",
+	"minAppVersion": "1.8.7",
+	"description": "Add Notion-style covers and icons to your notes.",
+	"author": "Edgar Ribeiro",
+	"isDesktopOnly": true,
+	"authorUrl": "https://github.com/Edgarcsr"
 }
