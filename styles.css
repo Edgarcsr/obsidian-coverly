@@ -984,6 +984,16 @@
   line-height: 1;
 }
 
+/*
+ * Na árvore, o ícone ocupa o recuo à esquerda (onde as pastas têm a seta),
+ * e o nome continua alinhado com o das notas sem ícone: as margens somam
+ * o oposto da largura do ícone.
+ */
+.nav-file-title .mdp-inline-icon {
+  margin-inline-start: calc(-1 * var(--mdp-inline-size) - 6px);
+  margin-inline-end: 6px;
+}
+
 .view-header-title-container .mdp-inline-icon {
   --mdp-inline-size: 18px;
 
