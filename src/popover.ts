@@ -186,7 +186,7 @@ export abstract class TabbedPopover<T extends string> {
       const room = Math.min(useAbove ? above : below, MAX_HEIGHT);
       this.el.style.maxHeight = `${Math.max(room, 0)}px`;
       height = Math.min(height, room);
-      left = rect.left;
+      ({ left } = rect);
       top = useAbove ? rect.top - GAP - height : rect.bottom + GAP;
     }
 
