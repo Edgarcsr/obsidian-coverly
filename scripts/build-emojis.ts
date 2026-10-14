@@ -11,7 +11,7 @@ import path from "node:path";
 import en from "emojibase-data/en/compact.json";
 import pt from "emojibase-data/pt/compact.json";
 
-import { twemojiCode } from "../src/twemoji";
+import { twemojiCode } from "../src/twemoji-code";
 
 /** Grupos do emojibase, na ordem do Unicode; o 2 ("component") fica de fora. */
 const GROUPS = [0, 1, 3, 4, 5, 6, 7, 8, 9];
@@ -47,7 +47,12 @@ const groups = GROUPS.map((group) =>
         ...(entry.tags ?? []),
         englishLabel.get(entry.hexcode) ?? "",
       ]);
-      return [entry.unicode, [...keywords].filter(Boolean).join(" ")];
+      // [emoji, nome mostrado na dica, texto usado pelo filtro]
+      return [
+        entry.unicode,
+        entry.label,
+        [...keywords].filter(Boolean).join(" "),
+      ];
     })
 );
 

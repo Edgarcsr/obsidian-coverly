@@ -810,6 +810,36 @@
   gap: 2px;
 }
 
+/*
+ * Grade de emojis virtualizada (ver emoji-grid.ts): a altura total é fixa e só
+ * as linhas à vista existem, cada uma posicionada pelo código. As medidas
+ * (botão de 34px, espaço de 2px, título de 38px) precisam bater com as de lá.
+ */
+.mdp-emoji-grid {
+  position: relative;
+}
+
+.mdp-emoji-grid > * {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+
+.mdp-emoji-grid-row {
+  display: grid;
+  grid-template-columns: repeat(var(--mdp-emoji-columns, 1), minmax(0, 1fr));
+  gap: 2px;
+  height: 34px;
+}
+
+.mdp-picker-section-title.mdp-emoji-grid-title {
+  display: flex;
+  align-items: flex-end;
+  height: 38px;
+  margin: 0;
+  padding-bottom: 8px;
+}
+
 .mdp-icon-picker .mdp-picker-search + .mdp-icon-grid {
   margin-top: 2px;
 }
@@ -1143,6 +1173,15 @@
 .mdp-inline-icon.is-image img {
   object-fit: cover;
   border-radius: 3px;
+}
+
+/*
+ * Na nota selecionada da árvore o fundo vira a cor de destaque e o texto muda
+ * de cor; o ícone Lucide acompanha o texto em vez de manter a cor escolhida
+ * (que vem inline, por isso o !important).
+ */
+.nav-file-title.is-active .mdp-inline-icon.is-lucide {
+  color: inherit !important;
 }
 
 .mdp-inline-icon.is-lucide .svg-icon {

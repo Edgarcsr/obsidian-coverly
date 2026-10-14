@@ -3,6 +3,7 @@ import type { App } from "obsidian";
 
 import { renderColorButton, showColorVariants } from "./color-palette";
 import type { ColorState } from "./color-palette";
+import { EmojiGrid } from "./emoji-grid";
 import { EMOJI_GROUPS } from "./emojis";
 import type { EmojiEntry } from "./emojis";
 import { renderIconUpload } from "./icon-upload";
@@ -97,6 +98,7 @@ export class IconPicker extends TabbedPopover<Tab> {
   private observer: IntersectionObserver | null = null;
   private upload: IconUploadHandle | null = null;
   private onBodyScroll: (() => void) | null = null;
+  private grids: EmojiGrid[] = [];
 
   private readonly onPaste = (event: ClipboardEvent): void => {
     this.upload?.onPaste(event);
@@ -166,6 +168,10 @@ export class IconPicker extends TabbedPopover<Tab> {
   private resetTab(): void {
     this.observer?.disconnect();
     this.observer = null;
+    for (const grid of this.grids) {
+      grid.destroy();
+    }
+    this.grids = [];
     this.upload?.dispose();
     this.upload = null;
     this.closeVariants?.();
@@ -210,49 +216,62 @@ export class IconPicker extends TabbedPopover<Tab> {
         await this.pick(entry.emoji);
       }
     });
-    const list = this.body.createDiv();
-    let titles: HTMLElement[] = [];
+
+    /*
+     * Duas grades virtualizadas: a completa, montada uma vez e só oculta
+     * durante a busca (ao voltar, as linhas já desenhadas reaparecem), e a dos
+     * resultados, refeita a cada tecla. Cada uma só desenha o que está à vista.
+     */
+    const make = (rowEl: HTMLElement, entry: EmojiEntry): void => {
+      this.emojiButton(rowEl, entry);
+    };
+    const full = new EmojiGrid(this.body, this.body, make);
+    full.setSections(
+      sections.map((section) => ({
+        entries: section.emojis,
+        title: section.name,
+      }))
+    );
+    const results = new EmojiGrid(this.body, this.body, make);
+    const empty = this.body.createDiv({
+      cls: "mdp-picker-hint is-empty",
+      text: "Nenhum emoji encontrado.",
+    });
+    this.grids = [full, results];
+    let searching = false;
 
     let buttons: HTMLElement[] = [];
 
     // Marca na barra a seção que está no topo da rolagem.
     const highlight = (): void => {
       const top = this.body.scrollTop + row.offsetHeight + 4;
+      const tops = searching ? [] : full.sectionTops();
       let active = 0;
-      for (const [index, title] of titles.entries()) {
-        if (title.offsetTop <= top) {
+      for (const [index, sectionTop] of tops.entries()) {
+        if (sectionTop <= top) {
           active = index;
         }
       }
       for (const [index, button] of buttons.entries()) {
-        button.toggleClass("is-active", titles.length > 1 && index === active);
+        button.toggleClass("is-active", tops.length > 1 && index === active);
       }
     };
 
     const filter = (): void => {
       const query = normalize(input.value);
-      list.empty();
-      if (!query) {
-        visible = ALL_EMOJIS;
-        titles = sections.map((section) =>
-          this.emojiSection(list, section.name, section.emojis)
-        );
-        highlight();
-        return;
+      searching = Boolean(query);
+      visible = searching
+        ? ALL_EMOJIS.filter((entry) =>
+            normalize(entry.keywords).includes(query)
+          )
+        : ALL_EMOJIS;
+      full.toggle(!searching);
+      results.toggle(searching && visible.length > 0);
+      empty.toggle(searching && visible.length === 0);
+      if (searching) {
+        results.setSections([{ entries: visible, title: "Resultados" }]);
       }
-      titles = [];
       highlight();
-      visible = ALL_EMOJIS.filter((entry) =>
-        normalize(entry.keywords).includes(query)
-      );
-      if (visible.length === 0) {
-        list.createDiv({
-          cls: "mdp-picker-hint is-empty",
-          text: "Nenhum emoji encontrado.",
-        });
-        return;
-      }
-      this.emojiSection(list, "Resultados", visible);
     };
 
     // Barra de categorias no rodapé: cada botão rola até a sua seção.
@@ -267,44 +286,37 @@ export class IconPicker extends TabbedPopover<Tab> {
           input.value = "";
           filter();
         }
-        const title = titles[index];
-        if (title) {
-          this.body.scrollTop = title.offsetTop - row.offsetHeight;
+        const sectionTop = full.sectionTops()[index];
+        if (sectionTop !== undefined) {
+          this.body.scrollTop = sectionTop - row.offsetHeight;
         }
       });
       return button;
     });
 
-    this.onBodyScroll = highlight;
-    this.body.addEventListener("scroll", highlight, { passive: true });
+    const onScroll = (): void => {
+      (searching ? results : full).update();
+      highlight();
+    };
+    this.onBodyScroll = onScroll;
+    this.body.addEventListener("scroll", onScroll, { passive: true });
     input.addEventListener("input", filter);
     filter();
     input.focus();
   }
 
-  /** Desenha uma seção de emojis e devolve o título, usado como âncora da rolagem. */
-  private emojiSection(
-    parent: HTMLElement,
-    title: string,
-    entries: readonly EmojiEntry[]
-  ): HTMLElement {
-    const titleEl = parent.createDiv({
-      cls: "mdp-picker-section-title",
-      text: title,
-    });
-    const grid = parent.createDiv({ cls: "mdp-icon-grid is-emoji" });
-    for (const entry of entries) {
-      const button = optionButton(
-        grid,
-        entry.keywords,
-        entry.emoji === this.options.current,
-        async () => {
-          await this.pick(entry.emoji);
-        }
-      );
-      drawEmoji(button, entry.emoji, this.options.twemoji, true);
-    }
-    return titleEl;
+  /** Botão de um emoji, com o nome dele na dica. */
+  private emojiButton(grid: HTMLElement, entry: EmojiEntry): HTMLElement {
+    const button = optionButton(
+      grid,
+      entry.name,
+      entry.emoji === this.options.current,
+      async () => {
+        await this.pick(entry.emoji);
+      }
+    );
+    drawEmoji(button, entry.emoji, this.options.twemoji);
+    return button;
   }
 
   private renderIcons(): void {

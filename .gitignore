@@ -20,3 +20,6 @@ data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# Cache local dos emojis do Twemoji (gerado pelo plugin)
+twemoji-cache.json

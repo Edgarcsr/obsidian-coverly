@@ -10,10 +10,14 @@ import { isImageIcon, parseLucide } from "./page-icon";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
 import { TocManager } from "./toc";
+import { closeTwemojiCache, loadTwemojiCache } from "./twemoji";
 import { HeaderManager } from "./view-header";
 
 /** Uma linha da grade de emojis. */
 const MAX_RECENT_EMOJIS = 12;
+
+/** SVGs do Twemoji já baixados, na pasta do plugin (ver twemoji.ts). */
+const TWEMOJI_CACHE_FILE = "twemoji-cache.json";
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
 
@@ -48,6 +52,14 @@ export default class CoverlyPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
     this.applyCoverStyle();
+    // Antes do primeiro desenho, para os emojis já baixados aparecerem na hora.
+    const pluginDir =
+      this.manifest.dir ??
+      `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
+    await loadTwemojiCache(
+      this.app.vault.adapter,
+      `${pluginDir}/${TWEMOJI_CACHE_FILE}`
+    );
 
     this.addSettingTab(new CoverlySettingTab(this.app, this));
     this.registerHeaderSync();
@@ -89,6 +101,7 @@ export default class CoverlyPlugin extends Plugin {
     this.headers.destroy();
     this.noteIcons.destroy();
     this.toc.destroy();
+    void closeTwemojiCache();
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);
     }

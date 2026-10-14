@@ -2,6 +2,8 @@ import EMOJI_DATA from "./emoji-data.json";
 
 export interface EmojiEntry {
   emoji: string;
+  /** Nome do emoji em português, mostrado na dica ao passar o mouse. */
+  name: string;
   /** Nome e palavras-chave em português, mais o nome em inglês, para o filtro. */
   keywords: string;
 }
@@ -32,8 +34,12 @@ const GROUPS: readonly Omit<EmojiGroup, "emojis">[] = [
 /** Todos os emojis da aba Emoji, em grupos na ordem em que aparecem. */
 export const EMOJI_GROUPS: EmojiGroup[] = GROUPS.map((group, index) => ({
   ...group,
-  emojis: (EMOJI_DATA[index] ?? []).map(([emoji = "", keywords = ""]) => ({
-    emoji,
-    keywords,
-  })),
+  emojis: (EMOJI_DATA[index] ?? []).map(
+    ([emoji = "", name = "", keywords = ""]) => ({
+      emoji,
+      keywords,
+      // "rosto risonho" → "Rosto risonho"
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+    })
+  ),
 }));

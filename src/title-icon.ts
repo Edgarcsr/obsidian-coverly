@@ -6,7 +6,7 @@ import {
   iconImageSource,
   parseLucide,
 } from "./page-icon";
-import { twemojiUrl } from "./twemoji";
+import { cacheTwemoji, twemojiUrl } from "./twemoji";
 
 /**
  * Ícone no título da barra superior da aba, desenhado como `::before` do
@@ -111,6 +111,13 @@ export const paintTitleIcon = (
   const url = twemojiUrl(value);
   setKind(title, "image", cssUrl(url));
   const probe = new Image();
+  probe.addEventListener(
+    "load",
+    () => {
+      cacheTwemoji(value);
+    },
+    { once: true }
+  );
   probe.addEventListener(
     "error",
     () => {

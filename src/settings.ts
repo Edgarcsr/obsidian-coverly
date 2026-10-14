@@ -132,7 +132,7 @@ export class CoverlySettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Emojis no estilo do X")
       .setDesc(
-        "Desenha os emojis com o Twemoji. As imagens são baixadas do jsDelivr (cdn.jsdelivr.net) quando aparecem; nada da nota é enviado. Desligado, usa os emojis do sistema."
+        "Desenha os emojis com o Twemoji. As imagens são baixadas do jsDelivr (cdn.jsdelivr.net) na primeira vez que aparecem e ficam guardadas na pasta do plugin; nada da nota é enviado. Desligado, usa os emojis do sistema."
       )
       .addToggle((toggle) =>
         toggle
