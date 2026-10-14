@@ -750,6 +750,8 @@
 .mdp-picker .mdp-icon-option .svg-icon {
   width: 20px;
   height: 20px;
+  /* Traço mais grosso que o padrão do Obsidian, como no Notion: lê melhor */
+  stroke-width: 2.25;
 }
 
 /* Na grade de ícones a cor vem da paleta, aplicada na própria grade */
@@ -904,11 +906,11 @@
   height: 1px;
 }
 
-/* Ícone Lucide no lugar do emoji: mesmo tamanho visual, na cor escolhida */
+/* Ícone Lucide no lugar do emoji: mesmo tamanho visual, na cor escolhida, com traço grosso como no Notion */
 .mdp-header .mdp-icon.is-lucide .svg-icon {
   width: 64px;
   height: 64px;
-  stroke-width: 1.5;
+  stroke-width: 2.5;
 }
 
 /* Aba Fazer upload do ícone: botão largo, dica e rodapé com Cancelar/Salvar */
