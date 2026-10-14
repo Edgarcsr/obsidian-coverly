@@ -88,8 +88,12 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
   });
   setTooltip(custom, "Escolher outra cor");
   const customDot = custom.createSpan({ cls: "mdp-color-dot is-custom" });
-  const input = custom.createEl("input", { type: "color" });
-  input.hide();
+  // Invisível, mas com posição: o seletor do sistema abre ancorado nele, e
+  // com display: none abriria no canto da janela.
+  const input = custom.createEl("input", {
+    cls: "mdp-color-input",
+    type: "color",
+  });
   const showCustom = (id: string): void => {
     customDot.style.background = isCustomColor(id) ? id : "";
   };

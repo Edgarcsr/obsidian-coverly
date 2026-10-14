@@ -825,6 +825,7 @@
 }
 
 .mdp-picker .mdp-color-swatch {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -844,6 +845,16 @@
 
 .mdp-picker .mdp-color-swatch.is-selected {
   box-shadow: inset 0 0 0 1.5px var(--text-muted);
+}
+
+/* Seletor de cor do sistema: invisível sobre a bolinha, para abrir ancorado nela */
+.mdp-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Barra de categorias da aba Emoji, fixa no rodapé do popover */
