@@ -87,6 +87,9 @@ const PALETTES: Record<ColorPalette, IconColor[]> = {
   tailwind: TAILWIND_COLORS,
 };
 
+export const isColorPalette = (value: unknown): value is ColorPalette =>
+  typeof value === "string" && Object.keys(PALETTES).includes(value);
+
 let palette: ColorPalette = "tailwind";
 
 export const setColorPalette = (value: ColorPalette): void => {

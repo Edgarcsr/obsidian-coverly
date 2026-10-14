@@ -8,7 +8,12 @@ import { LinkPreview } from "./link-preview";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { NoteIconDecorator } from "./note-icons";
-import { isImageIcon, parseLucide, setColorPalette } from "./page-icon";
+import {
+  isColorPalette,
+  isImageIcon,
+  parseLucide,
+  setColorPalette,
+} from "./page-icon";
 import { PopoverHeaders } from "./popover-header";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
@@ -145,6 +150,10 @@ export default class CoverlyPlugin extends Plugin {
       ...DEFAULT_SETTINGS,
       ...((await this.loadData()) as Partial<CoverlySettings> | null),
     };
+    // Uma paleta que não existe mais (ou valor estranho) volta para a padrão.
+    if (!isColorPalette(this.settings.colorPalette)) {
+      this.settings.colorPalette = DEFAULT_SETTINGS.colorPalette;
+    }
   }
 
   async saveSettings(): Promise<void> {
