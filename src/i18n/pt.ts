@@ -4,6 +4,7 @@
  * Use `{nome}` para valores que entram na frase.
  */
 export const pt = {
+  "color.accent": "Destaque do tema",
   "color.amber": "Âmbar",
   "color.askAlways": "Perguntar sempre",
   "color.blue": "Azul",
@@ -122,6 +123,7 @@ export const pt = {
   "settings.colorPalette.name": "Cores dos ícones",
   "settings.colorPalette.notion": "Cores do Notion",
   "settings.colorPalette.tailwind": "Cores atuais (Tailwind)",
+  "settings.colorPalette.theme": "Cores do tema do Obsidian",
   "settings.coverFade.desc":
     "Quanto da capa, de baixo para cima, some em degradê até a nota. Zero desliga o efeito.",
   "settings.coverFade.name": "Degradê na parte de baixo",
