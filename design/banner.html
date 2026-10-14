@@ -5,9 +5,14 @@
 <title>Coverly banner</title>
 <style>
   /* Fonte do banner do README. Gera docs/banner.png:
-     msedge --headless --screenshot=docs/banner.png --window-size=1600,640 --force-device-scale-factor=2 design/banner.html */
+     msedge --headless --screenshot=docs/banner.png --window-size=1600,640 --force-device-scale-factor=2 design/banner.html
+     node design/round-corners.mjs docs/banner.png 72 */
   * { box-sizing: border-box; margin: 0; }
+  html { background: #141414; }
   html, body { width: 1600px; height: 640px; overflow: hidden; }
+  /* O fundo do html é sólido; os cantos viram transparentes depois, em round-corners.mjs */
+  body { border-radius: 36px; }
+  body::after { content: ""; position: absolute; inset: 0; z-index: 10; border-radius: inherit; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.10); pointer-events: none; }
   body {
     font-family: "Segoe UI", "Inter", system-ui, sans-serif;
     color: #dadada;
