@@ -1,5 +1,6 @@
 import { setIcon } from "obsidian";
 
+import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
 
 /**
@@ -83,8 +84,7 @@ export abstract class TabbedPopover<T extends string> {
     this.anchor = anchor;
     this.tabs = tabs;
     this.tab = initial;
-    this.el = document.createElement("div");
-    this.el.addClass("mdp-picker", className);
+    this.el = createDiv({ cls: ["mdp-picker", className] });
     this.tabsEl = this.el.createDiv({ cls: "mdp-picker-tabs" });
     this.body = this.el.createDiv({ cls: "mdp-picker-body" });
     this.footer = this.el.createDiv({ cls: "mdp-picker-footer" });
@@ -147,10 +147,13 @@ export abstract class TabbedPopover<T extends string> {
         cls: "mdp-picker-tab mdp-picker-remove",
         text: t("common.remove"),
       });
-      remove.addEventListener("click", async () => {
-        this.close();
-        await this.remove();
-      });
+      remove.addEventListener(
+        "click",
+        asyncListener(async () => {
+          this.close();
+          await this.remove();
+        })
+      );
     }
   }
 
@@ -172,7 +175,7 @@ export abstract class TabbedPopover<T extends string> {
    * só abre acima se embaixo sobrar muito pouco.
    */
   private place(): void {
-    this.el.style.maxHeight = "";
+    this.el.style.removeProperty("max-height");
     const width = this.el.offsetWidth;
     let height = this.el.offsetHeight;
     let left = (window.innerWidth - width) / 2;

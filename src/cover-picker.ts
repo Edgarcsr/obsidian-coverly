@@ -1,5 +1,6 @@
 import { Notice } from "obsidian";
 
+import { asyncListener } from "./async-listener";
 import { firstImage, saveImageAttachment } from "./attachments";
 import { GALLERY } from "./gallery";
 import { t } from "./i18n";
@@ -55,13 +56,14 @@ export class CoverPicker extends TabbedPopover<Tab> {
    * Ctrl+V com uma imagem na área de transferência vira a capa, em qualquer
    * aba. Texto colado (um link, por exemplo) segue o caminho normal do campo.
    */
-  private readonly onPaste = async (event: ClipboardEvent): Promise<void> => {
+  private readonly onPaste = (event: ClipboardEvent): void => {
     const image = firstImage(event.clipboardData?.files);
     if (!image) {
       return;
     }
+    // O preventDefault precisa vir antes de qualquer await.
     event.preventDefault();
-    await this.upload(image);
+    void this.upload(image);
   };
 
   constructor(options: CoverPickerOptions) {
@@ -138,16 +140,19 @@ export class CoverPicker extends TabbedPopover<Tab> {
             attr: { alt: label, loading: "lazy", src: item.thumb },
           });
         }
-        tile.addEventListener("click", async () => {
-          await this.choose(
-            value,
-            item.kind === "artwork" ? item.credit : undefined
-          );
-          for (const other of this.body.querySelectorAll(".is-selected")) {
-            other.removeClass("is-selected");
-          }
-          tile.addClass("is-selected");
-        });
+        tile.addEventListener(
+          "click",
+          asyncListener(async () => {
+            await this.choose(
+              value,
+              item.kind === "artwork" ? item.credit : undefined
+            );
+            for (const other of this.body.querySelectorAll(".is-selected")) {
+              other.removeClass("is-selected");
+            }
+            tile.addClass("is-selected");
+          })
+        );
       }
     }
   }
@@ -171,12 +176,15 @@ export class CoverPicker extends TabbedPopover<Tab> {
     button.addEventListener("click", () => {
       input.click();
     });
-    input.addEventListener("change", async () => {
-      const file = input.files?.[0];
-      if (file) {
-        await this.upload(file);
-      }
-    });
+    input.addEventListener(
+      "change",
+      asyncListener(async () => {
+        const file = input.files?.[0];
+        if (file) {
+          await this.upload(file);
+        }
+      })
+    );
     zone.addEventListener("dragover", (event) => {
       event.preventDefault();
       zone.addClass("is-over");
@@ -184,14 +192,17 @@ export class CoverPicker extends TabbedPopover<Tab> {
     zone.addEventListener("dragleave", () => {
       zone.removeClass("is-over");
     });
-    zone.addEventListener("drop", async (event) => {
-      event.preventDefault();
-      zone.removeClass("is-over");
-      const file = event.dataTransfer?.files[0];
-      if (file) {
-        await this.upload(file);
-      }
-    });
+    zone.addEventListener(
+      "drop",
+      asyncListener(async (event) => {
+        event.preventDefault();
+        zone.removeClass("is-over");
+        const file = event.dataTransfer?.files[0];
+        if (file) {
+          await this.upload(file);
+        }
+      })
+    );
   }
 
   private async upload(file: File): Promise<void> {
@@ -241,12 +252,15 @@ export class CoverPicker extends TabbedPopover<Tab> {
     input.addEventListener("input", () => {
       submit.disabled = !URL_PATTERN.test(input.value.trim());
     });
-    input.addEventListener("keydown", async (event) => {
-      if (event.key === "Enter") {
-        await send();
-      }
-    });
-    submit.addEventListener("click", send);
+    input.addEventListener(
+      "keydown",
+      asyncListener(async (event) => {
+        if (event.key === "Enter") {
+          await send();
+        }
+      })
+    );
+    submit.addEventListener("click", asyncListener(send));
     input.focus();
   }
 
@@ -291,11 +305,14 @@ export class CoverPicker extends TabbedPopover<Tab> {
       }
     };
 
-    input.addEventListener("keydown", async (event) => {
-      if (event.key === "Enter") {
-        await run();
-      }
-    });
+    input.addEventListener(
+      "keydown",
+      asyncListener(async (event) => {
+        if (event.key === "Enter") {
+          await run();
+        }
+      })
+    );
     input.focus();
   }
 
@@ -317,16 +334,19 @@ export class CoverPicker extends TabbedPopover<Tab> {
       cls: "mdp-picker-photo-credit",
       text: photo.photographer.name,
     });
-    card.addEventListener("click", async () => {
-      // O aviso de download é obrigatório pela API, mas não deve bloquear a capa.
-      await trackUnsplashDownload(accessKey, photo.downloadLocation).catch(
-        () => false
-      );
-      await this.choose(photo.regular, {
-        name: `Foto de ${photo.photographer.name} no Unsplash`,
-        url: photo.photographer.url,
-      });
-    });
+    card.addEventListener(
+      "click",
+      asyncListener(async () => {
+        // O aviso de download é obrigatório pela API, mas não deve bloquear a capa.
+        await trackUnsplashDownload(accessKey, photo.downloadLocation).catch(
+          () => false
+        );
+        await this.choose(photo.regular, {
+          name: `Foto de ${photo.photographer.name} no Unsplash`,
+          url: photo.photographer.url,
+        });
+      })
+    );
   }
 
   /** Aplica a capa e passa a mostrar "Remover", já que agora existe uma. */

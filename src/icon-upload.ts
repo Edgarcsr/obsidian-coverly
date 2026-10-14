@@ -1,6 +1,7 @@
 import { Notice, setIcon } from "obsidian";
 import type { App } from "obsidian";
 
+import { asyncListener } from "./async-listener";
 import { firstImage, saveImageAttachment } from "./attachments";
 import { t } from "./i18n";
 import { URL_PATTERN } from "./page-icon";
@@ -124,29 +125,32 @@ export const renderIconUpload = (
   });
 
   cancel.addEventListener("click", context.close);
-  save.addEventListener("click", async () => {
-    if (!staged) {
-      return;
-    }
-    try {
-      const value =
-        staged.kind === "file"
-          ? await saveImageAttachment(
-              context.app,
-              staged.file,
-              context.sourcePath
-            )
-          : staged.url;
-      await context.pick(value);
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : "";
-      notify(
-        reason
-          ? t("notice.saveFailedReason", { reason })
-          : t("notice.saveFailed")
-      );
-    }
-  });
+  save.addEventListener(
+    "click",
+    asyncListener(async () => {
+      if (!staged) {
+        return;
+      }
+      try {
+        const value =
+          staged.kind === "file"
+            ? await saveImageAttachment(
+                context.app,
+                staged.file,
+                context.sourcePath
+              )
+            : staged.url;
+        await context.pick(value);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : "";
+        notify(
+          reason
+            ? t("notice.saveFailedReason", { reason })
+            : t("notice.saveFailed")
+        );
+      }
+    })
+  );
 
   render();
 

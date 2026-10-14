@@ -57,7 +57,8 @@ export const searchUnsplash = async (
     throw new Error(t("unsplash.searchFailed", { status: res.status }));
   }
 
-  const results = (res.json?.results ?? []) as UnsplashResult[];
+  const body = res.json as { results?: UnsplashResult[] } | null;
+  const results = body?.results ?? [];
   return results.map((photo) => ({
     alt: photo.alt_description ?? "",
     downloadLocation: photo.links?.download_location ?? "",

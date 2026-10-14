@@ -1,6 +1,7 @@
 import { getIconIds, setIcon, setTooltip } from "obsidian";
 import type { App } from "obsidian";
 
+import { asyncListener } from "./async-listener";
 import { renderColorButton, showColorVariants } from "./color-palette";
 import type { ColorState } from "./color-palette";
 import { EmojiGrid } from "./emoji-grid";
@@ -49,7 +50,7 @@ const optionButton = (
     attr: { "aria-label": label },
     cls: selected ? "mdp-icon-option is-selected" : "mdp-icon-option",
   });
-  button.addEventListener("click", onClick);
+  button.addEventListener("click", asyncListener(onClick));
   return button;
 };
 
@@ -219,12 +220,12 @@ export class IconPicker extends TabbedPopover<Tab> {
     let visible = this.allEmojis;
     const { input, row } = this.searchRow(
       t("iconPicker.filterEmoji"),
-      async () => {
+      asyncListener(async () => {
         const entry = randomItem(visible);
         if (entry) {
           await this.pick(entry.emoji);
         }
-      }
+      })
     );
 
     /*
@@ -339,12 +340,12 @@ export class IconPicker extends TabbedPopover<Tab> {
 
     const { input, row } = this.searchRow(
       t("iconPicker.filterIcons"),
-      async () => {
+      asyncListener(async () => {
         const name = randomItem(matches);
         if (name) {
           await this.pick(lucideValue(name, this.colorState.color));
         }
-      }
+      })
     );
     this.body.createDiv({
       cls: "mdp-picker-section-title",

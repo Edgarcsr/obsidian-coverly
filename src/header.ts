@@ -1,6 +1,7 @@
 import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
+import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { resolveCoverSource } from "./note-data";
@@ -149,21 +150,27 @@ const attachReposition = (
     }
   };
 
-  controls.start.addEventListener("click", async () => {
-    active = true;
-    cover.addClass("is-repositioning");
-    document.addEventListener("keydown", onKeydown, true);
-    overflow = await measureOverflow();
-  });
+  controls.start.addEventListener(
+    "click",
+    asyncListener(async () => {
+      active = true;
+      cover.addClass("is-repositioning");
+      document.addEventListener("keydown", onKeydown, true);
+      overflow = await measureOverflow();
+    })
+  );
 
   controls.cancel.addEventListener("click", cancel);
 
-  controls.save.addEventListener("click", async () => {
-    exit();
-    if (Math.round(current) !== Math.round(initialPosition)) {
-      await plugin.setPosition(sourcePath, Math.round(current));
-    }
-  });
+  controls.save.addEventListener(
+    "click",
+    asyncListener(async () => {
+      exit();
+      if (Math.round(current) !== Math.round(initialPosition)) {
+        await plugin.setPosition(sourcePath, Math.round(current));
+      }
+    })
+  );
 
   cover.addEventListener("pointerdown", (event) => {
     if (!active || overflow <= 0) {
@@ -224,8 +231,7 @@ const buildCover = (
   data: CoverData,
   sourcePath: string
 ): HTMLElement => {
-  const cover = document.createElement("div");
-  cover.className = "mdp-cover";
+  const cover = createDiv({ cls: "mdp-cover" });
 
   // Foto e gradiente ficam na mesma camada, então os dois podem ser reposicionados.
   const surface = cover.createDiv({ cls: "mdp-cover-image" });
@@ -242,9 +248,14 @@ const buildCover = (
     plugin.openCoverPicker(sourcePath, change);
   });
   const start = toolbarButton(toolbar, t("header.reposition"));
-  toolbarIconButton(toolbar, "trash-2", t("command.removeCover"), async () => {
-    await plugin.setCover(sourcePath, null);
-  });
+  toolbarIconButton(
+    toolbar,
+    "trash-2",
+    t("command.removeCover"),
+    asyncListener(async () => {
+      await plugin.setCover(sourcePath, null);
+    })
+  );
 
   // Pílula e dica do modo de reposicionar; o CSS troca uma pela outra.
   const editbar = cover.createDiv({ cls: "mdp-toolbar is-editing" });
@@ -289,8 +300,7 @@ export const buildHeader = (
   sourcePath: string,
   entering: boolean
 ): HTMLElement => {
-  const header = document.createElement("div");
-  header.addClass("mdp-header");
+  const header = createDiv({ cls: "mdp-header" });
   header.toggleClass("has-cover", Boolean(data.cover));
   header.toggleClass("has-icon", Boolean(data.icon));
   header.toggleClass("is-entering", entering);

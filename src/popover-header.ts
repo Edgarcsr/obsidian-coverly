@@ -80,7 +80,7 @@ export class PopoverHeaders {
     this.bodyObserver = new MutationObserver((records) => {
       for (const record of records) {
         for (const node of record.addedNodes) {
-          if (node instanceof HTMLElement && node.matches(POPOVER_SELECTOR)) {
+          if (node.instanceOf(HTMLElement) && node.matches(POPOVER_SELECTOR)) {
             this.attach(node);
           }
         }

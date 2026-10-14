@@ -1,5 +1,6 @@
 import { setTooltip } from "obsidian";
 
+import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
 import {
   drawLucide,
@@ -32,11 +33,14 @@ const toggle = (
 ): void => {
   const container = parent.createDiv({ cls: "checkbox-container" });
   container.toggleClass("is-enabled", enabled);
-  container.addEventListener("click", async () => {
-    const next = !container.hasClass("is-enabled");
-    container.toggleClass("is-enabled", next);
-    await onChange(next);
-  });
+  container.addEventListener(
+    "click",
+    asyncListener(async () => {
+      const next = !container.hasClass("is-enabled");
+      container.toggleClass("is-enabled", next);
+      await onChange(next);
+    })
+  );
 };
 
 /** Espaço mínimo entre os quadros e as bordas da janela. */
@@ -55,7 +59,7 @@ const placeFixed = (
   const rect = anchor.getBoundingClientRect();
   const below = window.innerHeight - rect.bottom - ANCHOR_GAP - EDGE;
   const above = rect.top - ANCHOR_GAP - EDGE;
-  el.style.maxHeight = "";
+  el.style.removeProperty("max-height");
   const height = el.offsetHeight;
   const useAbove = height > below && above > below;
   const room = Math.max(useAbove ? above : below, 0);
@@ -114,9 +118,12 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
     });
     setTooltip(swatch, t(color.label));
     swatch.createSpan({ cls: "mdp-color-dot" }).style.background = color.css;
-    swatch.addEventListener("click", async () => {
-      await apply(color.id, swatch);
-    });
+    swatch.addEventListener(
+      "click",
+      asyncListener(async () => {
+        await apply(color.id, swatch);
+      })
+    );
     swatches.push(swatch);
   }
 
@@ -153,9 +160,12 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
       preview(input.value);
       showCustom(input.value);
     });
-    input.addEventListener("change", async () => {
-      await apply(input.value, custom);
-    });
+    input.addEventListener(
+      "change",
+      asyncListener(async () => {
+        await apply(input.value, custom);
+      })
+    );
   }
 
   const ask = palette.createDiv({ cls: "mdp-color-ask" });
@@ -200,9 +210,12 @@ export const showColorVariants = (
     });
     variant.style.color = iconColorCss(id);
     drawLucide(variant, name);
-    variant.addEventListener("click", async () => {
-      await onPick(id);
-    });
+    variant.addEventListener(
+      "click",
+      asyncListener(async () => {
+        await onPick(id);
+      })
+    );
   }
 
   placeFixed(panel, target, "start");
