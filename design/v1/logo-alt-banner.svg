@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Cover Story (banner)">
+  <defs>
+    <linearGradient id="ab-grad" x1="0" y1="4" x2="64" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7B6CF6"/>
+      <stop offset="1" stop-color="#FF8FB1"/>
+    </linearGradient>
+    <mask id="ab-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <circle cx="22" cy="36" r="17" fill="#000"/>
+    </mask>
+  </defs>
+  <rect x="2" y="4" width="60" height="32" rx="10" fill="url(#ab-grad)" mask="url(#ab-gap)"/>
+  <circle cx="22" cy="36" r="13" fill="#FFC83D"/>
+  <path d="M42 50H58" fill="none" stroke="#7B6CF6" stroke-width="6" stroke-linecap="round"/>
+</svg>

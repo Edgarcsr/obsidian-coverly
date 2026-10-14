@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Logo">
+  <defs>
+    <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M9 70V44C9 36 15 30 23 30H41C49 30 55 36 55 44V70Z" fill="#000"/>
+      <circle cx="23" cy="30" r="10" fill="#000"/>
+    </mask>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="currentColor" mask="url(#m)"/>
+</svg>

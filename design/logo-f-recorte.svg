@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Logo">
+  <defs><clipPath id="c"><rect width="64" height="64" rx="18"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="64" height="64" fill="#6E56CF"/>
+    <rect x="33" y="33" width="34" height="34" rx="11" transform="rotate(-12 50 50)" fill="#FBE7A1"/>
+  </g>
+</svg>

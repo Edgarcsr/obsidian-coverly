@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Logo">
+  <defs>
+    <clipPath id="c"><rect width="64" height="64" rx="18"/></clipPath>
+    <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M21 -2L66 -2L66 39L31 47C24.5 48.5 18.5 44 18.5 37.5Z" transform="translate(-4.5 5.5)" fill="#000" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+    </mask>
+    <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M21 -2L66 -2L66 39L31 47C24.5 48.5 18.5 44 18.5 37.5Z" fill="#000" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <g clip-path="url(#c)" fill="currentColor">
+    <rect width="64" height="64" mask="url(#m1)"/>
+    <g mask="url(#m2)"><path d="M21 -2L66 -2L66 39L31 47C24.5 48.5 18.5 44 18.5 37.5Z" transform="translate(-4.5 5.5)"/></g>
+  </g>
+</svg>

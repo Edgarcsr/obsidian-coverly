@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Logo">
+  <defs><clipPath id="c"><rect width="64" height="64" rx="18"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="64" height="64" fill="#FBE7A1"/>
+    <path d="M0 70V27C0 21 4.5 17.4 10 17.9L54 22C60 22.5 64 26 64 32V70Z" fill="#A58BFA"/>
+    <path d="M0 70V50C0 44 4.5 40.4 10 40.9L54 45C60 45.5 64 49 64 55V70Z" fill="#3A2B8C"/>
+    <circle cx="19" cy="53.5" r="5.5" fill="#fff"/>
+  </g>
+</svg>

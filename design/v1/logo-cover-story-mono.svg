@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Cover Story" fill="none">
+  <defs>
+    <mask id="cs-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <circle cx="22" cy="28" r="14" fill="#000"/>
+    </mask>
+  </defs>
+  <path d="M0 28V16A16 16 0 0 1 16 0H48A16 16 0 0 1 64 16V28Z" fill="currentColor" mask="url(#cs-gap)"/>
+  <path d="M3 28V48A13 13 0 0 0 16 61H48A13 13 0 0 0 61 48V28" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="22" cy="28" r="10" fill="currentColor"/>
+  <path d="M16 50H48" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+</svg>
