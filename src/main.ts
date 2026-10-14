@@ -20,6 +20,7 @@ const COVER_VARS = [
   "--mdp-cover-height",
   "--mdp-cover-radius",
   "--mdp-cover-fade",
+  "--mdp-cover-shade",
 ] as const;
 
 /** Remove chaves do frontmatter. `Reflect` evita o `delete` com chave dinâmica. */
@@ -128,13 +129,14 @@ export default class MdPlusPlugin extends Plugin {
     this.noteIcons.schedule();
   }
 
-  /** Passa altura, cantos e degradê da capa para o CSS, que os lê como variáveis. */
+  /** Passa altura, cantos, degradê e sombra da capa para o CSS, que os lê como variáveis. */
   applyCoverStyle(): void {
-    const { coverFade, coverHeight, coverRadius } = this.settings;
+    const { coverFade, coverHeight, coverRadius, coverShade } = this.settings;
     const { style } = document.body;
     style.setProperty("--mdp-cover-height", `${coverHeight}px`);
     style.setProperty("--mdp-cover-radius", `${coverRadius}px`);
     style.setProperty("--mdp-cover-fade", `${coverFade}%`);
+    style.setProperty("--mdp-cover-shade", `${coverShade}%`);
   }
 
   /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */

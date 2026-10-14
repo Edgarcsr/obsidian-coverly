@@ -75,6 +75,25 @@
   );
 }
 
+/*
+ * Sombra de baixo para cima, por cima da imagem e abaixo da pílula e do
+ * crédito. A opacidade cai em curva (não em linha reta) para não marcar onde
+ * a sombra termina.
+ */
+.mdp-cover-image::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(
+    to top,
+    rgb(0 0 0 / 55%) 0%,
+    rgb(0 0 0 / 30%) calc(var(--mdp-cover-shade, 0%) * 0.4),
+    rgb(0 0 0 / 10%) calc(var(--mdp-cover-shade, 0%) * 0.75),
+    transparent var(--mdp-cover-shade, 0%)
+  );
+  pointer-events: none;
+}
+
 .mdp-cover.is-repositioning {
   cursor: ns-resize;
   touch-action: none;

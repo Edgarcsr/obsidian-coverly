@@ -10,6 +10,8 @@ export interface MdPlusSettings {
   coverRadius: number;
   /** Quanto da altura da capa, de baixo para cima, some em degradê. 0 = sem degradê. */
   coverFade: number;
+  /** Quanto da altura da capa, de baixo para cima, escurece em degradê preto. 0 = sem sombra. */
+  coverShade: number;
   /** Última cor usada na aba Ícones, para abrir já com ela. */
   iconColor: string;
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: MdPlusSettings = {
   coverFade: 0,
   coverHeight: 240,
   coverRadius: 0,
+  coverShade: 0,
   iconColor: "default",
   recentEmojis: [],
   twemoji: true,
@@ -101,6 +104,23 @@ export class MdPlusSettingTab extends PluginSettingTab {
           .setDynamicTooltip()
           .onChange(async (value) => {
             this.plugin.settings.coverFade = value;
+            this.plugin.applyCoverStyle();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Sombra na parte de baixo")
+      .setDesc(
+        "Quanto da capa, de baixo para cima, escurece em degradê preto. Destaca o ícone e o crédito sobre imagens claras. Zero desliga o efeito."
+      )
+      .addSlider((slider) =>
+        slider
+          .setLimits(0, 100, 5)
+          .setValue(this.plugin.settings.coverShade)
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.coverShade = value;
             this.plugin.applyCoverStyle();
             await this.plugin.saveSettings();
           })
