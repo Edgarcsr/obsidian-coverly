@@ -1,46 +1,80 @@
 name: Release Obsidian plugin
 
+# Para lançar: suba a versão (`bun run version` ou à mão no manifest.json,
+# package.json e versions.json) e dê push na main. Se o manifest.json trouxer
+# uma versão que ainda não tem release, o workflow constrói o plugin, cria a
+# tag (sem "v") e publica a release com main.js, manifest.json e styles.css.
 on:
   push:
-    tags:
-      - "*"
+    branches: [main]
+    paths: [manifest.json]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
       attestations: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
+      - name: Read version
+        id: version
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "$version" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$version" > /dev/null 2>&1; then
+            echo "A release or tag for $version already exists; nothing to do."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check version files agree
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          node -e '
+            const version = require("./manifest.json").version;
+            const pkg = require("./package.json").version;
+            const versions = require("./versions.json");
+            const errors = [];
+            if (!/^\d+\.\d+\.\d+$/.test(version)) errors.push(`manifest version "${version}" is not x.y.z`);
+            if (pkg !== version) errors.push(`package.json is ${pkg}, manifest.json is ${version}`);
+            if (!(version in versions)) errors.push(`versions.json has no entry for ${version}`);
+            if (errors.length > 0) { console.error(errors.join("\n")); process.exit(1); }
+          '
+
       - uses: oven-sh/setup-bun@v2
+        if: steps.version.outputs.publish == 'true'
 
       - name: Build plugin
+        if: steps.version.outputs.publish == 'true'
         run: |
           bun install --frozen-lockfile
           bun run build
 
-      - name: Check for optional styles
-        id: styles
-        run: |
-          [ -f styles.css ] && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
-
       - name: Attest build provenance
+        if: steps.version.outputs.publish == 'true'
         uses: actions/attest@v4
         with:
           subject-path: |
             main.js
-            ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+            styles.css
 
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release
+        if: steps.version.outputs.publish == 'true'
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
-
-          gh release create "$tag" \
-            --title="$tag" \
-            --draft \
-            main.js manifest.json ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+          version="${{ steps.version.outputs.version }}"
+          gh release create "$version" \
+            --target "$GITHUB_SHA" \
+            --title "$version" \
+            --generate-notes \
+            main.js manifest.json styles.css

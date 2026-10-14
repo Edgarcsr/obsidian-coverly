@@ -50,6 +50,14 @@ bun run dev
 
 `bun run build` makes a production build and `bun run check` runs the linter and formatter checks.
 
+### Releasing
+
+Releases are automated. Bump the version in `manifest.json`, `package.json`
+and `versions.json` (`bun run version` does it from `package.json`), then push
+to `main`. If that version has no release yet, the **Release Obsidian plugin**
+workflow builds the plugin, creates the tag (no `v` prefix) and publishes the
+release with `main.js`, `manifest.json` and `styles.css`.
+
 ## License
 
 [MIT](LICENSE)
