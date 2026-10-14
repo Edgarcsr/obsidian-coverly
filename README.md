@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/banner.png?v=2" alt="Coverly: Notion-style page covers and icons for Obsidian" width="100%">
+<img src="docs/banner.png" alt="Coverly: Notion-style page covers and icons for Obsidian" width="100%">
 
 <p>&nbsp;</p>
 
@@ -26,9 +26,10 @@ Covers and icons are stored in the note's frontmatter (`cover`, `cover-position`
 
 Coverly works offline. It only reaches the network for these features:
 
-- **Unsplash** (`api.unsplash.com`): searching photos, only after you add your own Unsplash access key in the settings.
+- **Unsplash** (`api.unsplash.com`, `images.unsplash.com`): searching photos and loading the ones you pick, only after you add your own Unsplash access key in the settings. Picking a photo also sends Unsplash a download notice, as their API guidelines require.
 - **Twemoji** (`cdn.jsdelivr.net`): downloading emoji images the first time they appear. They are cached in the plugin folder. Turn off **X-style emojis** in the settings to use system emojis instead.
-- **Gallery artworks** (`images.metmuseum.org`, `commons.wikimedia.org`): loading the public domain images shown in the cover gallery.
+- **Gallery artworks** (`images.metmuseum.org`, `commons.wikimedia.org`, which redirects to `upload.wikimedia.org`): loading the public domain images shown in the cover gallery.
+- **Images from links**: if a cover or icon comes from a web address, Obsidian loads that image from its host each time the note is shown.
 
 No note content, file names or personal data are sent anywhere.
 
