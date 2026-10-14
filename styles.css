@@ -18,14 +18,14 @@
 /* Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar propriedade" */
 :is(.markdown-source-view, .markdown-preview-view)
   .metadata-container:not(
-  :has(
-    .metadata-property:not([data-property-key="cover"]):not(
-        [data-property-key="cover-position"]
-      ):not([data-property-key="cover-credit"]):not(
-        [data-property-key="cover-credit-url"]
-      ):not([data-property-key="icon"])
-  )
-) {
+    :has(
+      .metadata-property:not([data-property-key="cover"]):not(
+          [data-property-key="cover-position"]
+        ):not([data-property-key="cover-credit"]):not(
+          [data-property-key="cover-credit-url"]
+        ):not([data-property-key="icon"])
+    )
+  ) {
   display: none;
 }
 
@@ -1306,7 +1306,9 @@
   overflow-y: auto;
   border-radius: 10px;
   background-color: var(--background-primary);
-  box-shadow: var(--shadow-s), 0 0 0 1px var(--background-modifier-border);
+  box-shadow:
+    var(--shadow-s),
+    0 0 0 1px var(--background-modifier-border);
   opacity: 0;
   pointer-events: none;
   transform: translate(8px, -50%);
@@ -1356,4 +1358,104 @@
 
 .mdp-toc-item.is-active {
   color: var(--text-accent);
+}
+
+/* ---------- Prévia dos links (cartão no estilo do Notion) ---------- */
+
+.mdp-link-card {
+  position: fixed;
+  z-index: var(--layer-popover);
+  box-sizing: border-box;
+  width: 280px;
+  padding: 16px 18px 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-l);
+  animation: mdp-link-card-in 120ms ease-out;
+}
+
+@keyframes mdp-link-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+/* A capa vai de borda a borda, compensando o padding do cartão */
+.mdp-link-card-cover {
+  height: 72px;
+  margin: -16px -18px 14px;
+  background-color: var(--background-modifier-hover);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* Com capa, o ícone sobe e fica metade sobre ela, como no cabeçalho da nota */
+.mdp-link-card.has-cover .mdp-link-card-icon {
+  position: relative;
+  margin-top: -36px;
+}
+
+.mdp-link-card-icon {
+  display: flex;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.mdp-link-card-icon svg,
+.mdp-link-card-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mdp-link-card-path {
+  overflow: hidden;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mdp-link-card-title {
+  margin-bottom: 12px;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+  overflow-wrap: anywhere;
+}
+
+/* A nota em miniatura: texto pequeno, cortado e sumindo em degradê */
+.mdp-link-card-body {
+  max-height: 110px;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+}
+
+.mdp-link-card-body > :first-child {
+  margin-top: 0;
+}
+
+.mdp-link-card-body :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0.6em 0 0.3em;
+  font-size: 1.15em;
+}
+
+.mdp-link-card-body :is(p, ul, ol, blockquote, pre) {
+  margin: 0.4em 0;
+}
+
+.mdp-link-card-body :is(img, iframe, video) {
+  max-height: 60px;
 }

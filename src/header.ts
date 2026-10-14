@@ -1,9 +1,10 @@
 import { setIcon } from "obsidian";
+import type { App } from "obsidian";
 
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { resolveCoverSource } from "./note-data";
-import type { CoverData } from "./note-data";
+import type { CoverData, CoverSource } from "./note-data";
 import { drawPageIcon } from "./page-icon";
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -197,6 +198,27 @@ const attachReposition = (
   cover.addEventListener("pointercancel", stop);
 };
 
+/**
+ * Pinta a capa da nota em `surface`: foto ou gradiente, na posição gravada.
+ * O gradiente é desenhado mais alto que a moldura, como no reposicionamento.
+ */
+export const paintCover = (
+  app: App,
+  surface: HTMLElement,
+  data: CoverData
+): CoverSource | null => {
+  const source = resolveCoverSource(app, data.cover);
+  surface.style.backgroundPosition = `50% ${data.position}%`;
+  if (source?.kind === "image") {
+    // Aspas no caminho quebrariam a declaração CSS, então são escapadas.
+    surface.style.backgroundImage = `url("${source.url.replaceAll('"', "%22")}")`;
+  } else {
+    surface.style.backgroundImage = source?.css ?? "";
+    surface.style.backgroundSize = `100% ${GRADIENT_SCALE * 100}%`;
+  }
+  return source;
+};
+
 const buildCover = (
   plugin: CoverlyPlugin,
   data: CoverData,
@@ -205,21 +227,13 @@ const buildCover = (
   const cover = document.createElement("div");
   cover.className = "mdp-cover";
 
-  const source = resolveCoverSource(plugin.app, data.cover);
   // Foto e gradiente ficam na mesma camada, então os dois podem ser reposicionados.
   const surface = cover.createDiv({ cls: "mdp-cover-image" });
-  surface.style.backgroundPosition = `50% ${data.position}%`;
-
-  let measureOverflow: OverflowMeasure;
-  if (source?.kind === "image") {
-    // Aspas no caminho quebrariam a declaração CSS, então são escapadas.
-    surface.style.backgroundImage = `url("${source.url.replaceAll('"', "%22")}")`;
-    measureOverflow = imageOverflow(cover, source.url);
-  } else {
-    surface.style.backgroundImage = source?.css ?? "";
-    surface.style.backgroundSize = `100% ${GRADIENT_SCALE * 100}%`;
-    measureOverflow = gradientOverflow(cover);
-  }
+  const source = paintCover(plugin.app, surface, data);
+  const measureOverflow: OverflowMeasure =
+    source?.kind === "image"
+      ? imageOverflow(cover, source.url)
+      : gradientOverflow(cover);
 
   // Pílula normal, visível ao passar o mouse.
   const toolbar = cover.createDiv({ cls: "mdp-toolbar is-idle" });

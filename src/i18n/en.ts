@@ -129,6 +129,9 @@ export const en: Messages = {
   "settings.language.desc":
     "Plugin language. Automatic follows the Obsidian language and falls back to English when it is not Portuguese. Command names only change after you reload Obsidian.",
   "settings.language.name": "Language",
+  "settings.linkPreview.desc":
+    "When the mouse rests on a link to another note, shows a card with its icon, folders, title and first lines. Hold Ctrl to open Obsidian's native preview instead.",
+  "settings.linkPreview.name": "Link preview",
   "settings.toc.desc":
     "Shows one line per heading on the right edge of the note, with the current section highlighted. Hover to see the headings and select one to jump to it.",
   "settings.toc.name": "Outline on the side",

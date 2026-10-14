@@ -4,6 +4,7 @@ import type { TFile } from "obsidian";
 import { CoverPicker } from "./cover-picker";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
+import { LinkPreview } from "./link-preview";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { NoteIconDecorator } from "./note-icons";
@@ -47,6 +48,7 @@ export default class CoverlyPlugin extends Plugin {
   private readonly headers = new HeaderManager(this);
   private readonly noteIcons = new NoteIconDecorator(this);
   private readonly toc = new TocManager(this);
+  private readonly linkPreview = new LinkPreview(this);
   /** Só um seletor (de capa ou de ícone) aberto por vez. */
   private picker: CoverPicker | IconPicker | null = null;
 
@@ -65,6 +67,7 @@ export default class CoverlyPlugin extends Plugin {
 
     this.addSettingTab(new CoverlySettingTab(this.app, this));
     this.registerHeaderSync();
+    this.linkPreview.register();
 
     this.addCommand({
       callback: () => {
@@ -103,6 +106,7 @@ export default class CoverlyPlugin extends Plugin {
     this.headers.destroy();
     this.noteIcons.destroy();
     this.toc.destroy();
+    this.linkPreview.destroy();
     void closeTwemojiCache();
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);

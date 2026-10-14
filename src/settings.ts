@@ -26,6 +26,8 @@ export interface CoverlySettings {
   twemoji: boolean;
   /** Mostra o sumário de títulos na lateral direita da nota. */
   toc: boolean;
+  /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
+  linkPreview: boolean;
 }
 
 export const DEFAULT_SETTINGS: CoverlySettings = {
@@ -36,6 +38,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverShade: 0,
   iconColor: "default",
   language: "auto",
+  linkPreview: true,
   recentEmojis: [],
   toc: true,
   twemoji: true,
@@ -169,6 +172,18 @@ export class CoverlySettingTab extends PluginSettingTab {
           this.plugin.refreshHeaders();
           await this.plugin.saveSettings();
         })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.linkPreview.name"))
+      .setDesc(t("settings.linkPreview.desc"))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.linkPreview)
+          .onChange(async (value) => {
+            this.plugin.settings.linkPreview = value;
+            await this.plugin.saveSettings();
+          })
       );
   }
 }
