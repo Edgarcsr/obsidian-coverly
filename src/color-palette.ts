@@ -32,6 +32,40 @@ const toggle = (
   });
 };
 
+/** Espaço mínimo entre os quadros e as bordas da janela. */
+const EDGE = 8;
+const ANCHOR_GAP = 4;
+
+/**
+ * Posiciona `el` (já `position: fixed`) junto ao `anchor`, dentro da janela:
+ * abaixo dele, ou acima se faltar espaço, e com rolagem se não couber em nenhum.
+ */
+const placeFixed = (
+  el: HTMLElement,
+  anchor: HTMLElement,
+  align: "start" | "end"
+): void => {
+  const rect = anchor.getBoundingClientRect();
+  const below = window.innerHeight - rect.bottom - ANCHOR_GAP - EDGE;
+  const above = rect.top - ANCHOR_GAP - EDGE;
+  el.style.maxHeight = "";
+  const height = el.offsetHeight;
+  const useAbove = height > below && above > below;
+  const room = Math.max(useAbove ? above : below, 0);
+  el.style.maxHeight = `${room}px`;
+  const shown = Math.min(height, room);
+  el.style.top = `${
+    useAbove ? rect.top - ANCHOR_GAP - shown : rect.bottom + ANCHOR_GAP
+  }px`;
+
+  const width = el.offsetWidth;
+  const left = align === "end" ? rect.right - width : rect.left;
+  el.style.left = `${Math.max(
+    EDGE,
+    Math.min(left, window.innerWidth - width - EDGE)
+  )}px`;
+};
+
 /**
  * Bolinha da cor atual ao lado da busca. Abre a paleta com as cores do
  * Tailwind, uma opção para escolher qualquer cor e o "Perguntar sempre".
@@ -124,7 +158,11 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
 
   preview(state.color);
   button.addEventListener("click", () => {
-    palette.toggle(!palette.isShown());
+    const show = !palette.isShown();
+    palette.toggle(show);
+    if (show) {
+      placeFixed(palette, button, "end");
+    }
   });
 };
 
@@ -157,19 +195,18 @@ export const showColorVariants = (
     });
   }
 
-  // Abre logo abaixo do ícone, sem passar da borda direita da área rolável.
-  const left = Math.min(
-    target.offsetLeft,
-    body.clientWidth - panel.offsetWidth - 8
-  );
-  panel.style.left = `${Math.max(8, left)}px`;
-  panel.style.top = `${target.offsetTop + target.offsetHeight + 4}px`;
+  placeFixed(panel, target, "start");
 
   const controller = new AbortController();
   const close = (): void => {
     panel.remove();
     controller.abort();
   };
+  // Posicionado pela janela: rolar a grade o deixaria longe do ícone.
+  body.addEventListener("scroll", close, {
+    once: true,
+    signal: controller.signal,
+  });
   // Clicar fora do quadro o fecha; clicar em outro ícone já abre o dele.
   body.addEventListener(
     "pointerdown",

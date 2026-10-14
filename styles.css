@@ -338,7 +338,8 @@
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   box-shadow: var(--shadow-l);
-  animation: mdp-picker-in 0.14s ease-out both;
+  /* Sem `forwards`: um transform mantido viraria o referencial dos filhos `fixed` */
+  animation: mdp-picker-in 0.14s ease-out backwards;
 }
 
 .mdp-picker-tabs {
@@ -787,10 +788,11 @@
   border-radius: 50%;
 }
 
+/* Fixos e posicionados em código, para não serem cortados pela área rolável do popover */
 .mdp-color-palette {
-  position: absolute;
-  top: calc(100% - 4px);
-  right: 0;
+  position: fixed;
+  z-index: var(--layer-popover);
+  overflow-y: auto;
   padding: 6px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
@@ -833,8 +835,9 @@
 
 /* Variantes de cor do ícone clicado, logo abaixo dele */
 .mdp-color-variants {
-  position: absolute;
-  z-index: 1;
+  position: fixed;
+  z-index: var(--layer-popover);
+  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(5, 34px);
   gap: 2px;
