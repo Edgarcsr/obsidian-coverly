@@ -21,11 +21,8 @@ export interface IconColor {
   css: string;
 }
 
-/**
- * Paleta das cores dos ícones: as do Notion, as do Tailwind (a original) ou
- * as do tema do Obsidian da pessoa.
- */
-export type ColorPalette = "notion" | "tailwind" | "theme";
+/** Paleta das cores dos ícones: as do Notion ou as do Tailwind (a original). */
+export type ColorPalette = "notion" | "tailwind";
 
 /**
  * Paleta Tailwind da aba Ícones: a cor padrão, que acompanha o tema, e as
@@ -33,10 +30,15 @@ export type ColorPalette = "notion" | "tailwind" | "theme";
  */
 const TAILWIND_COLORS: IconColor[] = [
   { css: "var(--text-muted)", id: "default", label: "color.default" },
+  // A cor de destaque do tema do Obsidian de quem usa; acompanha a troca de tema.
+  {
+    css: "var(--interactive-accent)",
+    id: "theme-accent",
+    label: "color.accent",
+  },
   { css: "#6b7280", id: "gray", label: "color.gray" },
   { css: "#ef4444", id: "red", label: "color.red" },
   { css: "#f97316", id: "orange", label: "color.orange" },
-  { css: "#f59e0b", id: "amber", label: "color.amber" },
   { css: "#eab308", id: "yellow", label: "color.yellow" },
   { css: "#84cc16", id: "lime", label: "color.lime" },
   { css: "#22c55e", id: "green", label: "color.green" },
@@ -73,31 +75,16 @@ const NOTION_COLORS: IconColor[] = [
 ];
 
 /**
- * Paleta do tema: usa as variáveis de cor do Obsidian (`--color-red` etc. e a
- * cor de destaque), então cada pessoa vê as cores do próprio tema, e elas
- * acompanham a troca de tema ou de claro/escuro. Ids com prefixo `theme-`.
+ * Cores que saíram do seletor (para a grade fechar em linhas de cinco), mas
+ * seguem valendo nos ícones que já as usam.
  */
-const THEME_COLORS: IconColor[] = [
-  { css: "var(--text-muted)", id: "theme-default", label: "color.default" },
-  {
-    css: "var(--interactive-accent)",
-    id: "theme-accent",
-    label: "color.accent",
-  },
-  { css: "var(--color-red)", id: "theme-red", label: "color.red" },
-  { css: "var(--color-orange)", id: "theme-orange", label: "color.orange" },
-  { css: "var(--color-yellow)", id: "theme-yellow", label: "color.yellow" },
-  { css: "var(--color-green)", id: "theme-green", label: "color.green" },
-  { css: "var(--color-cyan)", id: "theme-cyan", label: "color.cyan" },
-  { css: "var(--color-blue)", id: "theme-blue", label: "color.blue" },
-  { css: "var(--color-purple)", id: "theme-purple", label: "color.purple" },
-  { css: "var(--color-pink)", id: "theme-pink", label: "color.pink" },
+const LEGACY_COLORS: IconColor[] = [
+  { css: "#f59e0b", id: "amber", label: "color.amber" },
 ];
 
 const PALETTES: Record<ColorPalette, IconColor[]> = {
   notion: NOTION_COLORS,
   tailwind: TAILWIND_COLORS,
-  theme: THEME_COLORS,
 };
 
 let palette: ColorPalette = "tailwind";
@@ -108,6 +95,9 @@ export const setColorPalette = (value: ColorPalette): void => {
 
 /** Cores oferecidas no seletor, da paleta escolhida nas configurações. */
 export const iconColors = (): IconColor[] => PALETTES[palette];
+
+/** O seletor de cor livre só existe na paleta Tailwind; a do Notion é fechada. */
+export const allowsCustomColor = (): boolean => palette === "tailwind";
 
 export const DEFAULT_ICON_COLOR = "default";
 
@@ -123,9 +113,9 @@ export const iconColorCss = (id: string): string => {
   }
   // Resolve pelo id, de qualquer paleta, e não pela ativa: cada ícone mantém a
   // cor com que foi gravado.
-  const found = Object.values(PALETTES)
-    .flat()
-    .find((color) => color.id === id);
+  const found = [...Object.values(PALETTES).flat(), ...LEGACY_COLORS].find(
+    (color) => color.id === id
+  );
   return found?.css ?? TAILWIND_COLORS[0]?.css ?? "";
 };
 

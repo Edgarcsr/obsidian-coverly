@@ -4,6 +4,7 @@ import { t } from "./i18n";
 import {
   drawLucide,
   iconColorCss,
+  allowsCustomColor,
   iconColors,
   isCustomColor,
 } from "./page-icon";
@@ -119,41 +120,43 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
     swatches.push(swatch);
   }
 
-  // Última opção: o seletor de cor do sistema. O anel colorido indica que é
-  // livre; depois de escolhida, a bolinha mostra a própria cor.
-  const custom = colors.createEl("button", {
-    cls: isCustomColor(state.color)
-      ? "mdp-color-swatch is-selected"
-      : "mdp-color-swatch",
-  });
-  setTooltip(custom, t("color.custom"));
-  const customDot = custom.createSpan({ cls: "mdp-color-dot is-custom" });
-  // Invisível, mas com posição: o seletor do sistema abre ancorado nele, e
-  // com display: none abriria no canto da janela.
-  const input = custom.createEl("input", {
-    cls: "mdp-color-input",
-    type: "color",
-  });
-  const showCustom = (id: string): void => {
-    customDot.style.background = isCustomColor(id) ? id : "";
-  };
-  if (isCustomColor(state.color)) {
-    input.value = state.color;
-    showCustom(state.color);
-  }
-  swatches.push(custom);
+  if (allowsCustomColor()) {
+    // Última opção: o seletor de cor do sistema. O anel colorido indica que é
+    // livre; depois de escolhida, a bolinha mostra a própria cor.
+    const custom = colors.createEl("button", {
+      cls: isCustomColor(state.color)
+        ? "mdp-color-swatch is-selected"
+        : "mdp-color-swatch",
+    });
+    setTooltip(custom, t("color.custom"));
+    const customDot = custom.createSpan({ cls: "mdp-color-dot is-custom" });
+    // Invisível, mas com posição: o seletor do sistema abre ancorado nele, e
+    // com display: none abriria no canto da janela.
+    const input = custom.createEl("input", {
+      cls: "mdp-color-input",
+      type: "color",
+    });
+    const showCustom = (id: string): void => {
+      customDot.style.background = isCustomColor(id) ? id : "";
+    };
+    if (isCustomColor(state.color)) {
+      input.value = state.color;
+      showCustom(state.color);
+    }
+    swatches.push(custom);
 
-  custom.addEventListener("click", () => {
-    input.click();
-  });
-  // Enquanto arrasta no seletor do sistema, só pré-visualiza; grava ao confirmar.
-  input.addEventListener("input", () => {
-    preview(input.value);
-    showCustom(input.value);
-  });
-  input.addEventListener("change", async () => {
-    await apply(input.value, custom);
-  });
+    custom.addEventListener("click", () => {
+      input.click();
+    });
+    // Enquanto arrasta no seletor do sistema, só pré-visualiza; grava ao confirmar.
+    input.addEventListener("input", () => {
+      preview(input.value);
+      showCustom(input.value);
+    });
+    input.addEventListener("change", async () => {
+      await apply(input.value, custom);
+    });
+  }
 
   const ask = palette.createDiv({ cls: "mdp-color-ask" });
   ask.createSpan({ text: t("color.askAlways") });

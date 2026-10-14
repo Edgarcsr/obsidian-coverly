@@ -121,7 +121,6 @@ export const en: Messages = {
   "settings.colorPalette.name": "Icon colors",
   "settings.colorPalette.notion": "Notion colors",
   "settings.colorPalette.tailwind": "Current colors (Tailwind)",
-  "settings.colorPalette.theme": "Obsidian theme colors",
   "settings.coverFade.desc":
     "How much of the cover, from the bottom up, fades out into the note. Zero turns the effect off.",
   "settings.coverFade.name": "Fade at the bottom",

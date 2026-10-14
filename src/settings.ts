@@ -162,7 +162,6 @@ export class CoverlySettingTab extends PluginSettingTab {
         dropdown
           .addOption("tailwind", t("settings.colorPalette.tailwind"))
           .addOption("notion", t("settings.colorPalette.notion"))
-          .addOption("theme", t("settings.colorPalette.theme"))
           .setValue(this.plugin.settings.colorPalette)
           .onChange(async (value) => {
             this.plugin.settings.colorPalette = value as ColorPalette;
