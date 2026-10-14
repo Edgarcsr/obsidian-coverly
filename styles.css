@@ -409,6 +409,27 @@
   overflow-y: auto;
 }
 
+/* Marcador de rolagem fino e sempre visível, como no Notion */
+.mdp-picker-body::-webkit-scrollbar,
+.mdp-color-palette::-webkit-scrollbar,
+.mdp-color-variants::-webkit-scrollbar {
+  width: 10px;
+  background: transparent;
+}
+
+.mdp-picker-body::-webkit-scrollbar-thumb,
+.mdp-color-palette::-webkit-scrollbar-thumb,
+.mdp-color-variants::-webkit-scrollbar-thumb {
+  background-color: var(--background-modifier-border-hover);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 5px;
+}
+
+.mdp-picker-body::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-faint);
+}
+
 .mdp-picker-section-title {
   margin: 14px 0 8px;
   font-size: var(--font-ui-smaller);
