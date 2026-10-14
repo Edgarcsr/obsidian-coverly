@@ -409,25 +409,55 @@
   overflow-y: auto;
 }
 
-/* Marcador de rolagem fino e sempre visível, como no Notion */
+/*
+ * Barra de rolagem nativa no estilo do Notion: trilho transparente, indicador
+ * de ~4px arredondado, discreto em repouso e mais visível com o mouse por cima.
+ * O Obsidian roda no Chromium, então os pseudo-elementos -webkit bastam; o
+ * espaço de 8px menos a borda transparente de 2px dá o indicador de 4px.
+ */
 .mdp-picker-body::-webkit-scrollbar,
 .mdp-color-palette::-webkit-scrollbar,
 .mdp-color-variants::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
   background: transparent;
+}
+
+.mdp-picker-body::-webkit-scrollbar-track,
+.mdp-color-palette::-webkit-scrollbar-track,
+.mdp-color-variants::-webkit-scrollbar-track,
+.mdp-picker-body::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
+}
+
+.mdp-picker-body::-webkit-scrollbar-button,
+.mdp-color-palette::-webkit-scrollbar-button,
+.mdp-color-variants::-webkit-scrollbar-button {
+  display: none;
 }
 
 .mdp-picker-body::-webkit-scrollbar-thumb,
 .mdp-color-palette::-webkit-scrollbar-thumb,
 .mdp-color-variants::-webkit-scrollbar-thumb {
-  background-color: var(--background-modifier-border-hover);
+  background-color: rgb(127 127 127 / 20%);
   background-clip: padding-box;
-  border: 3px solid transparent;
-  border-radius: 5px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
 }
 
-.mdp-picker-body::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-faint);
+.mdp-picker-body:hover::-webkit-scrollbar-thumb,
+.mdp-color-palette:hover::-webkit-scrollbar-thumb,
+.mdp-color-variants:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(127 127 127 / 40%);
+}
+
+.mdp-picker-body::-webkit-scrollbar-thumb:hover,
+.mdp-picker-body::-webkit-scrollbar-thumb:active,
+.mdp-color-palette::-webkit-scrollbar-thumb:hover,
+.mdp-color-variants::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(127 127 127 / 60%);
 }
 
 .mdp-picker-section-title {
