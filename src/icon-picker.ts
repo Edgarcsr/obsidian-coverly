@@ -7,6 +7,7 @@ import { EMOJI_GROUPS } from "./emojis";
 import type { EmojiEntry } from "./emojis";
 import { renderIconUpload } from "./icon-upload";
 import type { IconUploadHandle } from "./icon-upload";
+import { normalize, searchLucide } from "./lucide-search";
 import {
   drawLucide,
   isImageIcon,
@@ -31,13 +32,6 @@ const TABS: PopoverTab<Tab>[] = [
  * A grade cresce em lotes conforme a rolagem chega ao fim.
  */
 const BATCH = 120;
-
-const WHITESPACE = /\s+/gu;
-const DIACRITICS = /\p{Diacritic}/gu;
-
-/** Minúsculas e sem acento, para "coracao" encontrar "coração". */
-const normalize = (value: string): string =>
-  value.normalize("NFD").replaceAll(DIACRITICS, "").toLowerCase().trim();
 
 const randomItem = <T>(items: readonly T[]): T | undefined =>
   items[Math.floor(Math.random() * items.length)];
@@ -359,9 +353,8 @@ export class IconPicker extends TabbedPopover<Tab> {
     };
 
     const filter = (): void => {
-      // Os nomes do Lucide são em inglês e com hífen: "arrow up" acha "arrow-up".
-      const query = normalize(input.value).replaceAll(WHITESPACE, "-");
-      matches = query ? all.filter((name) => name.includes(query)) : all;
+      // Nome, tags e categorias, como no lucide.dev: "money" acha "banknote".
+      matches = searchLucide(all, input.value);
       this.closeVariants?.();
       grid.empty();
       shown = 0;
