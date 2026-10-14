@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Coverly banner</title>
+<style>
+  /* Fonte do banner do README. Gera docs/banner.png:
+     msedge --headless --screenshot=docs/banner.png --window-size=1600,640 --force-device-scale-factor=2 design/banner.html */
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1600px; height: 640px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+    color: #dadada;
+    background:
+      radial-gradient(900px 520px at 8% 12%, rgba(255, 229, 138, 0.16), transparent 60%),
+      radial-gradient(900px 560px at 92% 100%, rgba(20, 184, 166, 0.20), transparent 60%),
+      #141414;
+    position: relative;
+  }
+
+  /* ---------- Marca ---------- */
+  .brand { position: absolute; left: 96px; top: 150px; width: 560px; }
+  .brand svg.logo { width: 104px; height: 104px; display: block; filter: drop-shadow(0 12px 28px rgba(20, 184, 166, 0.35)); }
+  .brand h1 { margin-top: 28px; font-size: 84px; line-height: 1; font-weight: 800; letter-spacing: -2.5px; color: #fff; }
+  .brand p { margin-top: 18px; font-size: 27px; line-height: 1.35; color: #a8a8a8; max-width: 480px; }
+  .chips { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { padding: 7px 14px; font-size: 17px; color: #cfcfcf; border: 1px solid #333; border-radius: 999px; background: rgba(255, 255, 255, 0.04); }
+
+  /* ---------- Janela do Obsidian ---------- */
+  .window {
+    position: absolute; left: 720px; top: 48px; width: 800px; height: 640px;
+    background: #1e1e1e; border: 1px solid #343434; border-radius: 16px 16px 0 0;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    overflow: hidden;
+  }
+  .tabs { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: #181818; border-bottom: 1px solid #2c2c2c; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #3a3a3a; }
+  .tab { margin-left: 14px; display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 14px; color: #dadada; background: #242424; border-radius: 8px; }
+  .tab .ic { width: 15px; height: 15px; color: #529cca; }
+
+  .cover { position: relative; height: 168px; overflow: hidden; background: linear-gradient(120deg, #0f766e 0%, #14b8a6 38%, #fde68a 100%); }
+  .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 55%, rgba(0, 0, 0, 0.28)); }
+  .cover svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pill { position: absolute; right: 18px; top: 14px; z-index: 2; display: flex; font-size: 12px; color: #e8e8e8; background: rgba(30, 30, 30, 0.82); border-radius: 6px; overflow: hidden; }
+  .pill span { padding: 5px 10px; }
+  .pill span + span { border-left: 1px solid rgba(255, 255, 255, 0.14); }
+
+  .page { padding: 0 64px; }
+  .page-icon { position: relative; z-index: 3; width: 84px; height: 84px; margin-top: -42px; color: #5aa9e6; }
+  .page-icon svg { width: 100%; height: 100%; stroke-width: 1.7; }
+  h2 { margin-top: 14px; font-size: 40px; line-height: 1.15; font-weight: 800; color: #fff; letter-spacing: -0.6px; }
+  .body { margin-top: 18px; font-size: 17px; line-height: 1.7; color: #b9b9b9; max-width: 560px; }
+  .body .line { height: 10px; margin-top: 14px; border-radius: 5px; background: #2b2b2b; }
+  a.link { color: #7aa7ff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(122, 167, 255, 0.5); background: rgba(122, 167, 255, 0.12); border-radius: 4px; padding: 0 3px; }
+
+  /* ---------- Cartão de prévia do link ---------- */
+  .card {
+    position: absolute; left: 160px; top: 372px; z-index: 6; width: 300px; padding: 16px 18px 0;
+    overflow: hidden; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  }
+  .card .c-cover { height: 72px; margin: -16px -18px 12px; background: linear-gradient(120deg, #6d28d9, #3b82f6 60%, #22d3ee); }
+  .card .c-icon { position: relative; width: 36px; height: 36px; margin-top: -34px; margin-bottom: 8px; color: #b79cff; }
+  .card .c-icon svg { width: 100%; height: 100%; stroke-width: 1.7; }
+  .card .c-path { font-size: 12px; color: #7d7d7d; }
+  .card .c-title { margin: 2px 0 10px; font-size: 18px; font-weight: 700; color: #fff; }
+  .card .c-body { height: 92px; overflow: hidden; font-size: 11.5px; line-height: 1.55; color: #9a9a9a; -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent); mask-image: linear-gradient(to bottom, #000 45%, transparent); }
+  .card .c-body b { color: #cfcfcf; }
+
+  /* ---------- Paleta de cores ---------- */
+  .palette {
+    position: absolute; left: 536px; top: 150px; z-index: 6; width: 188px; padding: 14px 14px 10px;
+    background: #252525; border: 1px solid #3a3a3a; border-radius: 12px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  }
+  .grid { display: grid; grid-template-columns: repeat(5, 24px); gap: 8px 8px; }
+  .sw { width: 24px; height: 24px; border-radius: 50%; }
+  .sw.sel { box-shadow: 0 0 0 2px #252525, 0 0 0 4px #ca8e1b; }
+  .ask { margin-top: 12px; padding-top: 10px; border-top: 1px solid #383838; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: #cfcfcf; }
+  .toggle { width: 30px; height: 17px; border-radius: 9px; background: #4a4a4a; position: relative; }
+  .toggle::after { content: ""; position: absolute; left: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: #dadada; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Coverly">
+      <defs><clipPath id="c"><rect width="64" height="64" rx="18"/></clipPath></defs>
+      <g clip-path="url(#c)">
+        <rect width="64" height="64" fill="#FFE58A"/>
+        <path d="M0 70V24C0 17 6 12.5 11.6 13L54.3 17.2C60 17.7 64 22 64 28.4V70Z" fill="#14B8A6"/>
+        <path d="M0 70V46C0 40 5 35.4 10.1 35.9L52.4 31.9C59 31.4 64 36 64 43V70Z" fill="#000"/>
+        <path d="M9.7 49.8L15 54.8L26.4 43.8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <h1>Coverly</h1>
+    <p>Notion-style page covers and icons for Obsidian.</p>
+    <div class="chips">
+      <span class="chip">Covers</span><span class="chip">Icons</span><span class="chip">Link previews</span><span class="chip">Outline</span>
+    </div>
+  </div>
+
+  <div class="window">
+    <div class="tabs">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="tab">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+        Sistemas Operacionais
+      </span>
+    </div>
+
+    <div class="cover">
+      <svg viewBox="0 0 800 168" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 168V110C120 70 220 120 360 96C500 72 620 40 800 84V168Z" fill="rgba(0,0,0,0.20)"/>
+        <path d="M0 168V138C140 108 260 150 420 128C560 108 680 92 800 120V168Z" fill="rgba(0,0,0,0.28)"/>
+        <circle cx="610" cy="52" r="26" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+      <div class="pill"><span>Change cover</span><span>Reposition</span></div>
+    </div>
+
+    <div class="page">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+      </div>
+      <h2>Study notes</h2>
+      <div class="body">
+        Abstraction simplifies a path. Start with <a class="link">Lista de Exercícios 1</a>.
+        <div class="line" style="width: 92%"></div>
+        <div class="line" style="width: 78%"></div>
+        <div class="line" style="width: 85%"></div>
+      </div>
+    </div>
+
+    <div class="palette">
+      <div class="grid">
+        <span class="sw" style="background:#d3d3d3"></span><span class="sw" style="background:#7f7f7f"></span><span class="sw" style="background:#aa755f"></span><span class="sw sel" style="background:#ca8e1b"></span><span class="sw" style="background:#d87620"></span>
+        <span class="sw" style="background:#2d9964"></span><span class="sw" style="background:#2e7cd1"></span><span class="sw" style="background:#8d5bc1"></span><span class="sw" style="background:#c94079"></span><span class="sw" style="background:#cd4945"></span>
+      </div>
+      <div class="ask"><span>Always ask</span><span class="toggle"></span></div>
+    </div>
+
+    <div class="card">
+      <div class="c-cover"></div>
+      <div class="c-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+      </div>
+      <div class="c-path">CEFSA / Sistemas Operacionais</div>
+      <div class="c-title">Lista de Exercícios 1</div>
+      <div class="c-body"><b>Ex. 1:</b><br>1. Abstrair um recurso significa, de maneira ampla, a simplificação de um caminho. Ou seja, se pegar em termos de desenvolvimento, seria como pegar uma função e esconder os detalhes internos.</div>
+    </div>
+  </div>
+</body>
+</html>

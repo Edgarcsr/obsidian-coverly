@@ -1,6 +1,6 @@
 <div align="center">
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/glow.svg?title=Coverly&subtitle=Notion-style%20page%20covers%20and%20icons%20for%20Obsidian&logo=lu:Image&theme=violet&mode=dark"><img src="https://shieldcn.dev/header/glow.svg?title=Coverly&subtitle=Notion-style%20page%20covers%20and%20icons%20for%20Obsidian&logo=lu:Image&theme=violet&mode=light" alt="Coverly" width="100%"></picture>
+<img src="docs/banner.png" alt="Coverly: Notion-style page covers and icons for Obsidian" width="100%">
 
 <p>
   <a href="https://github.com/Edgarcsr/obsidian-coverly/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/downloads/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/downloads/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="Downloads"></picture></a>
