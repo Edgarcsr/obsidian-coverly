@@ -333,6 +333,31 @@
   height: 16px;
 }
 
+/* Cores do Notion para os ícones (opção "Cores dos ícones"); mudam com o tema */
+body {
+  --mdp-notion-gray: #9b9a97;
+  --mdp-notion-brown: #64473a;
+  --mdp-notion-orange: #d9730d;
+  --mdp-notion-yellow: #dfab01;
+  --mdp-notion-green: #0f7b6c;
+  --mdp-notion-blue: #0b6e99;
+  --mdp-notion-purple: #6940a5;
+  --mdp-notion-pink: #ad1a72;
+  --mdp-notion-red: #e03e3e;
+}
+
+body.theme-dark {
+  --mdp-notion-gray: #979a9b;
+  --mdp-notion-brown: #937264;
+  --mdp-notion-orange: #ffa344;
+  --mdp-notion-yellow: #ffdc49;
+  --mdp-notion-green: #4dab9a;
+  --mdp-notion-blue: #529cca;
+  --mdp-notion-purple: #9a6dd7;
+  --mdp-notion-pink: #e255a1;
+  --mdp-notion-red: #ff7369;
+}
+
 /* ---------- Seletor de capa (popover) ---------- */
 .mdp-picker {
   position: fixed;

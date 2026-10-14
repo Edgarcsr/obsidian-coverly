@@ -8,7 +8,7 @@ import { LinkPreview } from "./link-preview";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { NoteIconDecorator } from "./note-icons";
-import { isImageIcon, parseLucide } from "./page-icon";
+import { isImageIcon, parseLucide, setColorPalette } from "./page-icon";
 import { PopoverHeaders } from "./popover-header";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
@@ -57,6 +57,7 @@ export default class CoverlyPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
     setLanguage(this.settings.language);
+    setColorPalette(this.settings.colorPalette);
     this.applyCoverStyle();
     // Antes do primeiro desenho, para os emojis já baixados aparecerem na hora.
     const pluginDir =

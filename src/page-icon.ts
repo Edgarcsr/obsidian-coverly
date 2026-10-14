@@ -21,11 +21,14 @@ export interface IconColor {
   css: string;
 }
 
+/** Paleta das cores dos ícones: as do Notion ou as do Tailwind (a original). */
+export type ColorPalette = "notion" | "tailwind";
+
 /**
- * Paleta da aba Ícones: a cor padrão, que acompanha o tema, e as principais
- * cores do Tailwind no tom 500. Os ids são os nomes do Tailwind.
+ * Paleta Tailwind da aba Ícones: a cor padrão, que acompanha o tema, e as
+ * principais cores do Tailwind no tom 500. Os ids são os nomes do Tailwind.
  */
-export const ICON_COLORS: IconColor[] = [
+const TAILWIND_COLORS: IconColor[] = [
   { css: "var(--text-muted)", id: "default", label: "color.default" },
   { css: "#6b7280", id: "gray", label: "color.gray" },
   { css: "#ef4444", id: "red", label: "color.red" },
@@ -47,6 +50,37 @@ export const ICON_COLORS: IconColor[] = [
   { css: "#f43f5e", id: "rose", label: "color.rose" },
 ];
 
+/**
+ * Paleta do Notion. As cores mudam com o tema do Obsidian, então vêm de
+ * variáveis CSS (`--mdp-notion-*`, no styles.css). Os ids que existem nas
+ * duas paletas (red, blue...) são os mesmos, então as notas já gravadas só
+ * trocam de tom.
+ */
+const NOTION_COLORS: IconColor[] = [
+  { css: "var(--text-muted)", id: "default", label: "color.default" },
+  { css: "var(--mdp-notion-gray)", id: "gray", label: "color.gray" },
+  { css: "var(--mdp-notion-brown)", id: "brown", label: "color.brown" },
+  { css: "var(--mdp-notion-orange)", id: "orange", label: "color.orange" },
+  { css: "var(--mdp-notion-yellow)", id: "yellow", label: "color.yellow" },
+  { css: "var(--mdp-notion-green)", id: "green", label: "color.green" },
+  { css: "var(--mdp-notion-blue)", id: "blue", label: "color.blue" },
+  { css: "var(--mdp-notion-purple)", id: "purple", label: "color.purple" },
+  { css: "var(--mdp-notion-pink)", id: "pink", label: "color.pink" },
+  { css: "var(--mdp-notion-red)", id: "red", label: "color.red" },
+];
+
+let palette: ColorPalette = "tailwind";
+
+export const setColorPalette = (value: ColorPalette): void => {
+  palette = value;
+};
+
+export const getColorPalette = (): ColorPalette => palette;
+
+/** Cores oferecidas na aba Ícones, da paleta escolhida nas configurações. */
+export const iconColors = (): IconColor[] =>
+  palette === "notion" ? NOTION_COLORS : TAILWIND_COLORS;
+
 export const DEFAULT_ICON_COLOR = "default";
 
 const HEX_COLOR = /^#[\da-f]{6}$/iu;
@@ -59,9 +93,12 @@ export const iconColorCss = (id: string): string => {
   if (isCustomColor(id)) {
     return id;
   }
-  return (
-    (ICON_COLORS.find((color) => color.id === id) ?? ICON_COLORS[0])?.css ?? ""
+  // Um id que só existe na outra paleta (amber, brown...) ainda resolve, para
+  // não deixar a nota sem cor ao trocar de paleta.
+  const found = [...iconColors(), ...TAILWIND_COLORS, ...NOTION_COLORS].find(
+    (color) => color.id === id
   );
+  return found?.css ?? iconColors()[0]?.css ?? "";
 };
 
 export interface LucideIcon {

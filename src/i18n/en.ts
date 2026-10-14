@@ -5,6 +5,7 @@ export const en: Messages = {
   "color.amber": "Amber",
   "color.askAlways": "Always ask",
   "color.blue": "Blue",
+  "color.brown": "Brown",
   "color.custom": "Choose another color",
   "color.cyan": "Cyan",
   "color.default": "Default",
@@ -114,6 +115,11 @@ export const en: Messages = {
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
+  "settings.colorPalette.desc":
+    "Colors offered for icons. Notes already saved keep their chosen color, just in the shade of the active palette.",
+  "settings.colorPalette.name": "Icon colors",
+  "settings.colorPalette.notion": "Notion colors",
+  "settings.colorPalette.tailwind": "Current colors (Tailwind)",
   "settings.coverFade.desc":
     "How much of the cover, from the bottom up, fades out into the note. Zero turns the effect off.",
   "settings.coverFade.name": "Fade at the bottom",

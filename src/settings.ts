@@ -4,6 +4,8 @@ import { PluginSettingTab, Setting } from "obsidian";
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
 import type CoverlyPlugin from "./main";
+import { setColorPalette } from "./page-icon";
+import type { ColorPalette } from "./page-icon";
 
 export interface CoverlySettings {
   /** Idioma da interface: um fixo ou "auto", que segue o do Obsidian. */
@@ -16,6 +18,8 @@ export interface CoverlySettings {
   coverFade: number;
   /** Quanto da altura da capa, de baixo para cima, escurece em degradê preto. 0 = sem sombra. */
   coverShade: number;
+  /** Cores dos ícones: as do Notion ou as do Tailwind (a paleta original). */
+  colorPalette: ColorPalette;
   /** Última cor usada na aba Ícones, para abrir já com ela. */
   iconColor: string;
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
@@ -32,6 +36,7 @@ export interface CoverlySettings {
 
 export const DEFAULT_SETTINGS: CoverlySettings = {
   askIconColor: false,
+  colorPalette: "tailwind",
   coverFade: 0,
   coverHeight: 240,
   coverRadius: 0,
@@ -146,6 +151,22 @@ export class CoverlySettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.coverShade = value;
             this.plugin.applyCoverStyle();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.colorPalette.name"))
+      .setDesc(t("settings.colorPalette.desc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("tailwind", t("settings.colorPalette.tailwind"))
+          .addOption("notion", t("settings.colorPalette.notion"))
+          .setValue(this.plugin.settings.colorPalette)
+          .onChange(async (value) => {
+            this.plugin.settings.colorPalette = value as ColorPalette;
+            setColorPalette(this.plugin.settings.colorPalette);
+            this.plugin.refreshHeaders();
             await this.plugin.saveSettings();
           })
       );

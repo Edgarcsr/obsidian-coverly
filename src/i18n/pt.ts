@@ -7,6 +7,7 @@ export const pt = {
   "color.amber": "Âmbar",
   "color.askAlways": "Perguntar sempre",
   "color.blue": "Azul",
+  "color.brown": "Marrom",
   "color.custom": "Escolher outra cor",
   "color.cyan": "Ciano",
   "color.default": "Padrão",
@@ -116,6 +117,11 @@ export const pt = {
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
+  "settings.colorPalette.desc":
+    "Cores oferecidas para os ícones. As notas já gravadas mantêm a cor escolhida, só no tom da paleta ativa.",
+  "settings.colorPalette.name": "Cores dos ícones",
+  "settings.colorPalette.notion": "Cores do Notion",
+  "settings.colorPalette.tailwind": "Cores atuais (Tailwind)",
   "settings.coverFade.desc":
     "Quanto da capa, de baixo para cima, some em degradê até a nota. Zero desliga o efeito.",
   "settings.coverFade.name": "Degradê na parte de baixo",

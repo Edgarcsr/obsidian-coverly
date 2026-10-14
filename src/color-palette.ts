@@ -2,9 +2,9 @@ import { setTooltip } from "obsidian";
 
 import { t } from "./i18n";
 import {
-  ICON_COLORS,
   drawLucide,
   iconColorCss,
+  iconColors,
   isCustomColor,
 } from "./page-icon";
 
@@ -104,7 +104,7 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
     await options.onColorChange(id);
   };
 
-  for (const color of ICON_COLORS) {
+  for (const color of iconColors()) {
     const swatch = colors.createEl("button", {
       cls:
         color.id === state.color
@@ -183,7 +183,7 @@ export const showColorVariants = (
   state: ColorState,
   onPick: (color: string) => Promise<void>
 ): (() => void) => {
-  const ids = ICON_COLORS.map((color) => color.id);
+  const ids = iconColors().map((color) => color.id);
   if (isCustomColor(state.color)) {
     ids.push(state.color);
   }

@@ -4,6 +4,7 @@ import { buildHeader } from "./header";
 import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
+import { getColorPalette } from "./page-icon";
 
 export type Mode = "source" | "preview";
 
@@ -203,7 +204,7 @@ export class HeaderManager {
       this.plugin.app.metadataCache.getFileCache(file)?.frontmatter
     );
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${JSON.stringify(data)}`;
+    const key = `${file.path}\n${getLocale()}\n${getColorPalette()}\n${this.plugin.settings.twemoji}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;
