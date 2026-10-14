@@ -16,6 +16,7 @@ import {
 } from "./page-icon";
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
+import { drawEmoji } from "./twemoji";
 
 type Tab = "emoji" | "icons" | "upload";
 
@@ -38,7 +39,7 @@ const DIACRITICS = /\p{Diacritic}/gu;
 const normalize = (value: string): string =>
   value.normalize("NFD").replaceAll(DIACRITICS, "").toLowerCase().trim();
 
-const randomItem = <T,>(items: readonly T[]): T | undefined =>
+const randomItem = <T>(items: readonly T[]): T | undefined =>
   items[Math.floor(Math.random() * items.length)];
 
 const ALL_EMOJIS: EmojiEntry[] = EMOJI_GROUPS.flatMap((group) => group.emojis);
@@ -79,6 +80,8 @@ export interface IconPickerOptions {
   askColor: boolean;
   /** Emojis usados por último, para a seção Recentes. */
   recentEmojis: readonly string[];
+  /** Desenha os emojis no estilo do X em vez do emoji do sistema. */
+  twemoji: boolean;
   onPick: (value: string) => Promise<void>;
   onColorChange: (color: string) => Promise<void>;
   onAskColorChange: (askColor: boolean) => Promise<void>;
@@ -297,14 +300,15 @@ export class IconPicker extends TabbedPopover<Tab> {
     });
     const grid = parent.createDiv({ cls: "mdp-icon-grid is-emoji" });
     for (const entry of entries) {
-      optionButton(
+      const button = optionButton(
         grid,
         entry.keywords,
         entry.emoji === this.options.current,
         async () => {
           await this.pick(entry.emoji);
         }
-      ).setText(entry.emoji);
+      );
+      drawEmoji(button, entry.emoji, this.options.twemoji, true);
     }
     return titleEl;
   }

@@ -185,7 +185,8 @@ export class HeaderManager {
     const data = dataFromFrontmatter(
       this.plugin.app.metadataCache.getFileCache(file)?.frontmatter
     );
-    const key = `${file.path}\n${JSON.stringify(data)}`;
+    // O estilo do emoji entra na chave para redesenhar quando a opção muda.
+    const key = `${file.path}\n${this.plugin.settings.twemoji}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;

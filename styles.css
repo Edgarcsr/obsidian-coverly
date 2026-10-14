@@ -1,24 +1,22 @@
-/* ---------- Propriedades do plugin ocultas, só se o usuário ligar a opção; as demais continuam visíveis ---------- */
-body.mdp-hide-properties .metadata-property[data-property-key="cover"],
-body.mdp-hide-properties .metadata-property[data-property-key="cover-position"],
-body.mdp-hide-properties .metadata-property[data-property-key="cover-credit"],
-body.mdp-hide-properties
-  .metadata-property[data-property-key="cover-credit-url"],
-body.mdp-hide-properties .metadata-property[data-property-key="icon"] {
+/* ---------- Propriedades do plugin sempre ocultas; as demais continuam visíveis ---------- */
+.metadata-property[data-property-key="cover"],
+.metadata-property[data-property-key="cover-position"],
+.metadata-property[data-property-key="cover-credit"],
+.metadata-property[data-property-key="cover-credit-url"],
+.metadata-property[data-property-key="icon"] {
   display: none !important;
 }
 
 /* Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar propriedade" */
-body.mdp-hide-properties
-  .metadata-container:not(
-    :has(
-      .metadata-property:not([data-property-key="cover"]):not(
-          [data-property-key="cover-position"]
-        ):not([data-property-key="cover-credit"]):not(
-          [data-property-key="cover-credit-url"]
-        ):not([data-property-key="icon"])
-    )
-  ) {
+.metadata-container:not(
+  :has(
+    .metadata-property:not([data-property-key="cover"]):not(
+        [data-property-key="cover-position"]
+      ):not([data-property-key="cover-credit"]):not(
+        [data-property-key="cover-credit-url"]
+      ):not([data-property-key="icon"])
+  )
+) {
   display: none;
 }
 
@@ -31,7 +29,8 @@ body.mdp-hide-properties
 
 /* ---------- Cabeçalho (capa + ícone) ---------- */
 .mdp-header {
-  --mdp-icon-overlap: 36px;
+  --mdp-cover-gap: 48px;
+  --mdp-icon-size: 80px;
 
   position: relative;
   margin-bottom: 4px;
@@ -191,50 +190,68 @@ body.mdp-hide-properties
   color: inherit;
 }
 
-/* ---------- Ícone sobreposto à borda inferior da capa ---------- */
+/*
+ * ---------- Ícone sobreposto à borda inferior da capa ----------
+ * O espaço entre a capa e o título é sempre --mdp-cover-gap, com ou sem
+ * ícone: sem ícone, é a margem + a linha de "Adicionar ícone"; com ícone, a
+ * parte dele que fica abaixo da capa.
+ */
 .mdp-icon-row {
+  /* Acima da capa, que é posicionada e pintaria por cima do ícone */
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-end;
-  padding-left: 4px;
 }
 
 .has-cover.has-icon .mdp-icon-row {
-  margin-top: calc(var(--mdp-icon-overlap) * -1);
+  margin-top: calc(var(--mdp-cover-gap) - var(--mdp-icon-size));
+}
+
+.mdp-header:not(.has-cover) .mdp-icon-row {
+  margin-top: 16px;
+}
+
+/* Com capa e ícone não há o que adicionar; a linha vazia mudaria o espaço */
+.has-cover.has-icon .mdp-add-row {
+  display: none;
 }
 
 /* Com capa e sem ícone, os botões de adicionar ficam logo abaixo da capa */
 .has-cover:not(.has-icon) .mdp-add-row {
+  min-height: calc(var(--mdp-cover-gap) - 12px);
   margin-top: 12px;
 }
 
-.mdp-header .mdp-icon {
-  position: relative;
-  padding: 2px 6px;
+/* Sem caixa nem sombra, como no Notion: no hover, só um fundo discreto */
+.mdp-header .mdp-icon-row .mdp-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mdp-icon-size);
+  height: var(--mdp-icon-size);
+  min-height: var(--mdp-icon-size);
+  max-height: none;
+  flex-shrink: 0;
+  padding: 0;
   font-size: 64px;
-  line-height: 1.1;
-  background: var(--background-primary);
+  line-height: 1;
+  background: transparent;
   border: none;
-  border-radius: 14px;
-  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.mdp-header.is-entering .mdp-icon {
-  animation: mdp-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
-}
-
-.mdp-header .mdp-icon:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 16%);
-}
-
-.mdp-header:not(.has-cover) .mdp-icon {
-  padding-top: 16px;
-  background: none;
+  border-radius: 8px;
   box-shadow: none;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.mdp-header .mdp-icon-row .mdp-icon:hover {
+  background: var(--background-modifier-hover);
+}
+
+.mdp-header .mdp-icon .mdp-twemoji {
+  display: block;
+  width: 68px;
+  height: 68px;
 }
 
 /* Ações de adicionar, discretas e visíveis só no hover */
@@ -876,16 +893,10 @@ body.mdp-hide-properties
   height: 1px;
 }
 
-/* Ícone Lucide no lugar do emoji: mesmo tamanho visual, na cor do texto */
-.mdp-header .mdp-icon.is-lucide {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* Ícone Lucide no lugar do emoji: mesmo tamanho visual, na cor escolhida */
 .mdp-header .mdp-icon.is-lucide .svg-icon {
   width: 64px;
-  height: 70px;
+  height: 64px;
   stroke-width: 1.5;
 }
 
@@ -948,8 +959,8 @@ body.mdp-hide-properties
 /* Imagem no lugar do emoji, no mesmo tamanho */
 .mdp-header .mdp-icon.is-image img {
   display: block;
-  width: 70px;
-  height: 70px;
+  width: 68px;
+  height: 68px;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -979,18 +990,6 @@ body.mdp-hide-properties
   }
 }
 
-@keyframes mdp-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mdp-picker,
   .mdp-cover,
@@ -1000,4 +999,10 @@ body.mdp-hide-properties
     animation: none;
     transition: none;
   }
+}
+
+/* Twemoji na grade do seletor, no tamanho visual dos ícones Lucide */
+.mdp-picker .mdp-icon-option .mdp-twemoji {
+  width: 18px;
+  height: 18px;
 }

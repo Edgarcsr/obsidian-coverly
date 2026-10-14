@@ -15,7 +15,9 @@
     "fix": "ultracite fix"
   },
   "devDependencies": {
+    "@twemoji/svg": "15.0.0",
     "@types/node": "^22.15.17",
+    "emojibase-data": "17.0.0",
     "esbuild": "0.25.5",
     "jiti": "^2.6.1",
     "obsidian": "1.12.3",

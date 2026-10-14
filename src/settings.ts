@@ -10,14 +10,14 @@ export interface MdPlusSettings {
   coverRadius: number;
   /** Quanto da altura da capa, de baixo para cima, some em degradê. 0 = sem degradê. */
   coverFade: number;
-  /** Esconde do painel de propriedades só as que o plugin grava (capa e ícone). */
-  hideProperties: boolean;
   /** Última cor usada na aba Ícones, para abrir já com ela. */
   iconColor: string;
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
   askIconColor: boolean;
   /** Emojis usados por último, do mais recente para o mais antigo. */
   recentEmojis: string[];
+  /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */
+  twemoji: boolean;
 }
 
 export const DEFAULT_SETTINGS: MdPlusSettings = {
@@ -25,9 +25,9 @@ export const DEFAULT_SETTINGS: MdPlusSettings = {
   coverFade: 0,
   coverHeight: 240,
   coverRadius: 0,
-  hideProperties: false,
   iconColor: "default",
   recentEmojis: [],
+  twemoji: true,
   unsplashKey: "",
 };
 
@@ -107,16 +107,16 @@ export class MdPlusSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Ocultar propriedades da capa")
+      .setName("Emojis no estilo do X")
       .setDesc(
-        "Esconde do painel de propriedades só as que este plugin grava (capa e ícone). Tags e as demais continuam visíveis."
+        "Desenha os emojis com o Twemoji. As imagens são baixadas do jsDelivr (cdn.jsdelivr.net) quando aparecem; nada da nota é enviado. Desligado, usa os emojis do sistema."
       )
       .addToggle((toggle) =>
         toggle
-          .setValue(this.plugin.settings.hideProperties)
+          .setValue(this.plugin.settings.twemoji)
           .onChange(async (value) => {
-            this.plugin.settings.hideProperties = value;
-            this.plugin.applyCoverStyle();
+            this.plugin.settings.twemoji = value;
+            this.plugin.refreshHeaders();
             await this.plugin.saveSettings();
           })
       );

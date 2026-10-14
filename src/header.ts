@@ -1,9 +1,9 @@
 import { setIcon } from "obsidian";
 
 import type MdPlusPlugin from "./main";
-import { drawPageIcon } from "./page-icon";
 import { resolveCoverSource } from "./note-data";
 import type { CoverData } from "./note-data";
+import { drawPageIcon } from "./page-icon";
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -292,7 +292,7 @@ export const buildHeader = (
       attr: { "aria-label": "Trocar ícone" },
       cls: "mdp-icon",
     });
-    drawPageIcon(plugin.app, icon, data.icon);
+    drawPageIcon(plugin.app, icon, data.icon, plugin.settings.twemoji);
     icon.addEventListener("click", () => {
       plugin.openIconPicker(sourcePath, icon);
     });

@@ -3,9 +3,9 @@ import type { TFile } from "obsidian";
 
 import { CoverPicker } from "./cover-picker";
 import { IconPicker } from "./icon-picker";
-import { isImageIcon, parseLucide } from "./page-icon";
 import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
+import { isImageIcon, parseLucide } from "./page-icon";
 import { DEFAULT_SETTINGS, MdPlusSettingTab } from "./settings";
 import type { MdPlusSettings } from "./settings";
 import { HeaderManager } from "./view-header";
@@ -85,7 +85,6 @@ export default class MdPlusPlugin extends Plugin {
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);
     }
-    document.body.removeClass("mdp-hide-properties");
   }
 
   /** Mantém o cabeçalho em dia com a nota aberta, o modo da view e o frontmatter. */
@@ -114,6 +113,11 @@ export default class MdPlusPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
+  /** Redesenha os cabeçalhos abertos depois de uma mudança nas configurações. */
+  refreshHeaders(): void {
+    this.headers.schedule();
+  }
+
   /** Passa altura, cantos e degradê da capa para o CSS, que os lê como variáveis. */
   applyCoverStyle(): void {
     const { coverFade, coverHeight, coverRadius } = this.settings;
@@ -121,10 +125,6 @@ export default class MdPlusPlugin extends Plugin {
     style.setProperty("--mdp-cover-height", `${coverHeight}px`);
     style.setProperty("--mdp-cover-radius", `${coverRadius}px`);
     style.setProperty("--mdp-cover-fade", `${coverFade}%`);
-    document.body.toggleClass(
-      "mdp-hide-properties",
-      this.settings.hideProperties
-    );
   }
 
   /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */
@@ -187,6 +187,7 @@ export default class MdPlusPlugin extends Plugin {
       },
       recentEmojis: this.settings.recentEmojis,
       sourcePath,
+      twemoji: this.settings.twemoji,
     });
     this.showPicker(picker);
   }

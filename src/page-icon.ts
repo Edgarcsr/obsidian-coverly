@@ -1,6 +1,8 @@
 import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
+import { drawEmoji } from "./twemoji";
+
 /**
  * O ícone da página fica no frontmatter como texto: um emoji ("📚"), um
  * ícone Lucide prefixado, com a cor opcional no fim ("lucide:book-open" ou
@@ -107,8 +109,16 @@ const imageSource = (app: App, value: string): string | null => {
 export const isImageIcon = (app: App, value: string): boolean =>
   imageSource(app, value) !== null;
 
-/** Desenha o ícone da página, emoji, Lucide ou imagem, dentro de `el`. */
-export const drawPageIcon = (app: App, el: HTMLElement, value: string): void => {
+/**
+ * Desenha o ícone da página, emoji, Lucide ou imagem, dentro de `el`. Com
+ * `twemoji`, o emoji sai no estilo do X em vez do emoji do sistema.
+ */
+export const drawPageIcon = (
+  app: App,
+  el: HTMLElement,
+  value: string,
+  twemoji: boolean
+): void => {
   const lucide = parseLucide(value);
   const image = lucide === null ? imageSource(app, value) : null;
   el.toggleClass("is-lucide", lucide !== null);
@@ -117,7 +127,7 @@ export const drawPageIcon = (app: App, el: HTMLElement, value: string): void => 
     drawLucide(el, lucide.name);
     el.style.color = iconColorCss(lucide.color);
   } else if (image === null) {
-    el.setText(value);
+    drawEmoji(el, value, twemoji);
   } else {
     el.createEl("img", { attr: { alt: "", src: image } });
   }
