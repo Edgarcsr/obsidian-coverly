@@ -20,6 +20,8 @@ export interface CoverlySettings {
   recentEmojis: string[];
   /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */
   twemoji: boolean;
+  /** Mostra o sumário de títulos na lateral direita da nota. */
+  toc: boolean;
 }
 
 export const DEFAULT_SETTINGS: CoverlySettings = {
@@ -30,6 +32,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverShade: 0,
   iconColor: "default",
   recentEmojis: [],
+  toc: true,
   twemoji: true,
   unsplashKey: "",
 };
@@ -139,6 +142,19 @@ export class CoverlySettingTab extends PluginSettingTab {
             this.plugin.refreshHeaders();
             await this.plugin.saveSettings();
           })
+      );
+
+    new Setting(containerEl)
+      .setName("Sumário na lateral")
+      .setDesc(
+        "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles."
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.toc).onChange(async (value) => {
+          this.plugin.settings.toc = value;
+          this.plugin.refreshHeaders();
+          await this.plugin.saveSettings();
+        })
       );
   }
 }

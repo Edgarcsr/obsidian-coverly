@@ -1,14 +1,23 @@
-/* ---------- Propriedades do plugin sempre ocultas; as demais continuam visíveis ---------- */
-.metadata-property[data-property-key="cover"],
-.metadata-property[data-property-key="cover-position"],
-.metadata-property[data-property-key="cover-credit"],
-.metadata-property[data-property-key="cover-credit-url"],
-.metadata-property[data-property-key="icon"] {
+/*
+ * ---------- Propriedades do plugin ocultas na nota; as demais continuam visíveis ----------
+ * Escopado às views da nota (edição e leitura, incluindo embeds e popovers de
+ * hover). O painel lateral de propriedades do arquivo não usa essas classes,
+ * então lá elas continuam aparecendo e podem ser editadas.
+ */
+:is(.markdown-source-view, .markdown-preview-view)
+  .metadata-property:is(
+    [data-property-key="cover"],
+    [data-property-key="cover-position"],
+    [data-property-key="cover-credit"],
+    [data-property-key="cover-credit-url"],
+    [data-property-key="icon"]
+  ) {
   display: none !important;
 }
 
 /* Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar propriedade" */
-.metadata-container:not(
+:is(.markdown-source-view, .markdown-preview-view)
+  .metadata-container:not(
   :has(
     .metadata-property:not([data-property-key="cover"]):not(
         [data-property-key="cover-position"]
@@ -414,50 +423,63 @@
  * de ~4px arredondado, discreto em repouso e mais visível com o mouse por cima.
  * O Obsidian roda no Chromium, então os pseudo-elementos -webkit bastam; o
  * espaço de 8px menos a borda transparente de 2px dá o indicador de 4px.
+ *
+ * Duas regras do Obsidian atrapalham, e as duas deixam o indicador a 10%:
+ * - `body:not(.styled-scrollbars)` define `scrollbar-color`, que é herdado; com
+ *   ele, o Chromium ignora os -webkit. Daí o `auto` explícito abaixo.
+ * - `body.styled-scrollbars ::-webkit-scrollbar-*` é mais específico que só a
+ *   classe do elemento. Daí o prefixo `.mdp-picker`.
  */
-.mdp-picker-body::-webkit-scrollbar,
-.mdp-color-palette::-webkit-scrollbar,
-.mdp-color-variants::-webkit-scrollbar {
+.mdp-picker .mdp-picker-body,
+.mdp-picker .mdp-color-palette,
+.mdp-picker .mdp-color-variants {
+  scrollbar-color: auto;
+  scrollbar-width: auto;
+}
+
+.mdp-picker .mdp-picker-body::-webkit-scrollbar,
+.mdp-picker .mdp-color-palette::-webkit-scrollbar,
+.mdp-picker .mdp-color-variants::-webkit-scrollbar {
   width: 8px;
   height: 8px;
   background: transparent;
 }
 
-.mdp-picker-body::-webkit-scrollbar-track,
-.mdp-color-palette::-webkit-scrollbar-track,
-.mdp-color-variants::-webkit-scrollbar-track,
-.mdp-picker-body::-webkit-scrollbar-corner {
+.mdp-picker .mdp-picker-body::-webkit-scrollbar-track,
+.mdp-picker .mdp-color-palette::-webkit-scrollbar-track,
+.mdp-picker .mdp-color-variants::-webkit-scrollbar-track,
+.mdp-picker .mdp-picker-body::-webkit-scrollbar-corner {
   background: transparent;
   border: none;
 }
 
-.mdp-picker-body::-webkit-scrollbar-button,
-.mdp-color-palette::-webkit-scrollbar-button,
-.mdp-color-variants::-webkit-scrollbar-button {
+.mdp-picker .mdp-picker-body::-webkit-scrollbar-button,
+.mdp-picker .mdp-color-palette::-webkit-scrollbar-button,
+.mdp-picker .mdp-color-variants::-webkit-scrollbar-button {
   display: none;
 }
 
-.mdp-picker-body::-webkit-scrollbar-thumb,
-.mdp-color-palette::-webkit-scrollbar-thumb,
-.mdp-color-variants::-webkit-scrollbar-thumb {
-  background-color: rgb(127 127 127 / 20%);
+.mdp-picker .mdp-picker-body::-webkit-scrollbar-thumb,
+.mdp-picker .mdp-color-palette::-webkit-scrollbar-thumb,
+.mdp-picker .mdp-color-variants::-webkit-scrollbar-thumb {
+  min-height: 32px;
+  background-color: rgb(127 127 127 / 30%);
   background-clip: padding-box;
   border: 2px solid transparent;
   border-radius: 4px;
-  transition: background-color 0.15s ease;
 }
 
-.mdp-picker-body:hover::-webkit-scrollbar-thumb,
-.mdp-color-palette:hover::-webkit-scrollbar-thumb,
-.mdp-color-variants:hover::-webkit-scrollbar-thumb {
-  background-color: rgb(127 127 127 / 40%);
+.mdp-picker .mdp-picker-body:hover::-webkit-scrollbar-thumb,
+.mdp-picker .mdp-color-palette:hover::-webkit-scrollbar-thumb,
+.mdp-picker .mdp-color-variants:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(127 127 127 / 50%);
 }
 
-.mdp-picker-body::-webkit-scrollbar-thumb:hover,
-.mdp-picker-body::-webkit-scrollbar-thumb:active,
-.mdp-color-palette::-webkit-scrollbar-thumb:hover,
-.mdp-color-variants::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(127 127 127 / 60%);
+.mdp-picker .mdp-picker-body::-webkit-scrollbar-thumb:hover,
+.mdp-picker .mdp-picker-body::-webkit-scrollbar-thumb:active,
+.mdp-picker .mdp-color-palette::-webkit-scrollbar-thumb:hover,
+.mdp-picker .mdp-color-variants::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(127 127 127 / 70%);
 }
 
 .mdp-picker-section-title {
@@ -1063,6 +1085,17 @@
  * o oposto da largura do ícone.
  */
 .nav-file-title .mdp-inline-icon {
+  /*
+   * A linha da árvore alinha pela linha de base (`align-items: baseline`), e um
+   * ícone sem texto apoia a borda de baixo nela, ficando alto demais. Preso ao
+   * topo e centralizado na altura da primeira linha, fica no meio do nome
+   * (e continua na primeira linha quando o nome quebra).
+   */
+  align-self: flex-start;
+  margin-block-start: calc(
+    (var(--nav-item-size) * var(--line-height-tight) - var(--mdp-inline-size)) /
+      2
+  );
   margin-inline-start: calc(-1 * var(--mdp-inline-size) - 6px);
   margin-inline-end: 6px;
 }
@@ -1076,7 +1109,8 @@
   width: 16px;
   height: 16px;
   margin-inline-end: 6px;
-  vertical-align: -2px;
+  /* Centro do ícone (8px) no meio da altura das maiúsculas e números (~0,35em). */
+  vertical-align: calc(0.35em - 8px);
   content: "";
   background: var(--mdp-title-icon-image) center / contain no-repeat;
 }
@@ -1166,4 +1200,121 @@
 .mdp-picker .mdp-icon-option .mdp-twemoji {
   width: 18px;
   height: 18px;
+}
+
+/*
+ * ---------- Sumário na lateral (como no Notion) ----------
+ * Um traço por título na borda direita da nota, centralizado na altura. O da
+ * seção atual fica em destaque. Com o mouse por cima, um cartão com os títulos
+ * aparece no lugar dos traços.
+ */
+.view-content:has(> .mdp-toc) {
+  position: relative;
+}
+
+.mdp-toc {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  z-index: var(--layer-cover, 5);
+  transform: translateY(-50%);
+}
+
+.mdp-toc-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  max-height: 60vh;
+  padding: 8px 4px;
+  overflow: hidden;
+  transition: opacity 120ms ease;
+}
+
+.mdp-toc-line {
+  flex-shrink: 0;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--text-faint);
+  opacity: 0.6;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.mdp-toc-line[data-depth="1"] {
+  width: 12px;
+}
+
+.mdp-toc-line[data-depth="2"],
+.mdp-toc-line[data-depth="3"] {
+  width: 8px;
+}
+
+.mdp-toc-line.is-active {
+  background-color: var(--text-normal);
+  opacity: 1;
+}
+
+.mdp-toc-panel {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 240px;
+  max-height: 60vh;
+  padding: 6px;
+  overflow-y: auto;
+  border-radius: 10px;
+  background-color: var(--background-primary);
+  box-shadow: var(--shadow-s), 0 0 0 1px var(--background-modifier-border);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(8px, -50%);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.mdp-toc:hover .mdp-toc-lines {
+  opacity: 0;
+}
+
+.mdp-toc:hover .mdp-toc-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%);
+}
+
+.mdp-toc-item {
+  padding: 4px 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mdp-toc-item[data-depth="1"] {
+  padding-left: 20px;
+}
+
+.mdp-toc-item[data-depth="2"] {
+  padding-left: 32px;
+}
+
+.mdp-toc-item[data-depth="3"] {
+  padding-left: 44px;
+}
+
+.mdp-toc-item:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.mdp-toc-item.is-active {
+  color: var(--text-accent);
 }

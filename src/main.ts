@@ -9,6 +9,7 @@ import { NoteIconDecorator } from "./note-icons";
 import { isImageIcon, parseLucide } from "./page-icon";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
+import { TocManager } from "./toc";
 import { HeaderManager } from "./view-header";
 
 /** Uma linha da grade de emojis. */
@@ -40,6 +41,7 @@ export default class CoverlyPlugin extends Plugin {
   settings: CoverlySettings = { ...DEFAULT_SETTINGS };
   private readonly headers = new HeaderManager(this);
   private readonly noteIcons = new NoteIconDecorator(this);
+  private readonly toc = new TocManager(this);
   /** Só um seletor (de capa ou de ícone) aberto por vez. */
   private picker: CoverPicker | IconPicker | null = null;
 
@@ -86,6 +88,7 @@ export default class CoverlyPlugin extends Plugin {
     this.picker?.close();
     this.headers.destroy();
     this.noteIcons.destroy();
+    this.toc.destroy();
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);
     }
@@ -100,6 +103,7 @@ export default class CoverlyPlugin extends Plugin {
     const schedule = (): void => {
       this.headers.schedule();
       this.noteIcons.schedule();
+      this.toc.schedule();
     };
 
     workspace.onLayoutReady(schedule);
@@ -127,6 +131,7 @@ export default class CoverlyPlugin extends Plugin {
   refreshHeaders(): void {
     this.headers.schedule();
     this.noteIcons.schedule();
+    this.toc.schedule();
   }
 
   /** Passa altura, cantos, degradê e sombra da capa para o CSS, que os lê como variáveis. */
