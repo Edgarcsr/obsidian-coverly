@@ -54,10 +54,12 @@ export const paintBackground = (
     source.kind === "image"
       ? `url("${source.url.replaceAll('"', "%22")}")`
       : source.css;
-  el.style.backgroundImage = `linear-gradient(${DIM_LAYER}, ${DIM_LAYER}), ${layer}`;
-  el.style.backgroundSize = "cover";
-  el.style.backgroundPosition = "center";
-  el.style.backgroundRepeat = "no-repeat";
+  el.setCssStyles({
+    backgroundImage: `linear-gradient(${DIM_LAYER}, ${DIM_LAYER}), ${layer}`,
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "cover",
+  });
   el.dataset.mdpBackground = value;
   el.addClass("mdp-has-background");
 };

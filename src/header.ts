@@ -132,7 +132,7 @@ const photoLayout =
   async (zoom) => {
     const natural = await naturalSize(url);
     if (!natural) {
-      surface.style.backgroundSize = "cover";
+      surface.setCssStyles({ backgroundSize: "cover" });
       return { x: 0, y: 0 };
     }
     const frameWidth = cover.clientWidth;
@@ -424,8 +424,10 @@ export const paintCover = (
   surface.style.backgroundPosition = `${data.positionX}% ${data.position}%`;
   if (source?.kind === "image") {
     // Aspas no caminho quebrariam a declaração CSS, então são escapadas.
-    surface.style.backgroundImage = `url("${source.url.replaceAll('"', "%22")}")`;
-    surface.style.backgroundSize = "cover";
+    surface.setCssStyles({
+      backgroundImage: `url("${source.url.replaceAll('"', "%22")}")`,
+      backgroundSize: "cover",
+    });
   } else {
     surface.style.backgroundImage = source?.css ?? "";
     surface.style.backgroundSize = gradientSize(data.zoom);

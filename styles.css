@@ -23,72 +23,17 @@
     [data-property-key="cover-credit-url"],
     [data-property-key="icon"]
   ) {
-  display: none !important;
+  display: none;
 }
 
 /*
  * Sem nenhuma outra propriedade, o painel inteiro some, inclusive "Adicionar
- * propriedade". O plugin marca a nota com .mdp-props-empty (ver properties.ts).
+ * propriedade". O plugin marca a nota com .mdp-props-empty (ver properties.ts),
+ * e as variáveis do Obsidian que controlam o painel passam a valer "none".
  */
-.mdp-props-empty
-  :is(.markdown-source-view, .markdown-preview-view)
-  .metadata-container {
-  display: none !important;
-}
-
-/*
- * Mesmo efeito olhando o DOM, sem depender do cache de frontmatter: se todas
- * as propriedades exibidas são as do plugin, o painel inteiro some.
- */
-:is(.markdown-source-view, .markdown-preview-view)
-  .metadata-container:not(
-    :has(
-      .metadata-property:not(
-        [data-property-key="coverly-accent"],
-        [data-property-key="coverly-background"],
-        [data-property-key="coverly-font"],
-        [data-property-key="coverly-color"],
-        [data-property-key="coverly-cover"],
-        [data-property-key="coverly-position"],
-        [data-property-key="coverly-zoom"],
-        [data-property-key="coverly-credit"],
-        [data-property-key="coverly-credit-url"],
-        [data-property-key="coverly-icon"],
-        [data-property-key="cover"],
-        [data-property-key="cover-position"],
-        [data-property-key="cover-credit"],
-        [data-property-key="cover-credit-url"],
-        [data-property-key="icon"]
-      )
-    )
-  ) {
-  display: none !important;
-}
-
-/* Mesma regra com escopo na folha da nota (não atinge o painel lateral). */
-.workspace-leaf-content[data-type="markdown"]
-  .metadata-container:not(
-    :has(
-      .metadata-property:not(
-        [data-property-key="coverly-accent"],
-        [data-property-key="coverly-background"],
-        [data-property-key="coverly-font"],
-        [data-property-key="coverly-color"],
-        [data-property-key="coverly-cover"],
-        [data-property-key="coverly-position"],
-        [data-property-key="coverly-zoom"],
-        [data-property-key="coverly-credit"],
-        [data-property-key="coverly-credit-url"],
-        [data-property-key="coverly-icon"],
-        [data-property-key="cover"],
-        [data-property-key="cover-position"],
-        [data-property-key="cover-credit"],
-        [data-property-key="cover-credit-url"],
-        [data-property-key="icon"]
-      )
-    )
-  ) {
-  display: none !important;
+.mdp-props-empty {
+  --metadata-display-editing: none;
+  --metadata-display-reading: none;
 }
 
 /*
@@ -1535,7 +1480,6 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   animation: mdp-picker-in 0.14s ease-out backwards;
 }
 
-
 /* A capa vai de borda a borda, compensando o padding do cartão */
 .mdp-link-card-cover {
   height: 72px;
@@ -1631,18 +1575,18 @@ body {
 /*
  * Só o texto da nota (editor, leitura e título), não a interface em volta:
  * trocar --font-text na view inteira mudaria também propriedades, botões e
- * sumário. O !important vale só para o contêiner, e o código segue na sua fonte.
+ * sumário. Vale só para o contêiner, e o código segue na sua fonte.
  */
 .mdp-font-serif :is(.cm-content, .inline-title, .markdown-preview-section) {
-  font-family: var(--mdp-font-serif) !important;
+  font-family: var(--mdp-font-serif);
 }
 
 .mdp-font-mono :is(.cm-content, .inline-title, .markdown-preview-section) {
-  font-family: var(--font-monospace) !important;
+  font-family: var(--font-monospace);
 }
 
 .mdp-font-custom :is(.cm-content, .inline-title, .markdown-preview-section) {
-  font-family: var(--mdp-note-font) !important;
+  font-family: var(--mdp-note-font);
 }
 
 /* Quadro de cores do nome da nota: reaproveita as classes da paleta de ícones. */

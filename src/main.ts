@@ -484,10 +484,13 @@ export default class CoverlyPlugin extends Plugin {
     if (!file || file.extension !== "md") {
       return;
     }
-    await this.app.fileManager.processFrontMatter(file, (fm) => {
-      migrateLegacyKeys(fm);
-      write(fm);
-    });
+    await this.app.fileManager.processFrontMatter(
+      file,
+      (fm: Record<string, unknown>) => {
+        migrateLegacyKeys(fm);
+        write(fm);
+      }
+    );
   }
 
   /**
