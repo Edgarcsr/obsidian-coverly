@@ -115,6 +115,11 @@ export const dataFromFrontmatter = (
 
 const URL_PATTERN = /^https?:\/\//u;
 
+const HEX_COLOR = /^#[0-9a-f]{6}$/iu;
+
+/** Cor escolhida livremente: `#rrggbb`. */
+export const isHexColor = (value: string): boolean => HEX_COLOR.test(value);
+
 export const resolveCoverSource = (
   app: App,
   value: string | undefined
@@ -127,6 +132,11 @@ export const resolveCoverSource = (
     const preset =
       GRADIENTS.find((g) => `gradient:${g.id}` === value) ?? GRADIENTS[0];
     return { css: preset?.css ?? "", kind: "gradient" };
+  }
+
+  if (isHexColor(value)) {
+    // Cor livre: um gradiente de uma cor só cabe na mesma camada dos demais.
+    return { css: `linear-gradient(${value}, ${value})`, kind: "gradient" };
   }
 
   if (URL_PATTERN.test(value)) {

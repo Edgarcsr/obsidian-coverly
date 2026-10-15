@@ -2,6 +2,7 @@ import { asyncListener } from "./async-listener";
 import { GRADIENTS } from "./gallery";
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
+import { isHexColor } from "./note-data";
 import { TabbedPopover } from "./popover";
 import type { PopoverTab } from "./popover";
 import { renderVaultImages } from "./vault-images";
@@ -100,6 +101,43 @@ export class BackgroundPicker extends TabbedPopover<Tab> {
         })
       );
     }
+
+    this.renderCustomColor(grid);
+  }
+
+  /** Último quadrado: abre o seletor de cores do sistema para qualquer cor. */
+  private renderCustomColor(grid: HTMLElement): void {
+    const custom = grid.createEl("button", {
+      attr: { "aria-label": t("color.custom"), title: t("color.custom") },
+      cls: "mdp-picker-tile is-custom",
+    });
+    const input = custom.createEl("input", {
+      cls: "mdp-color-input",
+      type: "color",
+    });
+    const showColor = (hex: string): void => {
+      custom.style.backgroundImage = `linear-gradient(${hex}, ${hex})`;
+    };
+    if (this.current && isHexColor(this.current)) {
+      input.value = this.current;
+      showColor(this.current);
+      custom.addClass("is-selected");
+    }
+
+    custom.addEventListener("click", () => {
+      input.click();
+    });
+    input.addEventListener(
+      "change",
+      asyncListener(async () => {
+        showColor(input.value);
+        await this.choose(input.value);
+        for (const other of this.body.querySelectorAll(".is-selected")) {
+          other.removeClass("is-selected");
+        }
+        custom.addClass("is-selected");
+      })
+    );
   }
 
   private renderLink(): void {

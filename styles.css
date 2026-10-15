@@ -1817,10 +1817,36 @@ body {
 
 /* Fundo da nota: as cores são quadrados, não faixas de banner */
 .mdp-picker-grid.is-squares {
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
 }
 
 .mdp-picker-grid.is-squares .mdp-picker-tile {
   height: auto;
   aspect-ratio: 1;
+}
+
+/* Quadrado de cor livre: o espectro até alguém escolher uma cor. */
+.mdp-picker .mdp-picker-tile.is-custom {
+  position: relative;
+  background-image: conic-gradient(
+    #ef4444,
+    #eab308,
+    #22c55e,
+    #06b6d4,
+    #3b82f6,
+    #a855f7,
+    #ec4899,
+    #ef4444
+  );
+}
+
+.mdp-picker-tile .mdp-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  pointer-events: none;
+  opacity: 0;
 }
