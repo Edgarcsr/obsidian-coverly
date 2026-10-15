@@ -296,11 +296,6 @@
   margin-top: 16px;
 }
 
-/* Com capa e ícone não há o que adicionar; a linha vazia mudaria o espaço */
-.has-cover.has-icon .mdp-add-row {
-  display: none;
-}
-
 /* Com capa e sem ícone, os botões de adicionar ficam logo abaixo da capa */
 .has-cover:not(.has-icon) .mdp-add-row {
   min-height: calc(var(--mdp-cover-gap) - 12px);
