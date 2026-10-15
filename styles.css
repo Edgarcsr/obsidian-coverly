@@ -13,7 +13,7 @@
     [data-property-key="cover-credit-url"],
     [data-property-key="icon"]
   ) {
-  display: none;
+  display: none !important;
 }
 
 /*
@@ -23,7 +23,42 @@
 .mdp-props-empty
   :is(.markdown-source-view, .markdown-preview-view)
   .metadata-container {
-  display: none;
+  display: none !important;
+}
+
+/*
+ * Mesmo efeito olhando o DOM, sem depender do cache de frontmatter: se todas
+ * as propriedades exibidas são as do plugin, o painel inteiro some.
+ */
+:is(.markdown-source-view, .markdown-preview-view)
+  .metadata-container:not(
+    :has(
+      .metadata-property:not(
+        [data-property-key="cover"],
+        [data-property-key="cover-position"],
+        [data-property-key="cover-credit"],
+        [data-property-key="cover-credit-url"],
+        [data-property-key="icon"]
+      )
+    )
+  ) {
+  display: none !important;
+}
+
+/* Mesma regra com escopo na folha da nota (não atinge o painel lateral). */
+.workspace-leaf-content[data-type="markdown"]
+  .metadata-container:not(
+    :has(
+      .metadata-property:not(
+        [data-property-key="cover"],
+        [data-property-key="cover-position"],
+        [data-property-key="cover-credit"],
+        [data-property-key="cover-credit-url"],
+        [data-property-key="icon"]
+      )
+    )
+  ) {
+  display: none !important;
 }
 
 /*

@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverFade: 0,
   coverHeight: 240,
   coverRadius: 0,
-  coverShade: 0,
+  coverShade: 35,
   iconColor: "default",
   language: "auto",
   linkPreview: true,
