@@ -1782,10 +1782,13 @@ body {
 }
 
 .mdp-color-palette .mdp-popup-remove {
-  height: auto;
-  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   margin-left: auto;
-  font-size: var(--font-ui-small);
   color: var(--text-muted);
   background: transparent;
   border: none;
@@ -1800,4 +1803,9 @@ body {
 .mdp-color-palette .mdp-popup-remove:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
+}
+
+.mdp-popup-remove svg {
+  width: 16px;
+  height: 16px;
 }

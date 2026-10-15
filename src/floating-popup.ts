@@ -1,3 +1,5 @@
+import { setIcon, setTooltip } from "obsidian";
+
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
 
@@ -62,8 +64,8 @@ export const openFloatingPopup = (
 };
 
 /**
- * Cabeçalho dos quadros: título à esquerda e, quando há o que tirar, "Remover"
- * no canto direito, como na barra de abas dos seletores de capa e ícone.
+ * Cabeçalho dos quadros: título à esquerda e, quando há o que tirar, a borracha
+ * ("Remover") no canto direito.
  */
 export const renderPopupHeader = (
   popup: HTMLElement,
@@ -76,10 +78,13 @@ export const renderPopupHeader = (
   if (!onRemove) {
     return;
   }
+  // Um ícone: o texto "Remover" ficava pequeno demais no canto do quadro.
   const remove = header.createEl("button", {
+    attr: { "aria-label": t("common.remove") },
     cls: "mdp-popup-remove",
-    text: t("common.remove"),
   });
+  setIcon(remove, "eraser");
+  setTooltip(remove, t("common.remove"));
   remove.addEventListener(
     "click",
     asyncListener(async () => {
