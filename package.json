@@ -1,6 +1,6 @@
 {
   "name": "coverly",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Notion-style page covers and icons for Obsidian",
   "license": "MIT",
   "type": "module",
