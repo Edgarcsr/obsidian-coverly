@@ -10,8 +10,9 @@ import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
 import { searchUnsplash, trackUnsplashDownload } from "./unsplash";
 import type { UnsplashPhoto } from "./unsplash";
+import { renderVaultImages } from "./vault-images";
 
-type Tab = "gallery" | "upload" | "link" | "unsplash";
+type Tab = "gallery" | "upload" | "vault" | "link" | "unsplash";
 
 /** Símbolo oficial do Unsplash, como o Notion mostra na aba. */
 const UNSPLASH_LOGO = "M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z";
@@ -19,6 +20,7 @@ const UNSPLASH_LOGO = "M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z";
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "gallery", label: t("tab.gallery") },
   { id: "upload", label: t("tab.upload") },
+  { id: "vault", label: t("tab.vault") },
   { id: "link", label: t("tab.link") },
   { icon: UNSPLASH_LOGO, id: "unsplash", label: "Unsplash" },
 ];
@@ -98,6 +100,17 @@ export class CoverPicker extends TabbedPopover<Tab> {
       }
       case "upload": {
         this.renderUpload();
+        break;
+      }
+      case "vault": {
+        renderVaultImages(this.body, {
+          app: this.options.plugin.app,
+          current: this.current,
+          pick: async (path) => {
+            await this.choose(path);
+            this.close();
+          },
+        });
         break;
       }
       case "link": {

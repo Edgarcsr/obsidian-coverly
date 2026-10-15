@@ -715,6 +715,19 @@
   transform: scale(1.04);
 }
 
+.mdp-picker .mdp-picker-photo.is-selected {
+  box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.mdp-picker-photos + .mdp-picker-hint:empty {
+  display: none;
+}
+
+.mdp-picker-photos ~ .mdp-picker-ghost {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .mdp-picker-photo-credit {
   position: absolute;
   right: 0;

@@ -167,6 +167,7 @@ export const pt = {
   "tab.link": "Link",
   "tab.upload": "Carregar",
   "tab.uploadIcon": "Fazer upload",
+  "tab.vault": "Vault",
 
   "toc.untitled": "Sem título",
 
@@ -174,6 +175,10 @@ export const pt = {
   "unsplash.rateLimit":
     "Limite de requisições do Unsplash atingido. O plano gratuito permite 50 por hora.",
   "unsplash.searchFailed": "Falha na busca do Unsplash (HTTP {status}).",
+
+  "vault.empty": "Nenhuma imagem encontrada no vault.",
+  "vault.more": "Mostrar mais",
+  "vault.placeholder": "Buscar imagens no vault…",
 } as const;
 
 export type MessageKey = keyof typeof pt;

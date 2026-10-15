@@ -21,13 +21,15 @@ import {
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
 import { drawEmoji } from "./twemoji";
+import { renderVaultImages } from "./vault-images";
 
-type Tab = "emoji" | "icons" | "upload";
+type Tab = "emoji" | "icons" | "upload" | "vault";
 
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "emoji", label: t("tab.emoji") },
   { id: "icons", label: t("tab.icons") },
   { id: "upload", label: t("tab.uploadIcon") },
+  { id: "vault", label: t("tab.vault") },
 ];
 
 /**
@@ -159,6 +161,16 @@ export class IconPicker extends TabbedPopover<Tab> {
             await this.pick(value);
           },
           sourcePath: this.options.sourcePath,
+        });
+        break;
+      }
+      case "vault": {
+        renderVaultImages(this.body, {
+          app: this.options.app,
+          current: this.options.current,
+          pick: async (path) => {
+            await this.pick(path);
+          },
         });
         break;
       }

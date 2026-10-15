@@ -165,6 +165,7 @@ export const en: Messages = {
   "tab.link": "Link",
   "tab.upload": "Upload",
   "tab.uploadIcon": "Upload",
+  "tab.vault": "Vault",
 
   "toc.untitled": "Untitled",
 
@@ -172,4 +173,8 @@ export const en: Messages = {
   "unsplash.rateLimit":
     "Unsplash rate limit reached. The free plan allows 50 requests per hour.",
   "unsplash.searchFailed": "Unsplash search failed (HTTP {status}).",
+
+  "vault.empty": "No images found in the vault.",
+  "vault.more": "Show more",
+  "vault.placeholder": "Search images in the vault…",
 };
