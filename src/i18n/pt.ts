@@ -114,7 +114,6 @@ export const pt = {
   "iconUpload.pasteHint": "ou Ctrl+V para colar uma imagem ou link",
 
   "notice.chooseImage": "Escolha um arquivo de imagem.",
-  "notice.openNote": "Abra uma nota primeiro.",
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 

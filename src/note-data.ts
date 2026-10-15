@@ -2,14 +2,26 @@ import type { App } from "obsidian";
 
 import { GRADIENTS } from "./gallery";
 
-/** Nomes das propriedades gravadas no frontmatter da nota. */
+/**
+ * Nomes das propriedades gravadas no frontmatter da nota. O prefixo `coverly-`
+ * evita conflito com outros plugins que também usam `cover` e `icon`.
+ */
 export const FM = {
+  cover: "coverly-cover",
+  credit: "coverly-credit",
+  creditUrl: "coverly-credit-url",
+  icon: "coverly-icon",
+  position: "coverly-position",
+} as const;
+
+/** Nomes usados antes do prefixo. Ainda são lidos e migrados ao gravar a nota. */
+export const LEGACY_FM: Record<keyof typeof FM, string> = {
   cover: "cover",
   credit: "cover-credit",
   creditUrl: "cover-credit-url",
   icon: "icon",
   position: "cover-position",
-} as const;
+};
 
 /** Chaves removidas quando a capa é tirada da nota. */
 export const COVER_KEYS: readonly string[] = [
@@ -18,6 +30,26 @@ export const COVER_KEYS: readonly string[] = [
   FM.credit,
   FM.creditUrl,
 ];
+
+/** Move para os nomes com prefixo o que estiver gravado com os nomes antigos. */
+export const migrateLegacyKeys = (fm: Record<string, unknown>): void => {
+  for (const name of Object.keys(FM) as (keyof typeof FM)[]) {
+    const legacy = LEGACY_FM[name];
+    if (!(legacy in fm)) {
+      continue;
+    }
+    if (!(FM[name] in fm)) {
+      fm[FM[name]] = fm[legacy];
+    }
+    Reflect.deleteProperty(fm, legacy);
+  }
+};
+
+/** Valor da propriedade com prefixo; sem ela, cai no nome antigo. */
+const read = (
+  fm: Record<string, unknown> | null | undefined,
+  name: keyof typeof FM
+): unknown => fm?.[FM[name]] ?? fm?.[LEGACY_FM[name]];
 
 export interface CoverData {
   cover?: string;
@@ -53,12 +85,12 @@ const text = (value: unknown): string | undefined => {
 export const dataFromFrontmatter = (
   fm: Record<string, unknown> | null | undefined
 ): CoverData => {
-  const position = Number(fm?.[FM.position]);
+  const position = Number(read(fm, "position"));
   return {
-    cover: text(fm?.[FM.cover]),
-    credit: text(fm?.[FM.credit]),
-    creditUrl: text(fm?.[FM.creditUrl]),
-    icon: text(fm?.[FM.icon]),
+    cover: text(read(fm, "cover")),
+    credit: text(read(fm, "credit")),
+    creditUrl: text(read(fm, "creditUrl")),
+    icon: text(read(fm, "icon")),
     position: Number.isFinite(position)
       ? clamp(position, 0, 100)
       : DEFAULT_POSITION,

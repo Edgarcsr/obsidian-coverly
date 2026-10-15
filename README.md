@@ -20,7 +20,7 @@
 - **Heading outline**: a slim outline on the right edge of the note that expands on hover and jumps to a heading on click.
 - **English and Portuguese** interface, following Obsidian's language by default.
 
-Covers and icons are stored in the note's frontmatter (`cover`, `cover-position`, `cover-credit`, `cover-credit-url`, `icon`), so your notes stay plain Markdown.
+Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown.
 
 ## Network use
 

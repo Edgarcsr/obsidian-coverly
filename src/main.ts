@@ -1,11 +1,15 @@
-import { Notice, Plugin } from "obsidian";
-import type { TFile } from "obsidian";
+import { MarkdownView, Plugin } from "obsidian";
 
 import { CoverPicker } from "./cover-picker";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
 import { LinkPreview } from "./link-preview";
-import { COVER_KEYS, FM, dataFromFrontmatter } from "./note-data";
+import {
+  COVER_KEYS,
+  FM,
+  dataFromFrontmatter,
+  migrateLegacyKeys,
+} from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { NoteIconDecorator } from "./note-icons";
 import {
@@ -46,9 +50,6 @@ const removeKeys = (
   }
 };
 
-/** Aviso ao usuário. Devolve a notificação para não ser um efeito colateral solto. */
-const notify = (message: string): Notice => new Notice(message);
-
 export default class CoverlyPlugin extends Plugin {
   settings: CoverlySettings = { ...DEFAULT_SETTINGS };
   private readonly headers = new HeaderManager(this);
@@ -79,32 +80,23 @@ export default class CoverlyPlugin extends Plugin {
     this.popoverHeaders.register();
 
     this.addCommand({
-      callback: () => {
-        const path = this.activeNotePath();
-        if (path) {
-          this.openCoverPicker(path);
-        }
-      },
+      checkCallback: this.onActiveNote((path) => {
+        this.openCoverPicker(path);
+      }),
       id: "change-cover",
       name: t("command.changeCover"),
     });
     this.addCommand({
-      callback: () => {
-        const path = this.activeNotePath();
-        if (path) {
-          this.openIconPicker(path);
-        }
-      },
+      checkCallback: this.onActiveNote((path) => {
+        this.openIconPicker(path);
+      }),
       id: "change-icon",
       name: t("command.changeIcon"),
     });
     this.addCommand({
-      callback: async () => {
-        const path = this.activeNotePath();
-        if (path) {
-          await this.setCover(path, null);
-        }
-      },
+      checkCallback: this.onActiveNote((path) => {
+        void this.setCover(path, null);
+      }),
       id: "remove-cover",
       name: t("command.removeCover"),
     });
@@ -307,19 +299,32 @@ export default class CoverlyPlugin extends Plugin {
     write: FrontmatterWriter
   ): Promise<void> {
     const file = this.app.vault.getFileByPath(sourcePath);
-    if (!file) {
+    // Só notas markdown têm frontmatter: canvas, PDF e afins seriam corrompidos.
+    if (!file || file.extension !== "md") {
       return;
     }
-    await this.app.fileManager.processFrontMatter(file, write);
+    await this.app.fileManager.processFrontMatter(file, (fm) => {
+      migrateLegacyKeys(fm);
+      write(fm);
+    });
   }
 
-  /** Caminho da nota ativa. Avisa quando não há nenhuma aberta. */
-  private activeNotePath(): string | null {
-    const file: TFile | null = this.app.workspace.getActiveFile();
-    if (!file) {
-      notify(t("notice.openNote"));
-      return null;
-    }
-    return file.path;
+  /**
+   * Adapta uma ação sobre a nota ativa para `checkCallback`: o comando só
+   * aparece quando a view ativa é uma nota markdown, e não um canvas ou PDF.
+   */
+  private onActiveNote(
+    action: (path: string) => void
+  ): (checking: boolean) => boolean {
+    return (checking) => {
+      const file = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+      if (!file || file.extension !== "md") {
+        return false;
+      }
+      if (!checking) {
+        action(file.path);
+      }
+      return true;
+    };
   }
 }

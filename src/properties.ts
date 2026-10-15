@@ -1,7 +1,10 @@
-import { FM } from "./note-data";
+import { FM, LEGACY_FM } from "./note-data";
 
 /** Propriedades que o plugin esconde na nota (ver styles.css). */
-const HIDDEN_KEYS: ReadonlySet<string> = new Set(Object.values(FM));
+const HIDDEN_KEYS: ReadonlySet<string> = new Set([
+  ...Object.values(FM),
+  ...Object.values(LEGACY_FM),
+]);
 
 /**
  * Marca o contêiner da nota quando não sobra nenhuma propriedade visível, para

@@ -7,6 +7,11 @@
 :is(.markdown-source-view, .markdown-preview-view)
   .metadata-container
   .metadata-property:is(
+    [data-property-key="coverly-cover"],
+    [data-property-key="coverly-position"],
+    [data-property-key="coverly-credit"],
+    [data-property-key="coverly-credit-url"],
+    [data-property-key="coverly-icon"],
     [data-property-key="cover"],
     [data-property-key="cover-position"],
     [data-property-key="cover-credit"],
@@ -34,6 +39,11 @@
   .metadata-container:not(
     :has(
       .metadata-property:not(
+        [data-property-key="coverly-cover"],
+        [data-property-key="coverly-position"],
+        [data-property-key="coverly-credit"],
+        [data-property-key="coverly-credit-url"],
+        [data-property-key="coverly-icon"],
         [data-property-key="cover"],
         [data-property-key="cover-position"],
         [data-property-key="cover-credit"],
@@ -50,6 +60,11 @@
   .metadata-container:not(
     :has(
       .metadata-property:not(
+        [data-property-key="coverly-cover"],
+        [data-property-key="coverly-position"],
+        [data-property-key="coverly-credit"],
+        [data-property-key="coverly-credit-url"],
+        [data-property-key="coverly-icon"],
         [data-property-key="cover"],
         [data-property-key="cover-position"],
         [data-property-key="cover-credit"],

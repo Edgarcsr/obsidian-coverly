@@ -112,7 +112,6 @@ export const en: Messages = {
   "iconUpload.pasteHint": "or press Ctrl+V to paste an image or link",
 
   "notice.chooseImage": "Choose an image file.",
-  "notice.openNote": "Open a note first.",
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
