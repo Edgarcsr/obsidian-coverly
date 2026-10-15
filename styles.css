@@ -1685,7 +1685,7 @@ body {
 }
 
 .mdp-font-sample.is-default {
-  font-family: var(--font-text-theme, var(--font-interface));
+  font-family: var(--font-interface);
 }
 
 .mdp-font-sample.is-serif {
