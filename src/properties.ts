@@ -3,7 +3,7 @@ import { FM, LEGACY_FM } from "./note-data";
 /** Propriedades que o plugin esconde na nota (ver styles.css). */
 const HIDDEN_KEYS: ReadonlySet<string> = new Set([
   ...Object.values(FM),
-  ...Object.values(LEGACY_FM),
+  ...Object.values(LEGACY_FM).filter((key): key is string => Boolean(key)),
 ]);
 
 /**

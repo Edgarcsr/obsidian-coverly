@@ -29,8 +29,10 @@ export const pt = {
   "color.violet": "Violeta",
   "color.yellow": "Amarelo",
 
+  "command.changeBackground": "Alterar fundo da nota",
   "command.changeCover": "Alterar capa",
   "command.changeIcon": "Alterar ícone",
+  "command.removeBackground": "Remover fundo da nota",
   "command.removeCover": "Remover capa",
 
   "common.cancel": "Cancelar",
@@ -93,9 +95,11 @@ export const pt = {
   "gradient.violet": "Violeta",
   "gradient.yellow": "Amarelo",
 
+  "header.addBackground": "Adicionar fundo",
   "header.addCover": "Adicionar capa",
   "header.addIcon": "Adicionar ícone",
   "header.change": "Alterar",
+  "header.changeBackground": "Trocar fundo",
   "header.changeIcon": "Trocar ícone",
   "header.reposition": "Reposicionar",
   "header.repositionHint": "Arraste a imagem para reposicionar",
@@ -161,6 +165,7 @@ export const pt = {
   "settings.unsplashKey.name": "Chave de acesso do Unsplash",
   "settings.unsplashKey.placeholder": "Cole a Access Key",
 
+  "tab.colors": "Cores",
   "tab.emoji": "Emoji",
   "tab.gallery": "Galeria",
   "tab.icons": "Ícones",

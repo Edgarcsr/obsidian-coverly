@@ -3,6 +3,7 @@ import { MarkdownView } from "obsidian";
 import { buildHeader } from "./header";
 import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
+import { clearBackground, paintBackground } from "./note-background";
 import { dataFromFrontmatter } from "./note-data";
 import { markEmptyProperties } from "./properties";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
@@ -22,6 +23,8 @@ export interface Slot {
 }
 
 interface ViewState {
+  /** Área de conteúdo da view, onde o fundo da nota é pintado. */
+  content: HTMLElement;
   path: string | null;
   headers: Partial<Record<Mode, HTMLElement>>;
   observed: Set<HTMLElement>;
@@ -97,6 +100,7 @@ const clearState = (state: ViewState): void => {
     header?.remove();
   }
   state.headers = {};
+  clearBackground(state.content);
   for (const title of state.titles) {
     clearTitleIcon(title);
   }
@@ -213,6 +217,7 @@ export class HeaderManager {
       this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
     const data = dataFromFrontmatter(frontmatter);
     markEmptyProperties(view.contentEl, frontmatter);
+    paintBackground(this.plugin.app, view.contentEl, data.background);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
     const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
@@ -268,6 +273,7 @@ export class HeaderManager {
     let state = this.states.get(view);
     if (!state) {
       state = {
+        content: view.contentEl,
         headers: {},
         mutations: [],
         observed: new Set(),

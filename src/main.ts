@@ -1,5 +1,6 @@
 import { MarkdownView, Plugin } from "obsidian";
 
+import { BackgroundPicker } from "./background-picker";
 import { CoverPicker } from "./cover-picker";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
@@ -58,7 +59,7 @@ export default class CoverlyPlugin extends Plugin {
   private readonly linkPreview = new LinkPreview(this);
   private readonly popoverHeaders = new PopoverHeaders(this);
   /** Só um seletor (de capa ou de ícone) aberto por vez. */
-  private picker: CoverPicker | IconPicker | null = null;
+  private picker: BackgroundPicker | CoverPicker | IconPicker | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -99,6 +100,20 @@ export default class CoverlyPlugin extends Plugin {
       }),
       id: "remove-cover",
       name: t("command.removeCover"),
+    });
+    this.addCommand({
+      checkCallback: this.onActiveNote((path) => {
+        this.openBackgroundPicker(path);
+      }),
+      id: "change-background",
+      name: t("command.changeBackground"),
+    });
+    this.addCommand({
+      checkCallback: this.onActiveNote((path) => {
+        void this.setBackground(path, null);
+      }),
+      id: "remove-background",
+      name: t("command.removeBackground"),
     });
   }
 
@@ -194,6 +209,28 @@ export default class CoverlyPlugin extends Plugin {
     this.showPicker(picker);
   }
 
+  /** Abre o seletor de fundo da nota ancorado em `anchor`; sem âncora, abre centralizado. */
+  openBackgroundPicker(
+    sourcePath: string,
+    anchor: HTMLElement | null = null
+  ): void {
+    this.picker?.close();
+    const { background } = this.noteData(sourcePath);
+    this.showPicker(
+      new BackgroundPicker({
+        anchor,
+        current: background,
+        onPick: async (value) => {
+          await this.setBackground(sourcePath, value);
+        },
+        onRemove: async () => {
+          await this.setBackground(sourcePath, null);
+        },
+        plugin: this,
+      })
+    );
+  }
+
   /** Põe o emoji no topo da seção Recentes. Ícones Lucide e imagens não entram. */
   private async rememberEmoji(value: string): Promise<void> {
     if (parseLucide(value) !== null || isImageIcon(this.app, value)) {
@@ -239,7 +276,9 @@ export default class CoverlyPlugin extends Plugin {
     this.showPicker(picker);
   }
 
-  private showPicker(picker: CoverPicker | IconPicker): void {
+  private showPicker(
+    picker: BackgroundPicker | CoverPicker | IconPicker
+  ): void {
     picker.onClose = () => {
       if (this.picker === picker) {
         this.picker = null;
@@ -274,6 +313,19 @@ export default class CoverlyPlugin extends Plugin {
         fm[FM.creditUrl] = credit.url;
       } else {
         removeKeys(fm, [FM.credit, FM.creditUrl]);
+      }
+    });
+  }
+
+  async setBackground(
+    sourcePath: string,
+    value: string | null
+  ): Promise<void> {
+    await this.updateNote(sourcePath, (fm) => {
+      if (value === null) {
+        removeKeys(fm, [FM.background]);
+      } else {
+        fm[FM.background] = value;
       }
     });
   }

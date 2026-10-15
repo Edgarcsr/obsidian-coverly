@@ -334,6 +334,12 @@ export const buildHeader = (
       plugin.openIconPicker(sourcePath, button);
     });
   }
+  const backgroundLabel = data.background
+    ? t("header.changeBackground")
+    : t("header.addBackground");
+  addButton(addRow, "paintbrush", backgroundLabel, (button) => {
+    plugin.openBackgroundPicker(sourcePath, button);
+  });
   if (!data.cover) {
     addButton(addRow, "image", t("header.addCover"), (button) => {
       plugin.openCoverPicker(sourcePath, button);

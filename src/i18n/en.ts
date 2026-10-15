@@ -27,8 +27,10 @@ export const en: Messages = {
   "color.violet": "Violet",
   "color.yellow": "Yellow",
 
+  "command.changeBackground": "Change note background",
   "command.changeCover": "Change cover",
   "command.changeIcon": "Change icon",
+  "command.removeBackground": "Remove note background",
   "command.removeCover": "Remove cover",
 
   "common.cancel": "Cancel",
@@ -91,9 +93,11 @@ export const en: Messages = {
   "gradient.violet": "Violet",
   "gradient.yellow": "Yellow",
 
+  "header.addBackground": "Add background",
   "header.addCover": "Add cover",
   "header.addIcon": "Add icon",
   "header.change": "Change",
+  "header.changeBackground": "Change background",
   "header.changeIcon": "Change icon",
   "header.reposition": "Reposition",
   "header.repositionHint": "Drag the image to reposition",
@@ -159,6 +163,7 @@ export const en: Messages = {
   "settings.unsplashKey.name": "Unsplash access key",
   "settings.unsplashKey.placeholder": "Paste the Access Key",
 
+  "tab.colors": "Colors",
   "tab.emoji": "Emoji",
   "tab.gallery": "Gallery",
   "tab.icons": "Icons",

@@ -7,6 +7,7 @@
 :is(.markdown-source-view, .markdown-preview-view)
   .metadata-container
   .metadata-property:is(
+    [data-property-key="coverly-background"],
     [data-property-key="coverly-cover"],
     [data-property-key="coverly-position"],
     [data-property-key="coverly-credit"],
@@ -39,6 +40,7 @@
   .metadata-container:not(
     :has(
       .metadata-property:not(
+        [data-property-key="coverly-background"],
         [data-property-key="coverly-cover"],
         [data-property-key="coverly-position"],
         [data-property-key="coverly-credit"],
@@ -60,6 +62,7 @@
   .metadata-container:not(
     :has(
       .metadata-property:not(
+        [data-property-key="coverly-background"],
         [data-property-key="coverly-cover"],
         [data-property-key="coverly-position"],
         [data-property-key="coverly-credit"],
@@ -1568,4 +1571,10 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 
 .mdp-link-card-body :is(img, iframe, video) {
   max-height: 60px;
+}
+
+/* Fundo da nota: pintado na área de conteúdo; as camadas internas ficam transparentes. */
+.mdp-has-background
+  :is(.markdown-source-view, .markdown-preview-view, .cm-editor, .cm-scroller) {
+  background: transparent;
 }

@@ -7,6 +7,7 @@ import { GRADIENTS } from "./gallery";
  * evita conflito com outros plugins que também usam `cover` e `icon`.
  */
 export const FM = {
+  background: "coverly-background",
   cover: "coverly-cover",
   credit: "coverly-credit",
   creditUrl: "coverly-credit-url",
@@ -15,7 +16,7 @@ export const FM = {
 } as const;
 
 /** Nomes usados antes do prefixo. Ainda são lidos e migrados ao gravar a nota. */
-export const LEGACY_FM: Record<keyof typeof FM, string> = {
+export const LEGACY_FM: Partial<Record<keyof typeof FM, string>> = {
   cover: "cover",
   credit: "cover-credit",
   creditUrl: "cover-credit-url",
@@ -35,7 +36,7 @@ export const COVER_KEYS: readonly string[] = [
 export const migrateLegacyKeys = (fm: Record<string, unknown>): void => {
   for (const name of Object.keys(FM) as (keyof typeof FM)[]) {
     const legacy = LEGACY_FM[name];
-    if (!(legacy in fm)) {
+    if (!legacy || !(legacy in fm)) {
       continue;
     }
     if (!(FM[name] in fm)) {
@@ -49,9 +50,13 @@ export const migrateLegacyKeys = (fm: Record<string, unknown>): void => {
 const read = (
   fm: Record<string, unknown> | null | undefined,
   name: keyof typeof FM
-): unknown => fm?.[FM[name]] ?? fm?.[LEGACY_FM[name]];
+): unknown => {
+  const legacy = LEGACY_FM[name];
+  return fm?.[FM[name]] ?? (legacy ? fm?.[legacy] : undefined);
+};
 
 export interface CoverData {
+  background?: string;
   cover?: string;
   position: number;
   icon?: string;
@@ -87,6 +92,7 @@ export const dataFromFrontmatter = (
 ): CoverData => {
   const position = Number(read(fm, "position"));
   return {
+    background: text(read(fm, "background")),
     cover: text(read(fm, "cover")),
     credit: text(read(fm, "credit")),
     creditUrl: text(read(fm, "creditUrl")),
