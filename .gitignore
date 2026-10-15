@@ -23,3 +23,6 @@ data.json
 
 # Cache local dos emojis do Twemoji (gerado pelo plugin)
 twemoji-cache.json
+
+# Local dev settings (path to the vault plugin folder)
+.env
