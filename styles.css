@@ -1581,8 +1581,12 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 }
 
 /* Fonte por nota: troca a variável de texto do Obsidian só dentro da view. */
+body {
+  --mdp-font-serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+
 .mdp-font-serif {
-  --font-text: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-text: var(--mdp-font-serif);
 }
 
 .mdp-font-mono {
@@ -1622,4 +1626,73 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   padding: 0;
   pointer-events: none;
   opacity: 0;
+}
+
+/* Quadro "Estilo da fonte": três cartões com um "Ag" na própria fonte. */
+.mdp-font-popup {
+  width: 264px;
+  padding: 10px;
+}
+
+.mdp-font-popup-title {
+  margin: 2px 4px 8px;
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+.mdp-font-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.mdp-font-popup .mdp-font-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  height: auto;
+  padding: 10px 4px;
+  color: var(--text-normal);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.mdp-font-popup .mdp-font-option:hover,
+.mdp-font-popup .mdp-font-option.is-selected {
+  background: var(--background-modifier-hover);
+}
+
+.mdp-font-popup .mdp-font-option.is-selected {
+  color: var(--interactive-accent);
+}
+
+.mdp-font-sample {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.mdp-font-sample.is-default {
+  font-family: var(--font-text-theme, var(--font-interface));
+}
+
+.mdp-font-sample.is-serif {
+  font-family: var(--mdp-font-serif);
+}
+
+.mdp-font-sample.is-mono {
+  font-family: var(--font-monospace);
+}
+
+.mdp-font-label {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.mdp-font-popup .mdp-font-option.is-selected .mdp-font-label {
+  color: var(--interactive-accent);
 }

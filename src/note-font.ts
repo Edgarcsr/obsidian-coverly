@@ -1,5 +1,6 @@
-import { Menu } from "obsidian";
-
+import { asyncListener } from "./async-listener";
+import { openFloatingPopup } from "./floating-popup";
+import type { PopupPosition } from "./floating-popup";
 import { t } from "./i18n";
 import type { MessageKey } from "./i18n";
 
@@ -22,31 +23,41 @@ const CLASS_PREFIX = "mdp-font-";
 export const isStoredFont = (value: unknown): value is StoredFont =>
   value === "serif" || value === "mono";
 
-/** Troca a fonte de `el` (a área de conteúdo da view); `undefined` volta à do tema. */
+/** Troca a fonte de `el` (a área de conteúdo da view); sem `font`, volta à do tema. */
 export const applyFont = (el: HTMLElement, font?: StoredFont): void => {
   for (const name of NOTE_FONTS) {
     el.toggleClass(`${CLASS_PREFIX}${name}`, name === font);
   }
 };
 
-export interface FontMenuOptions {
+export interface FontPopupOptions {
   current: StoredFont | undefined;
-  position: { x: number; y: number };
+  position: PopupPosition;
   onPick: (font: NoteFont) => Promise<void>;
 }
 
-/** Menu com as opções de fonte, a atual marcada. */
-export const showFontMenu = (options: FontMenuOptions): void => {
-  const menu = new Menu();
-  for (const font of NOTE_FONTS) {
-    menu.addItem((item) => {
-      item
-        .setTitle(t(LABELS[font]))
-        .setChecked((options.current ?? "default") === font)
-        .onClick(() => {
-          void options.onPick(font);
-        });
-    });
-  }
-  menu.showAtPosition(options.position);
+/** Quadro "Estilo da fonte", como no Notion: cada opção mostra um "Ag" na própria fonte. */
+export const showFontPopup = (options: FontPopupOptions): void => {
+  const current = options.current ?? "default";
+
+  openFloatingPopup("mdp-font-popup", options.position, (popup, close) => {
+    popup.createDiv({ cls: "mdp-font-popup-title", text: t("font.title") });
+    const row = popup.createDiv({ cls: "mdp-font-options" });
+
+    for (const font of NOTE_FONTS) {
+      const option = row.createEl("button", {
+        cls:
+          font === current ? "mdp-font-option is-selected" : "mdp-font-option",
+      });
+      option.createSpan({ cls: `mdp-font-sample is-${font}`, text: "Ag" });
+      option.createSpan({ cls: "mdp-font-label", text: t(LABELS[font]) });
+      option.addEventListener(
+        "click",
+        asyncListener(async () => {
+          close();
+          await options.onPick(font);
+        })
+      );
+    }
+  });
 };

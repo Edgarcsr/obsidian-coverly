@@ -66,6 +66,7 @@ export const en: Messages = {
   "font.default": "Default",
   "font.mono": "Mono",
   "font.serif": "Serif",
+  "font.title": "Font style",
 
   "gallery.asianArt": "National Museum of Asian Art",
   "gallery.colorsAndGradients": "Colors & gradients",

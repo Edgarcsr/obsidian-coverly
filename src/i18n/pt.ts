@@ -68,6 +68,7 @@ export const pt = {
   "font.default": "Padrão",
   "font.mono": "Mono",
   "font.serif": "Serifa",
+  "font.title": "Estilo da fonte",
 
   "gallery.asianArt": "Museu Nacional de Arte Asiática",
   "gallery.colorsAndGradients": "Cor e gradiente",

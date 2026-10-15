@@ -340,7 +340,7 @@ export const buildHeader = (
     });
   }
   addButton(addRow, "type", t("header.font"), (button) => {
-    plugin.openFontMenu(sourcePath, button);
+    plugin.openFontPopup(sourcePath, button);
   });
   const backgroundLabel = data.background
     ? t("header.changeBackground")

@@ -13,7 +13,7 @@ import {
   migrateLegacyKeys,
 } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
-import { showFontMenu } from "./note-font";
+import { showFontPopup } from "./note-font";
 import type { NoteFont } from "./note-font";
 import { NoteIconDecorator } from "./note-icons";
 import {
@@ -120,7 +120,7 @@ export default class CoverlyPlugin extends Plugin {
     });
     this.addCommand({
       checkCallback: this.onActiveNote((path) => {
-        this.openFontMenu(path);
+        this.openFontPopup(path);
       }),
       id: "change-font",
       name: t("command.changeFont"),
@@ -251,9 +251,9 @@ export default class CoverlyPlugin extends Plugin {
   }
 
   /**
-   * Abre o menu de fonte da nota. Sem âncora, aparece no centro da nota aberta.
+   * Abre o quadro de fonte da nota. Sem âncora, aparece no centro da nota aberta.
    */
-  openFontMenu(sourcePath: string, anchor: HTMLElement | null = null): void {
+  openFontPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
     const box = (
       anchor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.contentEl
     )?.getBoundingClientRect();
@@ -263,7 +263,7 @@ export default class CoverlyPlugin extends Plugin {
           x: (box?.left ?? 0) + (box?.width ?? 0) / 2,
           y: (box?.top ?? 0) + (box?.height ?? 0) / 3,
         };
-    showFontMenu({
+    showFontPopup({
       current: this.noteData(sourcePath).font,
       onPick: async (font) => {
         await this.setFont(sourcePath, font);
