@@ -8,6 +8,7 @@
   .metadata-container
   .metadata-property:is(
     [data-property-key="coverly-background"],
+    [data-property-key="coverly-font"],
     [data-property-key="coverly-cover"],
     [data-property-key="coverly-position"],
     [data-property-key="coverly-credit"],
@@ -41,6 +42,7 @@
     :has(
       .metadata-property:not(
         [data-property-key="coverly-background"],
+        [data-property-key="coverly-font"],
         [data-property-key="coverly-cover"],
         [data-property-key="coverly-position"],
         [data-property-key="coverly-credit"],
@@ -63,6 +65,7 @@
     :has(
       .metadata-property:not(
         [data-property-key="coverly-background"],
+        [data-property-key="coverly-font"],
         [data-property-key="coverly-cover"],
         [data-property-key="coverly-position"],
         [data-property-key="coverly-credit"],
@@ -1577,4 +1580,13 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 .mdp-has-background
   :is(.markdown-source-view, .markdown-preview-view, .cm-editor, .cm-scroller) {
   background: transparent;
+}
+
+/* Fonte por nota: troca a variável de texto do Obsidian só dentro da view. */
+.mdp-font-serif {
+  --font-text: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+
+.mdp-font-mono {
+  --font-text: var(--font-monospace);
 }

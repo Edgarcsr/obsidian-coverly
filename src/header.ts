@@ -334,6 +334,9 @@ export const buildHeader = (
       plugin.openIconPicker(sourcePath, button);
     });
   }
+  addButton(addRow, "type", t("header.font"), (button) => {
+    plugin.openFontMenu(sourcePath, button);
+  });
   const backgroundLabel = data.background
     ? t("header.changeBackground")
     : t("header.addBackground");

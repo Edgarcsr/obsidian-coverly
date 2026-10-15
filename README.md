@@ -17,12 +17,13 @@
 - **Page covers**: pick a color or gradient, a public domain artwork, an Unsplash photo, an uploaded image, a link, or paste an image with **Ctrl+V**. Drag to reposition. Height, rounded corners, bottom fade and bottom shade are configurable.
 - **Note background**: give a single note a color, gradient, vault image or linked image as its background, softened so the text stays readable. Use **Change note background** from the command palette or the button above the title.
 - **Vault images**: pick covers, icons and backgrounds from images already in your vault.
+- **Note font**: switch a single note between the theme font, a serif and a monospace font, from the command palette or the button above the title.
 - **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, or a custom image.
 - **Icons everywhere**: the note icon also shows in the tab title and the file explorer.
 - **Heading outline**: a slim outline on the right edge of the note that expands on hover and jumps to a heading on click.
 - **English and Portuguese** interface, following Obsidian's language by default.
 
-Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`, `coverly-background`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown.
+Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`, `coverly-background`, `coverly-font`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown.
 
 ## Network use
 

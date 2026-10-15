@@ -29,6 +29,7 @@ export const en: Messages = {
 
   "command.changeBackground": "Change note background",
   "command.changeCover": "Change cover",
+  "command.changeFont": "Change note font",
   "command.changeIcon": "Change icon",
   "command.removeBackground": "Remove note background",
   "command.removeCover": "Remove cover",
@@ -60,6 +61,10 @@ export const en: Messages = {
   "emojiGroup.smileys": "Smileys & emotion",
   "emojiGroup.symbols": "Symbols",
   "emojiGroup.travel": "Travel & places",
+
+  "font.default": "Default",
+  "font.mono": "Mono",
+  "font.serif": "Serif",
 
   "gallery.asianArt": "National Museum of Asian Art",
   "gallery.colorsAndGradients": "Colors & gradients",
@@ -99,6 +104,7 @@ export const en: Messages = {
   "header.change": "Change",
   "header.changeBackground": "Change background",
   "header.changeIcon": "Change icon",
+  "header.font": "Font",
   "header.reposition": "Reposition",
   "header.repositionHint": "Drag the image to reposition",
   "header.savePosition": "Save position",

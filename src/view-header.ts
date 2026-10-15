@@ -4,6 +4,7 @@ import { buildHeader } from "./header";
 import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { clearBackground, paintBackground } from "./note-background";
+import { applyFont } from "./note-font";
 import { dataFromFrontmatter } from "./note-data";
 import { markEmptyProperties } from "./properties";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
@@ -101,6 +102,7 @@ const clearState = (state: ViewState): void => {
   }
   state.headers = {};
   clearBackground(state.content);
+  applyFont(state.content);
   for (const title of state.titles) {
     clearTitleIcon(title);
   }
@@ -218,6 +220,7 @@ export class HeaderManager {
     const data = dataFromFrontmatter(frontmatter);
     markEmptyProperties(view.contentEl, frontmatter);
     paintBackground(this.plugin.app, view.contentEl, data.background);
+    applyFont(view.contentEl, data.font);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
     const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.

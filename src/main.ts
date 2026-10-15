@@ -12,6 +12,8 @@ import {
   migrateLegacyKeys,
 } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
+import { showFontMenu } from "./note-font";
+import type { NoteFont } from "./note-font";
 import { NoteIconDecorator } from "./note-icons";
 import {
   isColorPalette,
@@ -114,6 +116,13 @@ export default class CoverlyPlugin extends Plugin {
       }),
       id: "remove-background",
       name: t("command.removeBackground"),
+    });
+    this.addCommand({
+      checkCallback: this.onActiveNote((path) => {
+        this.openFontMenu(path);
+      }),
+      id: "change-font",
+      name: t("command.changeFont"),
     });
   }
 
@@ -231,6 +240,28 @@ export default class CoverlyPlugin extends Plugin {
     );
   }
 
+  /**
+   * Abre o menu de fonte da nota. Sem âncora, aparece no centro da nota aberta.
+   */
+  openFontMenu(sourcePath: string, anchor: HTMLElement | null = null): void {
+    const box = (
+      anchor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.contentEl
+    )?.getBoundingClientRect();
+    const position = anchor
+      ? { x: box?.left ?? 0, y: box?.bottom ?? 0 }
+      : {
+          x: (box?.left ?? 0) + (box?.width ?? 0) / 2,
+          y: (box?.top ?? 0) + (box?.height ?? 0) / 3,
+        };
+    showFontMenu({
+      current: this.noteData(sourcePath).font,
+      onPick: async (font) => {
+        await this.setFont(sourcePath, font);
+      },
+      position,
+    });
+  }
+
   /** Põe o emoji no topo da seção Recentes. Ícones Lucide e imagens não entram. */
   private async rememberEmoji(value: string): Promise<void> {
     if (parseLucide(value) !== null || isImageIcon(this.app, value)) {
@@ -317,15 +348,22 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
-  async setBackground(
-    sourcePath: string,
-    value: string | null
-  ): Promise<void> {
+  async setBackground(sourcePath: string, value: string | null): Promise<void> {
     await this.updateNote(sourcePath, (fm) => {
       if (value === null) {
         removeKeys(fm, [FM.background]);
       } else {
         fm[FM.background] = value;
+      }
+    });
+  }
+
+  async setFont(sourcePath: string, font: NoteFont): Promise<void> {
+    await this.updateNote(sourcePath, (fm) => {
+      if (font === "default") {
+        removeKeys(fm, [FM.font]);
+      } else {
+        fm[FM.font] = font;
       }
     });
   }

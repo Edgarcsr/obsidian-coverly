@@ -31,6 +31,7 @@ export const pt = {
 
   "command.changeBackground": "Alterar fundo da nota",
   "command.changeCover": "Alterar capa",
+  "command.changeFont": "Alterar fonte da nota",
   "command.changeIcon": "Alterar ícone",
   "command.removeBackground": "Remover fundo da nota",
   "command.removeCover": "Remover capa",
@@ -62,6 +63,10 @@ export const pt = {
   "emojiGroup.smileys": "Sorrisos e emoção",
   "emojiGroup.symbols": "Símbolos",
   "emojiGroup.travel": "Viagens e lugares",
+
+  "font.default": "Padrão",
+  "font.mono": "Mono",
+  "font.serif": "Serifa",
 
   "gallery.asianArt": "Museu Nacional de Arte Asiática",
   "gallery.colorsAndGradients": "Cor e gradiente",
@@ -101,6 +106,7 @@ export const pt = {
   "header.change": "Alterar",
   "header.changeBackground": "Trocar fundo",
   "header.changeIcon": "Trocar ícone",
+  "header.font": "Fonte",
   "header.reposition": "Reposicionar",
   "header.repositionHint": "Arraste a imagem para reposicionar",
   "header.savePosition": "Salvar posição",

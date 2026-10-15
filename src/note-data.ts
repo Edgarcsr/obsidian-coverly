@@ -1,6 +1,8 @@
 import type { App } from "obsidian";
 
 import { GRADIENTS } from "./gallery";
+import { isStoredFont } from "./note-font";
+import type { StoredFont } from "./note-font";
 
 /**
  * Nomes das propriedades gravadas no frontmatter da nota. O prefixo `coverly-`
@@ -11,6 +13,7 @@ export const FM = {
   cover: "coverly-cover",
   credit: "coverly-credit",
   creditUrl: "coverly-credit-url",
+  font: "coverly-font",
   icon: "coverly-icon",
   position: "coverly-position",
 } as const;
@@ -62,6 +65,7 @@ export interface CoverData {
   icon?: string;
   credit?: string;
   creditUrl?: string;
+  font?: StoredFont;
 }
 
 export interface CreditInfo {
@@ -86,6 +90,11 @@ const text = (value: unknown): string | undefined => {
   return trimmed === "" ? undefined : trimmed;
 };
 
+const fontOf = (value: unknown): StoredFont | undefined => {
+  const name = text(value)?.toLowerCase();
+  return isStoredFont(name) ? name : undefined;
+};
+
 /** Lê os dados de capa a partir do frontmatter já processado pelo Obsidian. */
 export const dataFromFrontmatter = (
   fm: Record<string, unknown> | null | undefined
@@ -96,6 +105,7 @@ export const dataFromFrontmatter = (
     cover: text(read(fm, "cover")),
     credit: text(read(fm, "credit")),
     creditUrl: text(read(fm, "creditUrl")),
+    font: fontOf(read(fm, "font")),
     icon: text(read(fm, "icon")),
     position: Number.isFinite(position)
       ? clamp(position, 0, 100)
