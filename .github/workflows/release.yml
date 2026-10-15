@@ -3,7 +3,9 @@ name: Release Obsidian plugin
 # Para lançar: suba a versão (`bun run version` ou à mão no manifest.json,
 # package.json e versions.json) e dê push na main. Se o manifest.json trouxer
 # uma versão que ainda não tem release, o workflow constrói o plugin, cria a
-# tag (sem "v") e publica a release com main.js, manifest.json e styles.css.
+# tag (sem "v") e publica a release com main.js, manifest.json e styles.css,
+# com um changelog gerado dos commits desde a tag anterior
+# (scripts/release-notes.mjs).
 on:
   push:
     branches: [main]
@@ -25,6 +27,9 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Histórico e tags completos para montar o changelog.
+          fetch-depth: 0
 
       - name: Read version
         id: version
@@ -69,6 +74,10 @@ jobs:
             main.js
             styles.css
 
+      - name: Write changelog
+        if: steps.version.outputs.publish == 'true'
+        run: node scripts/release-notes.mjs "${{ steps.version.outputs.version }}" > release-notes.md
+
       - name: Publish release
         if: steps.version.outputs.publish == 'true'
         run: |
@@ -76,5 +85,5 @@ jobs:
           gh release create "$version" \
             --target "$GITHUB_SHA" \
             --title "$version" \
-            --generate-notes \
+            --notes-file release-notes.md \
             main.js manifest.json styles.css
