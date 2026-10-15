@@ -22,6 +22,7 @@ export const pt = {
   "color.pink": "Rosa",
   "color.purple": "Roxo",
   "color.red": "Vermelho",
+  "color.remove": "Remover cor",
   "color.rose": "Rosé",
   "color.sky": "Céu",
   "color.teal": "Verde-azulado",
@@ -68,7 +69,9 @@ export const pt = {
 
   "font.custom.apply": "Aplicar",
   "font.custom.hint": "Use o nome de uma fonte instalada no computador.",
-  "font.custom.placeholder": "Outra fonte…",
+  "font.custom.loading": "Carregando as fontes instaladas…",
+  "font.custom.none": "Nenhuma fonte instalada corresponde.",
+  "font.custom.placeholder": "Buscar ou digitar uma fonte…",
   "font.default": "Padrão",
   "font.mono": "Mono",
   "font.serif": "Serifa",
@@ -175,6 +178,11 @@ export const pt = {
   "settings.noteBackgrounds.desc":
     "Deixa cada nota ter o próprio fundo: cor, gradiente ou imagem, escolhido na paleta de comandos ou no botão acima do título. Desligado por padrão.",
   "settings.noteBackgrounds.name": "Fundos por nota",
+  "settings.section.covers": "Capas",
+  "settings.section.general": "Geral",
+  "settings.section.icons": "Ícones",
+  "settings.section.navigation": "Navegação",
+  "settings.section.perNote": "Opções por nota (desligadas por padrão)",
   "settings.toc.desc":
     "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles.",
   "settings.toc.name": "Sumário na lateral",
@@ -197,7 +205,6 @@ export const pt = {
   "tab.icons": "Ícones",
   "tab.link": "Link",
   "tab.upload": "Carregar",
-  "tab.uploadIcon": "Fazer upload",
   "tab.vault": "Vault",
 
   "toc.untitled": "Sem título",

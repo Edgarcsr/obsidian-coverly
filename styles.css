@@ -1709,14 +1709,56 @@ body {
   color: var(--interactive-accent);
 }
 
-/* Campo da fonte personalizada, abaixo das três opções prontas. */
+/* Busca e lista das fontes instaladas, abaixo das três opções prontas. */
+.mdp-font-custom {
+  padding-top: 10px;
+  margin-top: 6px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
 .mdp-font-custom-row {
   display: flex;
   gap: 6px;
   align-items: center;
-  padding-top: 10px;
-  margin-top: 6px;
-  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mdp-font-list {
+  height: 160px;
+  margin-top: 8px;
+  overflow-y: auto;
+}
+
+.mdp-font-list-hint {
+  padding: 8px 4px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+.mdp-font-popup .mdp-font-list-item {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 6px 8px;
+  overflow: hidden;
+  font-size: var(--font-ui-medium);
+  color: var(--text-normal);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.mdp-font-popup .mdp-font-list-item:hover,
+.mdp-font-popup .mdp-font-list-item.is-selected {
+  background: var(--background-modifier-hover);
+}
+
+.mdp-font-popup .mdp-font-list-item.is-selected {
+  color: var(--interactive-accent);
 }
 
 .mdp-font-custom-input {
@@ -1728,4 +1770,26 @@ body {
   margin-top: 6px;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
+}
+
+/* Botão para tirar a cor escolhida, abaixo das bolinhas. */
+.mdp-note-color .mdp-color-remove {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 6px 8px;
+  margin-top: 6px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.mdp-note-color .mdp-color-remove:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
 }

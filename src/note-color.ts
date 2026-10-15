@@ -36,6 +36,20 @@ export const showColorPopup = (options: ColorPopupOptions): void => {
       await options.onPick(id);
     };
 
+    // A cor padrão da paleta é só uma bolinha cinza; tirar a cor merece botão próprio.
+    if (options.current && options.current !== DEFAULT_COLOR) {
+      const remove = popup.createEl("button", {
+        cls: "mdp-color-remove",
+        text: t("color.remove"),
+      });
+      remove.addEventListener(
+        "click",
+        asyncListener(async () => {
+          await choose(DEFAULT_COLOR);
+        })
+      );
+    }
+
     for (const color of iconColors()) {
       const swatch = grid.createEl("button", {
         cls:

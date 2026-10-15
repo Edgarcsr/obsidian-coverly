@@ -111,79 +111,112 @@ export class CoverlySettingTab extends PluginSettingTab {
 
     return [
       {
-        ...named("language"),
-        control: {
-          key: "language",
-          options: {
-            auto: t("settings.language.auto"),
-            en: "English",
-            pt: "Português",
+        heading: t("settings.section.general"),
+        items: [
+          {
+            ...named("language"),
+            control: {
+              key: "language",
+              options: {
+                auto: t("settings.language.auto"),
+                en: "English",
+                pt: "Português",
+              },
+              type: "dropdown",
+            },
           },
-          type: "dropdown",
-        },
+        ],
+        type: "group",
       },
       {
-        ...named("unsplashKey"),
-        control: { key: "unsplashKey", type: "secret" },
-      },
-      { ...named("coverHeight"), control: slider("coverHeight", 400, 10, 120) },
-      { ...named("coverRadius"), control: slider("coverRadius", 40, 2) },
-      { ...named("coverFade"), control: slider("coverFade", 100, 5) },
-      { ...named("coverShade"), control: slider("coverShade", 100, 5) },
-      {
-        ...named("customFonts"),
-        control: { key: "customFonts", type: "toggle" },
-      },
-      {
-        ...named("colorPalette"),
-        control: {
-          key: "colorPalette",
-          options: {
-            notion: t("settings.colorPalette.notion"),
-            tailwind: t("settings.colorPalette.tailwind"),
+        heading: t("settings.section.covers"),
+        items: [
+          {
+            ...named("unsplashKey"),
+            control: { key: "unsplashKey", type: "secret" },
           },
-          type: "dropdown",
-        },
-      },
-      {
-        ...named("iconPosition"),
-        control: {
-          key: "iconPosition",
-          options: {
-            above: t("settings.iconPosition.above"),
-            inline: t("settings.iconPosition.inline"),
+          {
+            ...named("coverHeight"),
+            control: slider("coverHeight", 400, 10, 120),
           },
-          type: "dropdown",
-        },
+          { ...named("coverRadius"), control: slider("coverRadius", 40, 2) },
+          { ...named("coverFade"), control: slider("coverFade", 100, 5) },
+          { ...named("coverShade"), control: slider("coverShade", 100, 5) },
+        ],
+        type: "group",
       },
       {
-        ...named("treeIconPosition"),
-        control: {
-          key: "treeIconPosition",
-          options: {
-            indent: t("settings.treeIconPosition.indent"),
-            inline: t("settings.treeIconPosition.inline"),
+        heading: t("settings.section.icons"),
+        items: [
+          {
+            ...named("iconPosition"),
+            control: {
+              key: "iconPosition",
+              options: {
+                above: t("settings.iconPosition.above"),
+                inline: t("settings.iconPosition.inline"),
+              },
+              type: "dropdown",
+            },
           },
-          type: "dropdown",
-        },
+          {
+            ...named("treeIconPosition"),
+            control: {
+              key: "treeIconPosition",
+              options: {
+                indent: t("settings.treeIconPosition.indent"),
+                inline: t("settings.treeIconPosition.inline"),
+              },
+              type: "dropdown",
+            },
+          },
+          {
+            ...named("colorPalette"),
+            control: {
+              key: "colorPalette",
+              options: {
+                notion: t("settings.colorPalette.notion"),
+                tailwind: t("settings.colorPalette.tailwind"),
+              },
+              type: "dropdown",
+            },
+          },
+          { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
+        ],
+        type: "group",
       },
-      { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
-      { ...named("toc"), control: { key: "toc", type: "toggle" } },
       {
-        ...named("linkPreview"),
-        control: { key: "linkPreview", type: "toggle" },
+        heading: t("settings.section.perNote"),
+        items: [
+          {
+            ...named("noteBackgrounds"),
+            control: { key: "noteBackgrounds", type: "toggle" },
+          },
+          {
+            ...named("noteAccents"),
+            control: { key: "noteAccents", type: "toggle" },
+          },
+          {
+            ...named("customFonts"),
+            control: { key: "customFonts", type: "toggle" },
+          },
+          {
+            ...named("nameColors"),
+            control: { key: "nameColors", type: "toggle" },
+          },
+        ],
+        type: "group",
       },
       {
-        ...named("nameColors"),
-        control: { key: "nameColors", type: "toggle" },
-      },
-      {
-        ...named("noteAccents"),
-        control: { key: "noteAccents", type: "toggle" },
-      },
-      {
-        ...named("noteBackgrounds"),
-        control: { key: "noteBackgrounds", type: "toggle" },
+        heading: t("settings.section.navigation"),
+        items: [
+          { ...named("toc"), control: { key: "toc", type: "toggle" } },
+          {
+            ...named("linkPreview"),
+            control: { key: "linkPreview", type: "toggle" },
+          },
+        ],
+        type: "group",
       },
     ];
   }

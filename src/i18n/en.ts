@@ -20,6 +20,7 @@ export const en: Messages = {
   "color.pink": "Pink",
   "color.purple": "Purple",
   "color.red": "Red",
+  "color.remove": "Remove color",
   "color.rose": "Rose",
   "color.sky": "Sky",
   "color.teal": "Teal",
@@ -66,7 +67,9 @@ export const en: Messages = {
 
   "font.custom.apply": "Apply",
   "font.custom.hint": "Use the name of a font installed on your computer.",
-  "font.custom.placeholder": "Other font…",
+  "font.custom.loading": "Loading installed fonts…",
+  "font.custom.none": "No installed font matches.",
+  "font.custom.placeholder": "Search or type a font…",
   "font.default": "Default",
   "font.mono": "Mono",
   "font.serif": "Serif",
@@ -173,6 +176,11 @@ export const en: Messages = {
   "settings.noteBackgrounds.desc":
     "Let each note have its own background: a color, gradient or image, picked from the command palette or the button above the title. Off by default.",
   "settings.noteBackgrounds.name": "Note backgrounds",
+  "settings.section.covers": "Covers",
+  "settings.section.general": "General",
+  "settings.section.icons": "Icons",
+  "settings.section.navigation": "Navigation",
+  "settings.section.perNote": "Per-note options (off by default)",
   "settings.toc.desc":
     "Shows one line per heading on the right edge of the note, with the current section highlighted. Hover to see the headings and select one to jump to it.",
   "settings.toc.name": "Outline on the side",
@@ -195,7 +203,6 @@ export const en: Messages = {
   "tab.icons": "Icons",
   "tab.link": "Link",
   "tab.upload": "Upload",
-  "tab.uploadIcon": "Upload",
   "tab.vault": "Vault",
 
   "toc.untitled": "Untitled",

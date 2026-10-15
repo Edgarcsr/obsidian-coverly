@@ -3,6 +3,7 @@ import { openFloatingPopup } from "./floating-popup";
 import type { PopupPosition } from "./floating-popup";
 import { t } from "./i18n";
 import type { MessageKey } from "./i18n";
+import { installedFonts } from "./system-fonts";
 
 /** Fontes prontas do quadro. A padrão é a do tema (sem propriedade). */
 export const NOTE_FONTS = ["default", "serif", "mono"] as const;
@@ -80,13 +81,21 @@ export interface FontPopupOptions {
   onPickCustom: (family: string) => Promise<void>;
 }
 
-/** Campo para digitar o nome de uma fonte instalada no computador. */
-const renderCustomRow = (
+/** Quantas fontes da lista aparecem de uma vez; o filtro mostra as outras. */
+const MAX_LISTED = 60;
+
+/**
+ * Busca e lista das fontes instaladas no sistema, cada uma desenhada na
+ * própria fonte. Se o Obsidian não deixar listá-las, sobra o campo de texto
+ * para digitar o nome.
+ */
+const renderCustomFonts = (
   popup: HTMLElement,
   options: FontPopupOptions,
   close: () => void
 ): void => {
-  const row = popup.createDiv({ cls: "mdp-font-custom-row" });
+  const section = popup.createDiv({ cls: "mdp-font-custom" });
+  const row = section.createDiv({ cls: "mdp-font-custom-row" });
   const input = row.createEl("input", {
     attr: { spellcheck: "false" },
     cls: "mdp-font-custom-input",
@@ -97,21 +106,81 @@ const renderCustomRow = (
     cls: "mod-cta",
     text: t("font.custom.apply"),
   });
-  popup.createDiv({ cls: "mdp-font-custom-hint", text: t("font.custom.hint") });
+  const list = section.createDiv({ cls: "mdp-font-list" });
+  list.createDiv({ cls: "mdp-font-list-hint", text: t("font.custom.loading") });
+  section.createDiv({
+    cls: "mdp-font-custom-hint",
+    text: t("font.custom.hint"),
+  });
 
   const { current } = options;
-  if (current && !isStoredFont(current)) {
-    input.value = current;
-  }
+  const selectedFamily = current && !isStoredFont(current) ? current : "";
+  input.value = selectedFamily;
 
-  const send = async (): Promise<void> => {
-    const family = cleanFamily(input.value);
-    if (!family) {
-      return;
-    }
+  const choose = async (family: string): Promise<void> => {
     close();
     await options.onPickCustom(family);
   };
+
+  const send = async (): Promise<void> => {
+    const family = cleanFamily(input.value);
+    if (family) {
+      await choose(family);
+    }
+  };
+
+  const showList = (families: readonly string[] | null): void => {
+    list.empty();
+    if (!families) {
+      // Sem a lista, o campo de texto basta.
+      list.remove();
+      return;
+    }
+    const query = input.value.trim().toLowerCase();
+    const matches = families.filter((family) =>
+      family.toLowerCase().includes(query)
+    );
+    if (matches.length === 0) {
+      list.createDiv({
+        cls: "mdp-font-list-hint",
+        text: t("font.custom.none"),
+      });
+      return;
+    }
+    for (const family of matches.slice(0, MAX_LISTED)) {
+      const item = list.createEl("button", {
+        cls:
+          family === selectedFamily
+            ? "mdp-font-list-item is-selected"
+            : "mdp-font-list-item",
+        text: family,
+      });
+      // O nome já vem do sistema, mas passa pela mesma limpeza das digitadas.
+      const safe = cleanFamily(family);
+      if (safe) {
+        item.style.fontFamily = `"${safe}", var(--font-interface)`;
+      }
+      item.addEventListener(
+        "click",
+        asyncListener(async () => {
+          await choose(family);
+        })
+      );
+    }
+  };
+
+  const loadList = async (): Promise<void> => {
+    const families = await installedFonts();
+    // O quadro pode ter sido fechado enquanto a lista carregava.
+    if (!section.isConnected) {
+      return;
+    }
+    input.addEventListener("input", () => {
+      showList(families);
+    });
+    showList(families);
+  };
+  void loadList();
 
   apply.addEventListener("click", asyncListener(send));
   input.addEventListener(
@@ -152,7 +221,7 @@ export const showFontPopup = (options: FontPopupOptions): void => {
     }
 
     if (options.allowCustom) {
-      renderCustomRow(popup, options, close);
+      renderCustomFonts(popup, options, close);
     }
   });
 };

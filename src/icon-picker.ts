@@ -28,7 +28,7 @@ type Tab = "emoji" | "icons" | "upload";
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "emoji", label: t("tab.emoji") },
   { id: "icons", label: t("tab.icons") },
-  { id: "upload", label: t("tab.uploadIcon") },
+  { id: "upload", label: t("tab.upload") },
 ];
 
 /**
