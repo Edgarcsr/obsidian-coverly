@@ -165,7 +165,8 @@ const watchTitles = (view: MarkdownView, state: ViewState): void => {
  */
 export const bleed = (header: HTMLElement, scroller: HTMLElement): void => {
   const cover = header.querySelector<HTMLElement>(":scope > .mdp-cover");
-  if (!cover || scroller.clientWidth === 0) {
+  // Fora do documento (ex.: `.mod-header` desmontado) não há o que medir.
+  if (!cover || !header.isConnected || scroller.clientWidth === 0) {
     return;
   }
 
@@ -294,6 +295,14 @@ export class HeaderManager {
         continue;
       }
       this.watch(state, slot, mode);
+      // Na leitura, notas longas usam rolagem virtual: longe do topo, o Obsidian
+      // desmonta o `.mod-header` (e o cabeçalho dentro dele). Pôr o cabeçalho
+      // solto no sizer, acima das seções visíveis, empurrava o conteúdo e a
+      // rolagem pulava de volta. Ele espera dentro do `.mod-header`, que volta
+      // com ele quando a nota rola até o topo.
+      if (mode === "preview" && slot.parent === slot.sizer) {
+        continue;
+      }
       state.scrollers[mode] = slot.scroller;
 
       let header = state.headers[mode];
