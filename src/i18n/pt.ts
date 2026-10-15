@@ -30,12 +30,12 @@ export const pt = {
   "color.yellow": "Amarelo",
 
   "command.changeAccentColor": "Alterar cor de destaque da nota",
-  "command.changeBackground": "Alterar fundo da nota",
+  "command.changeBackground": "Alterar fundo da nota (beta)",
   "command.changeCover": "Alterar capa",
   "command.changeFont": "Alterar fonte da nota",
   "command.changeIcon": "Alterar ícone",
   "command.changeNameColor": "Alterar cor do nome da nota",
-  "command.removeBackground": "Remover fundo da nota",
+  "command.removeBackground": "Remover fundo da nota (beta)",
   "command.removeCover": "Remover capa",
 
   "common.cancel": "Cancelar",
@@ -175,8 +175,8 @@ export const pt = {
     "Deixa cada nota ter a própria cor de destaque (links, botões e caixas de seleção) no lugar da do tema, escolhida na paleta de comandos ou no botão acima do título. Desligado por padrão.",
   "settings.noteAccents.name": "Cor de destaque por nota",
   "settings.noteBackgrounds.desc":
-    "Deixa cada nota ter o próprio fundo: cor, gradiente ou imagem, escolhido na paleta de comandos ou no botão acima do título. Desligado por padrão.",
-  "settings.noteBackgrounds.name": "Fundos por nota",
+    "Beta. Deixa cada nota ter o próprio fundo: cor, gradiente ou imagem, escolhido na paleta de comandos ou no botão acima do título. Desligado por padrão.",
+  "settings.noteBackgrounds.name": "Fundos por nota (beta)",
   "settings.section.covers": "Capas",
   "settings.section.general": "Geral",
   "settings.section.icons": "Ícones",

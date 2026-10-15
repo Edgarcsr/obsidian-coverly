@@ -28,12 +28,12 @@ export const en: Messages = {
   "color.yellow": "Yellow",
 
   "command.changeAccentColor": "Change note accent color",
-  "command.changeBackground": "Change note background",
+  "command.changeBackground": "Change note background (beta)",
   "command.changeCover": "Change cover",
   "command.changeFont": "Change note font",
   "command.changeIcon": "Change icon",
   "command.changeNameColor": "Change note name color",
-  "command.removeBackground": "Remove note background",
+  "command.removeBackground": "Remove note background (beta)",
   "command.removeCover": "Remove cover",
 
   "common.cancel": "Cancel",
@@ -173,8 +173,8 @@ export const en: Messages = {
     "Let each note have its own accent color (links, buttons and checkboxes) instead of the theme one, picked from the command palette or the button above the title. Off by default.",
   "settings.noteAccents.name": "Accent color per note",
   "settings.noteBackgrounds.desc":
-    "Let each note have its own background: a color, gradient or image, picked from the command palette or the button above the title. Off by default.",
-  "settings.noteBackgrounds.name": "Note backgrounds",
+    "Beta. Let each note have its own background: a color, gradient or image, picked from the command palette or the button above the title. Off by default.",
+  "settings.noteBackgrounds.name": "Note backgrounds (beta)",
   "settings.section.covers": "Covers",
   "settings.section.general": "General",
   "settings.section.icons": "Icons",
