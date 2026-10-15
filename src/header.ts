@@ -506,12 +506,16 @@ const buildCover = (
 /**
  * Monta capa + ícone. É o mesmo DOM para o modo de edição e o de leitura,
  * então o visual e as interações ficam idênticos nos dois.
+ *
+ * `cover` é uma capa já montada para os mesmos dados: reaproveitá-la evita
+ * recriar a imagem (e piscar) quando só o ícone muda.
  */
 export const buildHeader = (
   plugin: CoverlyPlugin,
   data: CoverData,
   sourcePath: string,
-  entering: boolean
+  entering: boolean,
+  cover?: HTMLElement | null
 ): HTMLElement => {
   const header = createDiv({ cls: "mdp-header" });
   header.toggleClass("has-cover", Boolean(data.cover));
@@ -521,7 +525,7 @@ export const buildHeader = (
   header.toggleClass("is-entering", entering);
 
   if (data.cover) {
-    header.append(buildCover(plugin, data, sourcePath));
+    header.append(cover ?? buildCover(plugin, data, sourcePath));
   }
 
   // A linha do ícone só existe com ícone: ela sobe sobre a capa, e vazia

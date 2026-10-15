@@ -33,6 +33,7 @@ export const en: Messages = {
   "command.changeFont": "Change note font",
   "command.changeIcon": "Change icon",
   "command.changeNameColor": "Change note name color",
+  "command.downloadCovers": "Download all covers used in the vault",
   "command.removeBackground": "Remove note background (beta)",
   "command.removeCover": "Remove cover",
 
@@ -134,6 +135,10 @@ export const en: Messages = {
   "iconUpload.pasteHint": "or press Ctrl+V to paste an image or link",
 
   "notice.chooseImage": "Choose an image file.",
+  "notice.coversDisabled":
+    'Turn on "Download covers" in the Coverly settings first.',
+  "notice.coversDownloaded": "Covers saved locally: {saved} of {total}.",
+  "notice.coversDownloading": "Downloading {total} covers…",
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
@@ -142,9 +147,15 @@ export const en: Messages = {
   "settings.colorPalette.name": "Icon colors",
   "settings.colorPalette.notion": "Notion colors",
   "settings.colorPalette.tailwind": "Current colors (Tailwind)",
+  "settings.coverAnimation.desc":
+    "Fade and zoom the cover in when a note is opened.",
+  "settings.coverAnimation.name": "Cover entrance animation",
   "settings.coverFade.desc":
     "How much of the cover, from the bottom up, fades out into the note. Zero turns the effect off.",
   "settings.coverFade.name": "Fade at the bottom",
+  "settings.coverFolder.desc":
+    "Vault folder for the downloaded covers. A name starting with a dot stays hidden from the file explorer and from search.",
+  "settings.coverFolder.name": "Cover folder",
   "settings.coverHeight.desc": "Default cover height in pixels.",
   "settings.coverHeight.name": "Cover height",
   "settings.coverRadius.desc":
@@ -156,6 +167,9 @@ export const en: Messages = {
   "settings.customFonts.desc":
     "Add a field to the font panel to type the name of any font installed on your computer as a note's font. Off by default.",
   "settings.customFonts.name": "Custom fonts per note",
+  "settings.downloadCovers.desc":
+    "Save a copy of covers from the internet in the vault, so they open from disk instead of loading over the network each time. The note keeps the original link.",
+  "settings.downloadCovers.name": "Download covers",
   "settings.iconPosition.above": "Over the cover",
   "settings.iconPosition.desc":
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",

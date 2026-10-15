@@ -35,6 +35,7 @@ export const pt = {
   "command.changeFont": "Alterar fonte da nota",
   "command.changeIcon": "Alterar ícone",
   "command.changeNameColor": "Alterar cor do nome da nota",
+  "command.downloadCovers": "Baixar todas as capas usadas no vault",
   "command.removeBackground": "Remover fundo da nota (beta)",
   "command.removeCover": "Remover capa",
 
@@ -136,6 +137,10 @@ export const pt = {
   "iconUpload.pasteHint": "ou Ctrl+V para colar uma imagem ou link",
 
   "notice.chooseImage": "Escolha um arquivo de imagem.",
+  "notice.coversDisabled":
+    'Ative "Baixar capas" nas configurações do Coverly primeiro.',
+  "notice.coversDownloaded": "Capas salvas no vault: {saved} de {total}.",
+  "notice.coversDownloading": "Baixando {total} capas…",
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
@@ -144,9 +149,15 @@ export const pt = {
   "settings.colorPalette.name": "Cores dos ícones",
   "settings.colorPalette.notion": "Cores do Notion",
   "settings.colorPalette.tailwind": "Cores atuais (Tailwind)",
+  "settings.coverAnimation.desc":
+    "A capa aparece com um esmaecer e um leve zoom ao abrir uma nota.",
+  "settings.coverAnimation.name": "Animação de entrada da capa",
   "settings.coverFade.desc":
     "Quanto da capa, de baixo para cima, some em degradê até a nota. Zero desliga o efeito.",
   "settings.coverFade.name": "Degradê na parte de baixo",
+  "settings.coverFolder.desc":
+    "Pasta do vault para as capas baixadas. Um nome que começa com ponto fica escondido do explorador e da busca.",
+  "settings.coverFolder.name": "Pasta das capas",
   "settings.coverHeight.desc": "Altura padrão da capa em pixels.",
   "settings.coverHeight.name": "Altura da capa",
   "settings.coverRadius.desc":
@@ -158,6 +169,9 @@ export const pt = {
   "settings.customFonts.desc":
     "Acrescenta ao quadro de fonte um campo para digitar o nome de qualquer fonte instalada no computador como fonte da nota. Desligado por padrão.",
   "settings.customFonts.name": "Fontes personalizadas por nota",
+  "settings.downloadCovers.desc":
+    "Guarda no vault uma cópia das capas da internet, para abrirem do disco em vez de carregar pela rede toda vez. A nota mantém o link original.",
+  "settings.downloadCovers.name": "Baixar capas",
   "settings.iconPosition.above": "Sobre a capa",
   "settings.iconPosition.desc":
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",

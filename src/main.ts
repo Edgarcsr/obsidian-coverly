@@ -1,7 +1,9 @@
 import { MarkdownView, Plugin } from "obsidian";
 
 import { BackgroundPicker } from "./background-picker";
+import { cacheCover, configureCoverCache } from "./cover-cache";
 import { CoverPicker } from "./cover-picker";
+import { downloadAllCovers } from "./download-covers";
 import type { PopupPosition } from "./floating-popup";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
@@ -12,6 +14,7 @@ import {
   DEFAULT_ZOOM,
   FM,
   dataFromFrontmatter,
+  isRemoteCover,
   migrateLegacyKeys,
 } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
@@ -78,6 +81,9 @@ export default class CoverlyPlugin extends Plugin {
       this.app.vault.adapter,
       `${pluginDir}/${TWEMOJI_CACHE_FILE}`
     );
+
+    // Antes do primeiro desenho, para as capas já baixadas abrirem do disco.
+    await this.configureCoverCache();
 
     this.addSettingTab(new CoverlySettingTab(this.app, this));
     this.registerHeaderSync();
@@ -148,6 +154,22 @@ export default class CoverlyPlugin extends Plugin {
       id: "change-name-color",
       name: t("command.changeNameColor"),
     });
+    this.addCommand({
+      callback: async () => {
+        await downloadAllCovers(this.app);
+      },
+      id: "download-covers",
+      name: t("command.downloadCovers"),
+    });
+  }
+
+  /** Aplica as opções de cópia local das capas (ver cover-cache.ts). */
+  async configureCoverCache(): Promise<void> {
+    await configureCoverCache({
+      app: this.app,
+      enabled: this.settings.downloadCovers,
+      folder: this.settings.coverFolder,
+    });
   }
 
   onunload(): void {
@@ -179,7 +201,13 @@ export default class CoverlyPlugin extends Plugin {
     workspace.onLayoutReady(schedule);
     this.registerEvent(workspace.on("layout-change", schedule));
     this.registerEvent(workspace.on("active-leaf-change", schedule));
-    this.registerEvent(workspace.on("file-open", schedule));
+    this.registerEvent(
+      workspace.on("file-open", () => {
+        // O cabeçalho troca junto com a nota, no mesmo frame (ver flush).
+        this.headers.flush();
+        schedule();
+      })
+    );
     this.registerEvent(workspace.on("css-change", schedule));
     this.registerEvent(metadataCache.on("changed", schedule));
     // No início o cache pode ainda não estar pronto quando o layout fica.
@@ -388,6 +416,10 @@ export default class CoverlyPlugin extends Plugin {
     value: string | null,
     credit?: CreditInfo
   ): Promise<void> {
+    // Baixa antes de gravar: a capa nova já aparece do disco, sem esperar a rede.
+    if (value && isRemoteCover(value)) {
+      await cacheCover(value);
+    }
     await this.updateNote(sourcePath, (fm) => {
       if (value === null) {
         removeKeys(fm, COVER_KEYS);
