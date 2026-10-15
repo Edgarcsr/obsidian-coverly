@@ -8,7 +8,7 @@
      msedge --headless --screenshot=docs/banner.png --window-size=1600,640 --force-device-scale-factor=2 design/banner.html
      node design/round-corners.mjs docs/banner.png 72 */
   * { box-sizing: border-box; margin: 0; }
-  html { background: #141414; }
+  html { background: #111014; }
   html, body { width: 1600px; height: 640px; overflow: hidden; }
   /* O fundo do html é sólido; os cantos viram transparentes depois, em round-corners.mjs */
   body { border-radius: 36px; }
@@ -17,15 +17,15 @@
     font-family: "Segoe UI", "Inter", system-ui, sans-serif;
     color: #dadada;
     background:
-      radial-gradient(900px 520px at 8% 12%, rgba(255, 229, 138, 0.16), transparent 60%),
-      radial-gradient(900px 560px at 92% 100%, rgba(20, 184, 166, 0.20), transparent 60%),
-      #141414;
+      radial-gradient(900px 520px at 8% 12%, rgba(139, 92, 246, 0.22), transparent 60%),
+      radial-gradient(900px 560px at 92% 100%, rgba(76, 34, 181, 0.30), transparent 60%),
+      #111014;
     position: relative;
   }
 
   /* ---------- Marca ---------- */
   .brand { position: absolute; left: 96px; top: 150px; width: 560px; }
-  .brand svg.logo { width: 104px; height: 104px; display: block; filter: drop-shadow(0 12px 28px rgba(20, 184, 166, 0.35)); }
+  .brand svg.logo { width: 104px; height: 104px; display: block; filter: drop-shadow(0 14px 32px rgba(124, 58, 237, 0.5)); }
   .brand h1 { margin-top: 28px; font-size: 84px; line-height: 1; font-weight: 800; letter-spacing: -2.5px; color: #fff; }
   .brand p { margin-top: 18px; font-size: 27px; line-height: 1.35; color: #a8a8a8; max-width: 480px; }
   .chips { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
@@ -43,7 +43,7 @@
   .tab { margin-left: 14px; display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 14px; color: #dadada; background: #242424; border-radius: 8px; }
   .tab .ic { width: 15px; height: 15px; color: #529cca; }
 
-  .cover { position: relative; height: 168px; overflow: hidden; background: linear-gradient(120deg, #0f766e 0%, #14b8a6 38%, #fde68a 100%); }
+  .cover { position: relative; height: 168px; overflow: hidden; background: linear-gradient(135deg, #1f4167 0%, #6b5b95 45%, #c9a08a 100%); }
   .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 55%, rgba(0, 0, 0, 0.28)); }
   .cover svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .pill { position: absolute; right: 18px; top: 14px; z-index: 2; display: flex; font-size: 12px; color: #e8e8e8; background: rgba(30, 30, 30, 0.82); border-radius: 6px; overflow: hidden; }
@@ -88,13 +88,19 @@
 <body>
   <div class="brand">
     <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Coverly">
-      <defs><clipPath id="c"><rect width="64" height="64" rx="18"/></clipPath></defs>
-      <g clip-path="url(#c)">
-        <rect width="64" height="64" fill="#FFE58A"/>
-        <path d="M0 70V24C0 17 6 12.5 11.6 13L54.3 17.2C60 17.7 64 22 64 28.4V70Z" fill="#14B8A6"/>
-        <path d="M0 70V46C0 40 5 35.4 10.1 35.9L52.4 31.9C59 31.4 64 36 64 43V70Z" fill="#000"/>
-        <path d="M9.7 49.8L15 54.8L26.4 43.8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-      </g>
+      <!-- Ícone exigido pelo catálogo da comunidade: quadrado roxo com um check -->
+      <defs>
+        <linearGradient id="logo-bg" x1="0" y1="0" x2="0.35" y2="1">
+          <stop offset="0" stop-color="#9f7aea"/><stop offset="0.55" stop-color="#7444e0"/><stop offset="1" stop-color="#4c22b5"/>
+        </linearGradient>
+        <linearGradient id="logo-shine" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity="0.28"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="16" fill="url(#logo-bg)"/>
+      <rect width="64" height="64" rx="16" fill="url(#logo-shine)"/>
+      <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#fff" stroke-opacity="0.16" stroke-width="1.5"/>
+      <path d="M20 33.5 28.5 42 45 23.5" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <h1>Coverly</h1>
     <p>Notion-style page covers and icons for Obsidian.</p>
