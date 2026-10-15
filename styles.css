@@ -1487,6 +1487,11 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   color: var(--text-muted);
 }
 
+/* Mesma especificidade da regra acima, que vem antes de .mdp-tinted e vencia a cor do ícone. */
+.mdp-link-card-icon.mdp-tinted {
+  color: var(--mdp-icon-color);
+}
+
 .mdp-link-card-icon svg,
 .mdp-link-card-icon img {
   width: 100%;
