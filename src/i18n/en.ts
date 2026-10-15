@@ -132,6 +132,11 @@ export const en: Messages = {
   "settings.coverShade.desc":
     "How much of the cover, from the bottom up, darkens into a black gradient. Helps the icon and credit stand out on light images. Zero turns the effect off.",
   "settings.coverShade.name": "Shadow at the bottom",
+  "settings.iconPosition.above": "Over the cover",
+  "settings.iconPosition.desc":
+    "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",
+  "settings.iconPosition.inline": "On the title line",
+  "settings.iconPosition.name": "Icon position",
   "settings.language.auto": "Automatic",
   "settings.language.desc":
     "Plugin language. Automatic follows the Obsidian language and falls back to English when it is not Portuguese. Command names only change after you reload Obsidian.",

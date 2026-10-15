@@ -7,6 +7,8 @@ import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
 import type { ColorPalette } from "./page-icon";
 
+export type IconPosition = "above" | "inline";
+
 export interface CoverlySettings {
   /** Idioma da interface: um fixo ou "auto", que segue o do Obsidian. */
   language: Language;
@@ -18,6 +20,8 @@ export interface CoverlySettings {
   coverFade: number;
   /** Quanto da altura da capa, de baixo para cima, escurece em degradê preto. 0 = sem sombra. */
   coverShade: number;
+  /** Onde fica o ícone da página: grande sobre a capa ("above") ou antes do texto do título ("inline"). */
+  iconPosition: IconPosition;
   /** Cores dos ícones: as do Notion ou as do Tailwind (a paleta original). */
   colorPalette: ColorPalette;
   /** Última cor usada na aba Ícones, para abrir já com ela. */
@@ -42,6 +46,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverRadius: 0,
   coverShade: 35,
   iconColor: "default",
+  iconPosition: "above",
   language: "auto",
   linkPreview: true,
   recentEmojis: [],
@@ -58,6 +63,7 @@ type ControlKey =
   | "coverFade"
   | "coverShade"
   | "colorPalette"
+  | "iconPosition"
   | "twemoji"
   | "toc"
   | "linkPreview";
@@ -112,6 +118,17 @@ export class CoverlySettingTab extends PluginSettingTab {
           type: "dropdown",
         },
       },
+      {
+        ...named("iconPosition"),
+        control: {
+          key: "iconPosition",
+          options: {
+            above: t("settings.iconPosition.above"),
+            inline: t("settings.iconPosition.inline"),
+          },
+          type: "dropdown",
+        },
+      },
       { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
       { ...named("toc"), control: { key: "toc", type: "toggle" } },
       {
@@ -142,6 +159,9 @@ export class CoverlySettingTab extends PluginSettingTab {
     } else if (key === "colorPalette") {
       settings.colorPalette = value as ColorPalette;
       setColorPalette(settings.colorPalette);
+    } else if (key === "iconPosition") {
+      settings.iconPosition = value as IconPosition;
+      plugin.refreshHeaders();
     } else if (key === "linkPreview") {
       settings.linkPreview = value as boolean;
     } else if (key === "twemoji" || key === "toc") {

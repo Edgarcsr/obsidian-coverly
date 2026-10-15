@@ -302,7 +302,9 @@ export const buildHeader = (
 ): HTMLElement => {
   const header = createDiv({ cls: "mdp-header" });
   header.toggleClass("has-cover", Boolean(data.cover));
-  header.toggleClass("has-icon", Boolean(data.icon));
+  // Na linha do título o ícone é pintado no título (view-header.ts), não aqui.
+  const inline = plugin.settings.iconPosition === "inline";
+  header.toggleClass("has-icon", Boolean(data.icon) && !inline);
   header.toggleClass("is-entering", entering);
 
   if (data.cover) {
@@ -311,7 +313,7 @@ export const buildHeader = (
 
   // A linha do ícone só existe com ícone: ela sobe sobre a capa, e vazia
   // arrastaria junto os botões de adicionar.
-  if (data.icon) {
+  if (data.icon && !inline) {
     const iconRow = header.createDiv({ cls: "mdp-icon-row" });
     const icon = iconRow.createEl("button", {
       attr: { "aria-label": t("header.changeIcon") },
@@ -325,8 +327,10 @@ export const buildHeader = (
 
   // Ações de adicionar aparecem só ao passar o mouse, para não poluir a nota.
   const addRow = header.createDiv({ cls: "mdp-add-row" });
-  if (!data.icon) {
-    addButton(addRow, "smile", t("header.addIcon"), (button) => {
+  // Na linha do título o ícone não é clicável, então o botão fica aqui.
+  if (!data.icon || inline) {
+    const label = data.icon ? t("header.changeIcon") : t("header.addIcon");
+    addButton(addRow, "smile", label, (button) => {
       plugin.openIconPicker(sourcePath, button);
     });
   }

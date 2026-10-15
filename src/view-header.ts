@@ -5,6 +5,7 @@ import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 import { markEmptyProperties } from "./properties";
+import { clearTitleIcon, paintTitleIcon } from "./title-icon";
 
 export type Mode = "source" | "preview";
 
@@ -24,6 +25,8 @@ interface ViewState {
   path: string | null;
   headers: Partial<Record<Mode, HTMLElement>>;
   observed: Set<HTMLElement>;
+  /** Títulos inline que receberam o ícone da nota (posição "na linha do título"). */
+  titles: Set<HTMLElement>;
   mutations: MutationObserver[];
   resize: ResizeObserver;
 }
@@ -94,6 +97,10 @@ const clearState = (state: ViewState): void => {
     header?.remove();
   }
   state.headers = {};
+  for (const title of state.titles) {
+    clearTitleIcon(title);
+  }
+  state.titles.clear();
   state.path = null;
 };
 
@@ -207,7 +214,7 @@ export class HeaderManager {
     const data = dataFromFrontmatter(frontmatter);
     markEmptyProperties(view.contentEl, frontmatter);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${JSON.stringify(data)}`;
+    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;
@@ -232,6 +239,28 @@ export class HeaderManager {
         state.headers[mode] = header;
       }
       bleed(header, slot.scroller);
+      this.paintInlineIcon(state, slot, data.icon);
+    }
+  }
+
+  /** Posição "na linha do título": o ícone vira um ::before do título inline. */
+  private paintInlineIcon(
+    state: ViewState,
+    slot: Slot,
+    icon: string | undefined
+  ): void {
+    const { app, settings } = this.plugin;
+    const title = slot.parent.querySelector<HTMLElement>(
+      ":scope > .inline-title"
+    );
+    if (!title) {
+      return;
+    }
+    if (settings.iconPosition === "inline" && icon) {
+      paintTitleIcon(app, title, icon, settings.twemoji);
+      state.titles.add(title);
+    } else if (state.titles.delete(title)) {
+      clearTitleIcon(title);
     }
   }
 
@@ -246,6 +275,7 @@ export class HeaderManager {
         resize: new ResizeObserver(() => {
           this.schedule();
         }),
+        titles: new Set(),
       };
       this.states.set(view, state);
     }

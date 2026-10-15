@@ -134,6 +134,11 @@ export const pt = {
   "settings.coverShade.desc":
     "Quanto da capa, de baixo para cima, escurece em degradê preto. Destaca o ícone e o crédito sobre imagens claras. Zero desliga o efeito.",
   "settings.coverShade.name": "Sombra na parte de baixo",
+  "settings.iconPosition.above": "Sobre a capa",
+  "settings.iconPosition.desc":
+    "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",
+  "settings.iconPosition.inline": "Na linha do título",
+  "settings.iconPosition.name": "Posição do ícone",
   "settings.language.auto": "Automático",
   "settings.language.desc":
     "Idioma do plugin. Automático segue o idioma do Obsidian; quando ele não é o português, usa o inglês. Os nomes dos comandos só mudam ao recarregar o Obsidian.",
