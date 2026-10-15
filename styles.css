@@ -1210,7 +1210,7 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   display: inline-block;
   width: 16px;
   height: 16px;
-  margin-inline-end: 6px;
+  margin-inline-end: 8px;
   /* Centro do ícone (8px) no meio da altura das maiúsculas e números (~0,35em). */
   vertical-align: calc(0.35em - 8px);
   content: "";
