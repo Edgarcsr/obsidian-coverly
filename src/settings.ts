@@ -39,6 +39,8 @@ export interface CoverlySettings {
   twemoji: boolean;
   /** Pinta o nome de cada nota no explorador com a cor escolhida para ela. */
   nameColors: boolean;
+  /** Deixa dar a cada nota um fundo próprio (cor, gradiente ou imagem). */
+  noteBackgrounds: boolean;
   /** Mostra o sumário de títulos na lateral direita da nota. */
   toc: boolean;
   /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
@@ -57,6 +59,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   language: "auto",
   linkPreview: true,
   nameColors: false,
+  noteBackgrounds: false,
   recentEmojis: [],
   toc: true,
   treeIconPosition: "indent",
@@ -77,7 +80,8 @@ type ControlKey =
   | "twemoji"
   | "toc"
   | "linkPreview"
-  | "nameColors";
+  | "nameColors"
+  | "noteBackgrounds";
 
 export class CoverlySettingTab extends PluginSettingTab {
   private readonly plugin: CoverlyPlugin;
@@ -161,6 +165,10 @@ export class CoverlySettingTab extends PluginSettingTab {
         ...named("nameColors"),
         control: { key: "nameColors", type: "toggle" },
       },
+      {
+        ...named("noteBackgrounds"),
+        control: { key: "noteBackgrounds", type: "toggle" },
+      },
     ];
   }
 
@@ -193,7 +201,12 @@ export class CoverlySettingTab extends PluginSettingTab {
       plugin.applyCoverStyle();
     } else if (key === "linkPreview") {
       settings.linkPreview = value as boolean;
-    } else if (key === "twemoji" || key === "toc" || key === "nameColors") {
+    } else if (
+      key === "twemoji" ||
+      key === "toc" ||
+      key === "nameColors" ||
+      key === "noteBackgrounds"
+    ) {
       settings[key] = value as boolean;
       plugin.refreshHeaders();
     } else {

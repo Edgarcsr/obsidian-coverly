@@ -105,16 +105,20 @@ export default class CoverlyPlugin extends Plugin {
       name: t("command.removeCover"),
     });
     this.addCommand({
-      checkCallback: this.onActiveNote((path) => {
-        this.openBackgroundPicker(path);
-      }),
+      checkCallback: (checking) =>
+        this.settings.noteBackgrounds &&
+        this.onActiveNote((path) => {
+          this.openBackgroundPicker(path);
+        })(checking),
       id: "change-background",
       name: t("command.changeBackground"),
     });
     this.addCommand({
-      checkCallback: this.onActiveNote((path) => {
-        void this.setBackground(path, null);
-      }),
+      checkCallback: (checking) =>
+        this.settings.noteBackgrounds &&
+        this.onActiveNote((path) => {
+          void this.setBackground(path, null);
+        })(checking),
       id: "remove-background",
       name: t("command.removeBackground"),
     });

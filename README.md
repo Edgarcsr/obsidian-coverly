@@ -15,7 +15,7 @@
 ## Features
 
 - **Page covers**: pick a color or gradient, a public domain artwork, an Unsplash photo, an uploaded image, a link, or paste an image with **Ctrl+V**. Drag to reposition. Height, rounded corners, bottom fade and bottom shade are configurable.
-- **Note background**: give a single note a color, gradient, vault image or linked image as its background, softened so the text stays readable. Use **Change note background** from the command palette or the button above the title.
+- **Note background** (off by default, **Settings → Coverly**): give a single note a color, gradient, vault image or linked image as its background, softened so the text stays readable. Use **Change note background** from the command palette or the button above the title.
 - **Vault images**: pick covers, icons and backgrounds from images already in your vault.
 - **Note font**: switch a single note between the theme font, a serif and a monospace font, from the command palette or the button above the title.
 - **Colored names** (off by default, **Settings → Coverly**): pick a color for a note and its name is painted with it in the file explorer.

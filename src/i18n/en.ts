@@ -159,6 +159,9 @@ export const en: Messages = {
   "settings.nameColors.desc":
     "Color each note name in the file explorer with the color you pick for it (command or button above the title). Off by default.",
   "settings.nameColors.name": "Colored names in the explorer",
+  "settings.noteBackgrounds.desc":
+    "Let each note have its own background: a color, gradient or image, picked from the command palette or the button above the title. Off by default.",
+  "settings.noteBackgrounds.name": "Note backgrounds",
   "settings.toc.desc":
     "Shows one line per heading on the right edge of the note, with the current section highlighted. Hover to see the headings and select one to jump to it.",
   "settings.toc.name": "Outline on the side",

@@ -161,6 +161,9 @@ export const pt = {
   "settings.nameColors.desc":
     "Pinta o nome de cada nota no explorador de arquivos com a cor escolhida para ela (comando ou botão acima do título). Desligado por padrão.",
   "settings.nameColors.name": "Nomes coloridos no explorador",
+  "settings.noteBackgrounds.desc":
+    "Deixa cada nota ter o próprio fundo: cor, gradiente ou imagem, escolhido na paleta de comandos ou no botão acima do título. Desligado por padrão.",
+  "settings.noteBackgrounds.name": "Fundos por nota",
   "settings.toc.desc":
     "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles.",
   "settings.toc.name": "Sumário na lateral",
