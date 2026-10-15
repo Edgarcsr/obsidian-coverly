@@ -29,11 +29,16 @@ interface ViewState {
   content: HTMLElement;
   path: string | null;
   headers: Partial<Record<Mode, HTMLElement>>;
+  /** Contêiner que rola de cada cabeçalho, para refazer o `bleed` no resize. */
+  scrollers: Partial<Record<Mode, HTMLElement>>;
   observed: Set<HTMLElement>;
   /** Títulos inline que receberam o ícone da nota (posição "na linha do título"). */
   titles: Set<HTMLElement>;
   mutations: MutationObserver[];
   resize: ResizeObserver;
+  /** Observa os títulos da view: eles mudam assim que a view troca de nota. */
+  titleObserver: MutationObserver;
+  titleTargets: HTMLElement[];
 }
 
 const VIEW_SELECTOR = ".markdown-source-view, .markdown-preview-view";
@@ -102,6 +107,7 @@ const clearState = (state: ViewState): void => {
     header?.remove();
   }
   state.headers = {};
+  state.scrollers = {};
   clearBackground(state.content);
   clearAccent(state.content);
   applyFont(state.content);
@@ -115,11 +121,41 @@ const clearState = (state: ViewState): void => {
 const disposeState = (state: ViewState): void => {
   clearState(state);
   state.resize.disconnect();
+  state.titleObserver.disconnect();
+  state.titleTargets = [];
   for (const observer of state.mutations) {
     observer.disconnect();
   }
   state.mutations = [];
   state.observed.clear();
+};
+
+/**
+ * Ao trocar de nota, o Obsidian pinta o conteúdo novo antes de qualquer
+ * evento (o `file-open` vem depois). O título da aba muda logo depois de o
+ * conteúdo ser trocado, e o MutationObserver roda antes da pintura: o
+ * cabeçalho troca no mesmo frame, em vez de a nota pular um frame depois.
+ * O título inline não serve: ele muda antes, ainda com o conteúdo antigo.
+ */
+const watchTitles = (view: MarkdownView, state: ViewState): void => {
+  const targets = [
+    ...view.containerEl.querySelectorAll<HTMLElement>(".view-header-title"),
+  ];
+  if (
+    targets.length === state.titleTargets.length &&
+    targets.every((target, i) => target === state.titleTargets[i])
+  ) {
+    return;
+  }
+  state.titleObserver.disconnect();
+  for (const target of targets) {
+    state.titleObserver.observe(target, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+  }
+  state.titleTargets = targets;
 };
 
 /**
@@ -180,6 +216,19 @@ export class HeaderManager {
     });
   }
 
+  /**
+   * Atualiza já, sem esperar o próximo frame. Ao trocar de nota o Obsidian
+   * pinta o conteúdo novo antes do `requestAnimationFrame`: esperar deixava um
+   * frame da nota nova com o cabeçalho da anterior, e a nota inteira pulava.
+   */
+  flush(): void {
+    if (this.frame !== null) {
+      window.cancelAnimationFrame(this.frame);
+      this.frame = null;
+    }
+    this.syncAll();
+  }
+
   syncAll(): void {
     const alive = new Set<MarkdownView>();
     for (const leaf of this.plugin.app.workspace.getLeavesOfType("markdown")) {
@@ -231,8 +280,10 @@ export class HeaderManager {
       this.plugin.settings.noteAccents ? data.accent : undefined
     );
     applyFont(view.contentEl, data.font, this.plugin.settings.customFonts);
+    // Só o que a capa mostra (e os textos dos botões dela) decide se ela é refeita.
+    const coverKey = `${file.path}\n${getLocale()}\n${JSON.stringify([data.cover, data.position, data.positionX, data.zoom, data.credit, data.creditUrl])}`;
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
+    const key = `${coverKey}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;
@@ -243,22 +294,43 @@ export class HeaderManager {
         continue;
       }
       this.watch(state, slot, mode);
+      state.scrollers[mode] = slot.scroller;
 
       let header = state.headers[mode];
-      if (
-        !header ||
-        header.dataset.key !== key ||
-        !isPlaced(header, slot.parent)
-      ) {
+      if (header?.dataset.key === key) {
+        // O Obsidian refaz o DOM da view (ex.: ao trocar de modo). O cabeçalho
+        // é só reposto: recriá-lo faria a imagem da capa piscar.
+        if (!isPlaced(header, slot.parent)) {
+          // Reinserir reinicia animações CSS; a de entrada não deve repetir.
+          header.removeClass("is-entering");
+          slot.parent.insertBefore(header, anchorIn(slot.parent));
+        }
+      } else {
+        const cover = header?.querySelector<HTMLElement>(":scope > .mdp-cover");
+        const reuse = cover?.dataset.key === coverKey ? cover : null;
         header?.remove();
-        header = buildHeader(this.plugin, data, file.path, entering);
+        // O modo escondido não anima: a animação rodaria só quando ele
+        // aparecesse, e a capa "entraria" de novo ao trocar de modo.
+        const visible = slot.scroller.clientWidth > 0;
+        header = buildHeader(
+          this.plugin,
+          data,
+          file.path,
+          entering && visible && this.plugin.settings.coverAnimation,
+          reuse
+        );
         header.dataset.key = key;
+        const built = header.querySelector<HTMLElement>(":scope > .mdp-cover");
+        if (built) {
+          built.dataset.key = coverKey;
+        }
         slot.parent.insertBefore(header, anchorIn(slot.parent));
         state.headers[mode] = header;
       }
       bleed(header, slot.scroller);
       this.paintInlineIcon(state, slot, data.icon);
     }
+    watchTitles(view, state);
   }
 
   /** Posição "na linha do título": o ícone vira um ::before do título inline. */
@@ -285,17 +357,33 @@ export class HeaderManager {
   private stateFor(view: MarkdownView): ViewState {
     let state = this.states.get(view);
     if (!state) {
-      state = {
+      const created: ViewState = {
         content: view.contentEl,
         headers: {},
         mutations: [],
         observed: new Set(),
         path: null,
         resize: new ResizeObserver(() => {
+          // O ResizeObserver roda depois do layout e antes da pintura: esticar a
+          // capa aqui a mantém colada às bordas no mesmo frame. Deixar para o
+          // `schedule` (próximo frame) fazia a capa tremer ao redimensionar.
+          for (const mode of MODES) {
+            const header = created.headers[mode];
+            const scroller = created.scrollers[mode];
+            if (header && scroller) {
+              bleed(header, scroller);
+            }
+          }
           this.schedule();
         }),
+        scrollers: {},
+        titleObserver: new MutationObserver(() => {
+          this.flush();
+        }),
+        titleTargets: [],
         titles: new Set(),
       };
+      state = created;
       this.states.set(view, state);
     }
     return state;

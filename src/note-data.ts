@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
 
+import { cacheCoverInBackground, cachedCoverUrl } from "./cover-cache";
 import { GRADIENTS } from "./gallery";
 
 /**
@@ -142,6 +143,10 @@ const HEX_COLOR = /^#[0-9a-f]{6}$/iu;
 /** Cor escolhida livremente: `#rrggbb`. */
 export const isHexColor = (value: string): boolean => HEX_COLOR.test(value);
 
+/** Capa que vem da internet (e pode ganhar uma cópia local). */
+export const isRemoteCover = (value: string): boolean =>
+  URL_PATTERN.test(value);
+
 export const resolveCoverSource = (
   app: App,
   value: string | undefined
@@ -161,7 +166,13 @@ export const resolveCoverSource = (
     return { css: `linear-gradient(${value}, ${value})`, kind: "gradient" };
   }
 
-  if (URL_PATTERN.test(value)) {
+  if (isRemoteCover(value)) {
+    // Com a cópia local ligada, a capa abre do disco; a primeira vez baixa.
+    const local = cachedCoverUrl(value);
+    if (local) {
+      return { kind: "image", url: local };
+    }
+    cacheCoverInBackground(value);
     return { kind: "image", url: value };
   }
 

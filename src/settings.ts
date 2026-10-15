@@ -25,6 +25,12 @@ export interface CoverlySettings {
   coverShade: number;
   /** Deixa digitar o nome de qualquer fonte instalada como fonte de uma nota. */
   customFonts: boolean;
+  /** A capa entra com esmaecer e zoom ao abrir uma nota. */
+  coverAnimation: boolean;
+  /** Guarda uma cópia local das capas da internet, para abrirem do disco. */
+  downloadCovers: boolean;
+  /** Pasta do vault onde ficam as cópias locais das capas. */
+  coverFolder: string;
   /** Onde fica o ícone da página: grande sobre a capa ("above") ou antes do texto do título ("inline"). */
   iconPosition: IconPosition;
   /** Onde fica o ícone das notas no explorador de arquivos. */
@@ -54,11 +60,14 @@ export interface CoverlySettings {
 export const DEFAULT_SETTINGS: CoverlySettings = {
   askIconColor: false,
   colorPalette: "tailwind",
+  coverAnimation: false,
   coverFade: 0,
+  coverFolder: ".cover",
   coverHeight: 240,
   coverRadius: 0,
   coverShade: 35,
   customFonts: false,
+  downloadCovers: false,
   iconColor: "default",
   iconPosition: "above",
   language: "auto",
@@ -81,6 +90,9 @@ type ControlKey =
   | "coverFade"
   | "coverShade"
   | "customFonts"
+  | "coverAnimation"
+  | "downloadCovers"
+  | "coverFolder"
   | "colorPalette"
   | "iconPosition"
   | "treeIconPosition"
@@ -142,6 +154,22 @@ export class CoverlySettingTab extends PluginSettingTab {
           { ...named("coverRadius"), control: slider("coverRadius", 40, 2) },
           { ...named("coverFade"), control: slider("coverFade", 100, 5) },
           { ...named("coverShade"), control: slider("coverShade", 100, 5) },
+          {
+            ...named("coverAnimation"),
+            control: { key: "coverAnimation", type: "toggle" },
+          },
+          {
+            ...named("downloadCovers"),
+            control: { key: "downloadCovers", type: "toggle" },
+          },
+          {
+            ...named("coverFolder"),
+            control: {
+              key: "coverFolder",
+              placeholder: ".cover",
+              type: "text",
+            },
+          },
         ],
         type: "group",
       },
@@ -248,8 +276,15 @@ export class CoverlySettingTab extends PluginSettingTab {
     } else if (key === "treeIconPosition") {
       settings.treeIconPosition = value as TreeIconPosition;
       plugin.applyCoverStyle();
-    } else if (key === "linkPreview") {
-      settings.linkPreview = value as boolean;
+    } else if (key === "downloadCovers") {
+      settings.downloadCovers = value as boolean;
+      await plugin.configureCoverCache();
+    } else if (key === "coverFolder") {
+      settings.coverFolder = String(value).trim();
+      await plugin.configureCoverCache();
+    } else if (key === "linkPreview" || key === "coverAnimation") {
+      // Vale a partir da próxima nota aberta; não precisa redesenhar.
+      settings[key] = value as boolean;
     } else if (
       key === "twemoji" ||
       key === "toc" ||
