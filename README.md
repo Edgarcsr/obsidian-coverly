@@ -18,7 +18,7 @@
 - **Note background** (off by default, **Settings → Coverly**): give a single note a color, gradient, vault image or linked image as its background, softened so the text stays readable. Use **Change note background** from the command palette or the button above the title.
 - **Accent color per note** (off by default, **Settings → Coverly**): change the theme's accent color (links, buttons, checkboxes) for a single note.
 - **Vault images**: pick covers, icons and backgrounds from images already in your vault.
-- **Note font**: switch a single note between the theme font, a serif and a monospace font, from the command palette or the button above the title.
+- **Note font**: switch a single note between the theme font, a serif and a monospace font, from the command palette or the button above the title. With **Custom fonts per note** on (off by default), you can also type the name of any font installed on your computer.
 - **Colored names** (off by default, **Settings → Coverly**): pick a color for a note and its name is painted with it in the file explorer.
 - **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, or a custom image.
 - **Icons everywhere**: the note icon also shows in the tab title and the file explorer.

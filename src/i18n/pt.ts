@@ -66,6 +66,9 @@ export const pt = {
   "emojiGroup.symbols": "Símbolos",
   "emojiGroup.travel": "Viagens e lugares",
 
+  "font.custom.apply": "Aplicar",
+  "font.custom.hint": "Use o nome de uma fonte instalada no computador.",
+  "font.custom.placeholder": "Outra fonte…",
   "font.default": "Padrão",
   "font.mono": "Mono",
   "font.serif": "Serifa",
@@ -148,6 +151,9 @@ export const pt = {
   "settings.coverShade.desc":
     "Quanto da capa, de baixo para cima, escurece em degradê preto. Destaca o ícone e o crédito sobre imagens claras. Zero desliga o efeito.",
   "settings.coverShade.name": "Sombra na parte de baixo",
+  "settings.customFonts.desc":
+    "Acrescenta ao quadro de fonte um campo para digitar o nome de qualquer fonte instalada no computador como fonte da nota. Desligado por padrão.",
+  "settings.customFonts.name": "Fontes personalizadas por nota",
   "settings.iconPosition.above": "Sobre a capa",
   "settings.iconPosition.desc":
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",

@@ -64,6 +64,9 @@ export const en: Messages = {
   "emojiGroup.symbols": "Symbols",
   "emojiGroup.travel": "Travel & places",
 
+  "font.custom.apply": "Apply",
+  "font.custom.hint": "Use the name of a font installed on your computer.",
+  "font.custom.placeholder": "Other font…",
   "font.default": "Default",
   "font.mono": "Mono",
   "font.serif": "Serif",
@@ -146,6 +149,9 @@ export const en: Messages = {
   "settings.coverShade.desc":
     "How much of the cover, from the bottom up, darkens into a black gradient. Helps the icon and credit stand out on light images. Zero turns the effect off.",
   "settings.coverShade.name": "Shadow at the bottom",
+  "settings.customFonts.desc":
+    "Add a field to the font panel to type the name of any font installed on your computer as a note's font. Off by default.",
+  "settings.customFonts.name": "Custom fonts per note",
   "settings.iconPosition.above": "Over the cover",
   "settings.iconPosition.desc":
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",

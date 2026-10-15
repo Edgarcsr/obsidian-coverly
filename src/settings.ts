@@ -23,6 +23,8 @@ export interface CoverlySettings {
   coverFade: number;
   /** Quanto da altura da capa, de baixo para cima, escurece em degradê preto. 0 = sem sombra. */
   coverShade: number;
+  /** Deixa digitar o nome de qualquer fonte instalada como fonte de uma nota. */
+  customFonts: boolean;
   /** Onde fica o ícone da página: grande sobre a capa ("above") ou antes do texto do título ("inline"). */
   iconPosition: IconPosition;
   /** Onde fica o ícone das notas no explorador de arquivos. */
@@ -56,6 +58,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverHeight: 240,
   coverRadius: 0,
   coverShade: 35,
+  customFonts: false,
   iconColor: "default",
   iconPosition: "above",
   language: "auto",
@@ -77,6 +80,7 @@ type ControlKey =
   | "coverRadius"
   | "coverFade"
   | "coverShade"
+  | "customFonts"
   | "colorPalette"
   | "iconPosition"
   | "treeIconPosition"
@@ -126,6 +130,10 @@ export class CoverlySettingTab extends PluginSettingTab {
       { ...named("coverRadius"), control: slider("coverRadius", 40, 2) },
       { ...named("coverFade"), control: slider("coverFade", 100, 5) },
       { ...named("coverShade"), control: slider("coverShade", 100, 5) },
+      {
+        ...named("customFonts"),
+        control: { key: "customFonts", type: "toggle" },
+      },
       {
         ...named("colorPalette"),
         control: {
@@ -212,6 +220,7 @@ export class CoverlySettingTab extends PluginSettingTab {
     } else if (
       key === "twemoji" ||
       key === "toc" ||
+      key === "customFonts" ||
       key === "nameColors" ||
       key === "noteAccents" ||
       key === "noteBackgrounds"

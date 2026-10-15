@@ -14,7 +14,6 @@ import {
 } from "./note-data";
 import type { CoverData, CreditInfo } from "./note-data";
 import { showFontPopup } from "./note-font";
-import type { NoteFont } from "./note-font";
 import { NoteIconDecorator } from "./note-icons";
 import {
   isColorPalette,
@@ -280,9 +279,13 @@ export default class CoverlyPlugin extends Plugin {
   /** Abre o quadro de fonte da nota. Sem âncora, aparece no centro da nota aberta. */
   openFontPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
     showFontPopup({
+      allowCustom: this.settings.customFonts,
       current: this.noteData(sourcePath).font,
       onPick: async (font) => {
         await this.setFont(sourcePath, font);
+      },
+      onPickCustom: async (family) => {
+        await this.setFont(sourcePath, family);
       },
       position: this.popupPosition(anchor),
     });
@@ -406,7 +409,8 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
-  async setFont(sourcePath: string, font: NoteFont): Promise<void> {
+  /** `font` é "default" (sem propriedade), uma fonte pronta ou o nome de uma personalizada. */
+  async setFont(sourcePath: string, font: string): Promise<void> {
     await this.updateNote(sourcePath, (fm) => {
       if (font === "default") {
         removeKeys(fm, [FM.font]);

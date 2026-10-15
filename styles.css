@@ -1601,6 +1601,10 @@ body {
   font-family: var(--font-monospace) !important;
 }
 
+.mdp-font-custom :is(.cm-content, .inline-title, .markdown-preview-section) {
+  font-family: var(--mdp-note-font) !important;
+}
+
 /* Quadro de cores do nome da nota: reaproveita as classes da paleta de ícones. */
 .mdp-note-color .mdp-color-swatch {
   position: relative;
@@ -1703,4 +1707,25 @@ body {
 
 .mdp-font-popup .mdp-font-option.is-selected .mdp-font-label {
   color: var(--interactive-accent);
+}
+
+/* Campo da fonte personalizada, abaixo das três opções prontas. */
+.mdp-font-custom-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding-top: 10px;
+  margin-top: 6px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mdp-font-custom-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.mdp-font-custom-hint {
+  margin-top: 6px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
 }

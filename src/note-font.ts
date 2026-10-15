@@ -4,12 +4,12 @@ import type { PopupPosition } from "./floating-popup";
 import { t } from "./i18n";
 import type { MessageKey } from "./i18n";
 
-/** Fontes que dá para escolher por nota. A padrão é a do tema (sem propriedade). */
+/** Fontes prontas do quadro. A padrão é a do tema (sem propriedade). */
 export const NOTE_FONTS = ["default", "serif", "mono"] as const;
 
 export type NoteFont = (typeof NOTE_FONTS)[number];
 
-/** Fontes gravadas na nota: "default" é a ausência da propriedade. */
+/** Fontes prontas gravadas na nota: "default" é a ausência da propriedade. */
 export type StoredFont = Exclude<NoteFont, "default">;
 
 const LABELS: Record<NoteFont, MessageKey> = {
@@ -19,26 +19,117 @@ const LABELS: Record<NoteFont, MessageKey> = {
 };
 
 const CLASS_PREFIX = "mdp-font-";
+const CUSTOM_CLASS = `${CLASS_PREFIX}custom`;
+const CUSTOM_VARIABLE = "--mdp-note-font";
+
+/** Tamanho máximo do nome de uma fonte personalizada. */
+const MAX_FAMILY_LENGTH = 60;
+
+/** Tudo que não é letra, número, espaço, ponto, hífen ou sublinhado. */
+const UNSAFE_FAMILY_CHARS = /[^\p{L}\p{N} _.-]/gu;
 
 export const isStoredFont = (value: unknown): value is StoredFont =>
   value === "serif" || value === "mono";
 
-/** Troca a fonte de `el` (a área de conteúdo da view); sem `font`, volta à do tema. */
-export const applyFont = (el: HTMLElement, font?: StoredFont): void => {
+/**
+ * Nome de fonte personalizada já limpo, ou `undefined` se não sobrar nada.
+ * O valor vem de uma propriedade que o usuário pode editar à mão e vai parar
+ * numa declaração CSS, então só passam caracteres inofensivos.
+ */
+export const cleanFamily = (value: string): string | undefined => {
+  const family = value
+    .replaceAll(UNSAFE_FAMILY_CHARS, "")
+    .replaceAll(/\s+/gu, " ")
+    .trim()
+    .slice(0, MAX_FAMILY_LENGTH);
+  return family === "" ? undefined : family;
+};
+
+/**
+ * Troca a fonte de `el` (a área de conteúdo da view); sem `font`, volta à do
+ * tema. Qualquer valor que não seja uma fonte pronta é um nome de fonte
+ * personalizada, só aceito com `allowCustom` ligado.
+ */
+export const applyFont = (
+  el: HTMLElement,
+  font?: string,
+  allowCustom = false
+): void => {
+  const preset = isStoredFont(font) ? font : undefined;
+  const family = !preset && allowCustom && font ? cleanFamily(font) : undefined;
+
   for (const name of NOTE_FONTS) {
-    el.toggleClass(`${CLASS_PREFIX}${name}`, name === font);
+    el.toggleClass(`${CLASS_PREFIX}${name}`, name === preset);
+  }
+  el.toggleClass(CUSTOM_CLASS, family !== undefined);
+  if (family) {
+    // Se a fonte não estiver instalada, o texto cai na fonte do tema.
+    el.style.setProperty(CUSTOM_VARIABLE, `"${family}", var(--font-text)`);
+  } else {
+    el.style.removeProperty(CUSTOM_VARIABLE);
   }
 };
 
 export interface FontPopupOptions {
-  current: StoredFont | undefined;
+  /** Valor gravado na nota: uma fonte pronta ou o nome de uma personalizada. */
+  current: string | undefined;
   position: PopupPosition;
+  /** Mostra o campo para digitar o nome de qualquer fonte instalada. */
+  allowCustom: boolean;
   onPick: (font: NoteFont) => Promise<void>;
+  onPickCustom: (family: string) => Promise<void>;
 }
+
+/** Campo para digitar o nome de uma fonte instalada no computador. */
+const renderCustomRow = (
+  popup: HTMLElement,
+  options: FontPopupOptions,
+  close: () => void
+): void => {
+  const row = popup.createDiv({ cls: "mdp-font-custom-row" });
+  const input = row.createEl("input", {
+    attr: { spellcheck: "false" },
+    cls: "mdp-font-custom-input",
+    placeholder: t("font.custom.placeholder"),
+    type: "text",
+  });
+  const apply = row.createEl("button", {
+    cls: "mod-cta",
+    text: t("font.custom.apply"),
+  });
+  popup.createDiv({ cls: "mdp-font-custom-hint", text: t("font.custom.hint") });
+
+  const { current } = options;
+  if (current && !isStoredFont(current)) {
+    input.value = current;
+  }
+
+  const send = async (): Promise<void> => {
+    const family = cleanFamily(input.value);
+    if (!family) {
+      return;
+    }
+    close();
+    await options.onPickCustom(family);
+  };
+
+  apply.addEventListener("click", asyncListener(send));
+  input.addEventListener(
+    "keydown",
+    asyncListener(async (event) => {
+      if (event.key === "Enter") {
+        await send();
+      }
+    })
+  );
+  input.focus();
+};
 
 /** Quadro "Estilo da fonte", como no Notion: cada opção mostra um "Ag" na própria fonte. */
 export const showFontPopup = (options: FontPopupOptions): void => {
-  const current = options.current ?? "default";
+  const isCustom = Boolean(options.current) && !isStoredFont(options.current);
+  // Uma fonte personalizada gravada não marca nenhuma das prontas.
+  const selected = isCustom ? undefined : (options.current ?? "default");
 
   openFloatingPopup("mdp-font-popup", options.position, (popup, close) => {
     popup.createDiv({ cls: "mdp-font-popup-title", text: t("font.title") });
@@ -47,7 +138,7 @@ export const showFontPopup = (options: FontPopupOptions): void => {
     for (const font of NOTE_FONTS) {
       const option = row.createEl("button", {
         cls:
-          font === current ? "mdp-font-option is-selected" : "mdp-font-option",
+          font === selected ? "mdp-font-option is-selected" : "mdp-font-option",
       });
       option.createSpan({ cls: `mdp-font-sample is-${font}`, text: "Ag" });
       option.createSpan({ cls: "mdp-font-label", text: t(LABELS[font]) });
@@ -58,6 +149,10 @@ export const showFontPopup = (options: FontPopupOptions): void => {
           await options.onPick(font);
         })
       );
+    }
+
+    if (options.allowCustom) {
+      renderCustomRow(popup, options, close);
     }
   });
 };

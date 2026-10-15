@@ -230,7 +230,7 @@ export class HeaderManager {
       view.contentEl,
       this.plugin.settings.noteAccents ? data.accent : undefined
     );
-    applyFont(view.contentEl, data.font);
+    applyFont(view.contentEl, data.font, this.plugin.settings.customFonts);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
     const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
