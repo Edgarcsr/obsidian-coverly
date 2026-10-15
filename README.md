@@ -10,6 +10,10 @@
   <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=dark"><img src="https://shieldcn.dev/github/license/Edgarcsr/obsidian-coverly.svg?variant=outline&mode=light" alt="License"></picture></a>
 </p>
 
+<p>
+  <a href="https://youtu.be/qEFwSZ2j1Ho"><b>Watch the video overview on YouTube</b></a>
+</p>
+
 </div>
 
 ## Features
