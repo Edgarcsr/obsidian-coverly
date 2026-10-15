@@ -123,7 +123,17 @@
   transition: height 0.25s ease;
 }
 
+/*
+ * A moldura só esmaece: o bleed() mede a capa com getBoundingClientRect logo
+ * ao montar, e um transform nela entraria na conta (margens erradas que só se
+ * corrigiam no próximo clique, deslocando a capa). A escala fica na camada
+ * da imagem, que é absoluta e não é medida.
+ */
 .mdp-header.is-entering .mdp-cover {
+  animation: mdp-opacity-in 0.45s ease both;
+}
+
+.mdp-header.is-entering .mdp-cover-image {
   animation: mdp-fade-in 0.45s ease both;
 }
 
@@ -1319,6 +1329,12 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   }
 }
 
+@keyframes mdp-opacity-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes mdp-picker-in {
   from {
     opacity: 0;
@@ -1334,6 +1350,7 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .mdp-picker,
   .mdp-cover,
+  .mdp-cover-image,
   .mdp-icon,
   .mdp-toolbar,
   .mdp-add-row {
