@@ -1814,3 +1814,13 @@ body {
 .mdp-picker-search + .mdp-picker-photos {
   margin-top: 8px;
 }
+
+/* Fundo da nota: as cores são quadrados, não faixas de banner */
+.mdp-picker-grid.is-squares {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.mdp-picker-grid.is-squares .mdp-picker-tile {
+  height: auto;
+  aspect-ratio: 1;
+}
