@@ -1162,6 +1162,11 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   margin-inline-end: 6px;
 }
 
+/* Opção "no começo do nome": o ícone fica no fluxo e empurra o texto. */
+.mdp-tree-icon-inline .nav-file-title .mdp-inline-icon {
+  margin-inline-start: 0;
+}
+
 /*
  * Título da barra superior: o ícone é um ::before do próprio título (ver
  * title-icon.ts), então some e aparece junto com ele em temas que o escondem.

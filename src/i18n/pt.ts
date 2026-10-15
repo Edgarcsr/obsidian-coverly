@@ -149,6 +149,11 @@ export const pt = {
   "settings.toc.desc":
     "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles.",
   "settings.toc.name": "Sumário na lateral",
+  "settings.treeIconPosition.desc":
+    "Onde fica o ícone das notas no explorador de arquivos: no recuo à esquerda, mantendo o nome alinhado, ou no começo do nome, empurrando o texto.",
+  "settings.treeIconPosition.indent": "No recuo à esquerda",
+  "settings.treeIconPosition.inline": "No começo do nome",
+  "settings.treeIconPosition.name": "Posição do ícone no explorador",
   "settings.twemoji.desc":
     "Desenha os emojis com o Twemoji. As imagens são baixadas do jsDelivr (cdn.jsdelivr.net) na primeira vez que aparecem e ficam guardadas na pasta do plugin; nada da nota é enviado. Desligado, usa os emojis do sistema.",
   "settings.twemoji.name": "Emojis no estilo do X",

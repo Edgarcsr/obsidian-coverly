@@ -9,6 +9,9 @@ import type { ColorPalette } from "./page-icon";
 
 export type IconPosition = "above" | "inline";
 
+/** Ícone no explorador: no recuo à esquerda ("indent") ou empurrando o nome ("inline"). */
+export type TreeIconPosition = "indent" | "inline";
+
 export interface CoverlySettings {
   /** Idioma da interface: um fixo ou "auto", que segue o do Obsidian. */
   language: Language;
@@ -22,6 +25,8 @@ export interface CoverlySettings {
   coverShade: number;
   /** Onde fica o ícone da página: grande sobre a capa ("above") ou antes do texto do título ("inline"). */
   iconPosition: IconPosition;
+  /** Onde fica o ícone das notas no explorador de arquivos. */
+  treeIconPosition: TreeIconPosition;
   /** Cores dos ícones: as do Notion ou as do Tailwind (a paleta original). */
   colorPalette: ColorPalette;
   /** Última cor usada na aba Ícones, para abrir já com ela. */
@@ -51,6 +56,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   linkPreview: true,
   recentEmojis: [],
   toc: true,
+  treeIconPosition: "indent",
   twemoji: true,
   unsplashKey: "",
 };
@@ -64,6 +70,7 @@ type ControlKey =
   | "coverShade"
   | "colorPalette"
   | "iconPosition"
+  | "treeIconPosition"
   | "twemoji"
   | "toc"
   | "linkPreview";
@@ -129,6 +136,17 @@ export class CoverlySettingTab extends PluginSettingTab {
           type: "dropdown",
         },
       },
+      {
+        ...named("treeIconPosition"),
+        control: {
+          key: "treeIconPosition",
+          options: {
+            indent: t("settings.treeIconPosition.indent"),
+            inline: t("settings.treeIconPosition.inline"),
+          },
+          type: "dropdown",
+        },
+      },
       { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
       { ...named("toc"), control: { key: "toc", type: "toggle" } },
       {
@@ -162,6 +180,9 @@ export class CoverlySettingTab extends PluginSettingTab {
     } else if (key === "iconPosition") {
       settings.iconPosition = value as IconPosition;
       plugin.refreshHeaders();
+    } else if (key === "treeIconPosition") {
+      settings.treeIconPosition = value as TreeIconPosition;
+      plugin.applyCoverStyle();
     } else if (key === "linkPreview") {
       settings.linkPreview = value as boolean;
     } else if (key === "twemoji" || key === "toc") {

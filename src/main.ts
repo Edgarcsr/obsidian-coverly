@@ -121,6 +121,7 @@ export default class CoverlyPlugin extends Plugin {
     for (const name of COVER_VARS) {
       document.body.style.removeProperty(name);
     }
+    document.body.removeClass("mdp-tree-icon-inline");
   }
 
   /**
@@ -175,6 +176,10 @@ export default class CoverlyPlugin extends Plugin {
     style.setProperty("--mdp-cover-radius", `${coverRadius}px`);
     style.setProperty("--mdp-cover-fade", `${coverFade}%`);
     style.setProperty("--mdp-cover-shade", `${coverShade}%`);
+    document.body.toggleClass(
+      "mdp-tree-icon-inline",
+      this.settings.treeIconPosition === "inline"
+    );
   }
 
   /** Abre o seletor de capa ancorado em `anchor`; sem âncora, abre centralizado. */

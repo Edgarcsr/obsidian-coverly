@@ -147,6 +147,11 @@ export const en: Messages = {
   "settings.toc.desc":
     "Shows one line per heading on the right edge of the note, with the current section highlighted. Hover to see the headings and select one to jump to it.",
   "settings.toc.name": "Outline on the side",
+  "settings.treeIconPosition.desc":
+    "Where note icons go in the file explorer: in the left indent, keeping names aligned, or at the start of the name, pushing the text.",
+  "settings.treeIconPosition.indent": "In the left indent",
+  "settings.treeIconPosition.inline": "At the start of the name",
+  "settings.treeIconPosition.name": "Icon position in the explorer",
   "settings.twemoji.desc":
     "Draws emoji with Twemoji. Images are downloaded from jsDelivr (cdn.jsdelivr.net) the first time they appear and kept in the plugin folder; nothing from your notes is sent. When off, system emoji are used.",
   "settings.twemoji.name": "X-style emoji",
