@@ -204,7 +204,6 @@ export const pt = {
   "tab.icons": "Ícones",
   "tab.link": "Link",
   "tab.upload": "Carregar",
-  "tab.vault": "Vault",
 
   "toc.untitled": "Sem título",
 

@@ -2,6 +2,7 @@ import { setIcon } from "obsidian";
 
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
+import { swallowOpenerClick } from "./opener-toggle";
 
 /**
  * Campo de busca com lupa. A borda fica no contêiner, não no `input`, para os
@@ -60,6 +61,7 @@ export abstract class TabbedPopover<T extends string> {
     if (event.target instanceof Node && this.el.contains(event.target)) {
       return;
     }
+    swallowOpenerClick(this.anchor, event.target);
     this.close();
   };
 

@@ -2,6 +2,7 @@ import { MarkdownView, Plugin } from "obsidian";
 
 import { BackgroundPicker } from "./background-picker";
 import { CoverPicker } from "./cover-picker";
+import type { PopupPosition } from "./floating-popup";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
 import { LinkPreview } from "./link-preview";
@@ -258,17 +259,18 @@ export default class CoverlyPlugin extends Plugin {
           await this.setBackground(sourcePath, null);
         },
         plugin: this,
+        sourcePath,
       })
     );
   }
 
   /** Onde abrir um quadro: junto à âncora, ou no centro da nota aberta. */
-  private popupPosition(anchor: HTMLElement | null): { x: number; y: number } {
+  private popupPosition(anchor: HTMLElement | null): PopupPosition {
     const box = (
       anchor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.contentEl
     )?.getBoundingClientRect();
     if (anchor) {
-      return { x: box?.left ?? 0, y: box?.bottom ?? 0 };
+      return { opener: anchor, x: box?.left ?? 0, y: box?.bottom ?? 0 };
     }
     return {
       x: (box?.left ?? 0) + (box?.width ?? 0) / 2,

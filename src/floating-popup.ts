@@ -2,6 +2,7 @@ import { setIcon, setTooltip } from "obsidian";
 
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
+import { swallowOpenerClick } from "./opener-toggle";
 
 /** Distância mínima entre o quadro e as bordas da janela. */
 const EDGE = 8;
@@ -9,6 +10,8 @@ const EDGE = 8;
 export interface PopupPosition {
   x: number;
   y: number;
+  /** Botão que abriu o quadro: clicar nele de novo fecha (ver opener-toggle.ts). */
+  opener?: HTMLElement | null;
 }
 
 /**
@@ -46,9 +49,11 @@ export const openFloatingPopup = (
   document.addEventListener(
     "pointerdown",
     (event) => {
-      if (!(event.target instanceof Node && popup.contains(event.target))) {
-        close();
+      if (event.target instanceof Node && popup.contains(event.target)) {
+        return;
       }
+      swallowOpenerClick(position.opener, event.target);
+      close();
     },
     { capture: true, signal: controller.signal }
   );

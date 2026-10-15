@@ -1833,9 +1833,16 @@ body {
 }
 
 /* Fundo da nota: as cores são quadrados, não faixas de banner */
+/* Aba de cores: o quadro encolhe para caber a grade de cinco */
+.mdp-picker.is-compact {
+  width: max-content;
+}
+
+/* Cinco quadrados pequenos por linha, bem espaçados, alinhados à esquerda */
 .mdp-picker-grid.is-squares {
-  grid-template-columns: repeat(12, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(5, 32px);
+  gap: 12px;
+  justify-content: start;
 }
 
 .mdp-picker-grid.is-squares .mdp-picker-tile {
@@ -1843,19 +1850,24 @@ body {
   aspect-ratio: 1;
 }
 
-/* Quadrado de cor livre: o espectro até alguém escolher uma cor. */
+/* Quadrado de cor livre: cinza com um "+" até alguém escolher uma cor. */
 .mdp-picker .mdp-picker-tile.is-custom {
   position: relative;
-  background-image: conic-gradient(
-    #ef4444,
-    #eab308,
-    #22c55e,
-    #06b6d4,
-    #3b82f6,
-    #a855f7,
-    #ec4899,
-    #ef4444
-  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.mdp-picker-tile.is-custom .mdp-picker-tile-icon {
+  display: flex;
+  pointer-events: none;
+}
+
+.mdp-picker-tile.is-custom .mdp-picker-tile-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .mdp-picker-tile .mdp-color-input {

@@ -202,7 +202,6 @@ export const en: Messages = {
   "tab.icons": "Icons",
   "tab.link": "Link",
   "tab.upload": "Upload",
-  "tab.vault": "Vault",
 
   "toc.untitled": "Untitled",
 

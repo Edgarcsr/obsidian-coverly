@@ -1,7 +1,5 @@
-import { Notice } from "obsidian";
-
 import { asyncListener } from "./async-listener";
-import { firstImage, saveImageAttachment } from "./attachments";
+import { firstImage } from "./attachments";
 import { GALLERY } from "./gallery";
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
@@ -10,7 +8,8 @@ import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
 import { searchUnsplash, trackUnsplashDownload } from "./unsplash";
 import type { UnsplashPhoto } from "./unsplash";
-import { renderVaultImages } from "./vault-images";
+import { renderUploadTab, uploadImage } from "./upload-tab";
+import type { UploadTabOptions } from "./upload-tab";
 
 type Tab = "gallery" | "upload" | "link" | "unsplash";
 
@@ -42,9 +41,6 @@ export interface CoverPickerOptions {
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Erro desconhecido.";
 
-/** Mostra um aviso e devolve a notificação, sem efeito colateral solto no chamador. */
-const notify = (message: string): Notice => new Notice(message);
-
 /**
  * Seletor de capa. Na galeria e no Unsplash continua aberto depois de
  * escolher, para dar para experimentar várias capas seguidas.
@@ -64,7 +60,7 @@ export class CoverPicker extends TabbedPopover<Tab> {
     }
     // O preventDefault precisa vir antes de qualquer await.
     event.preventDefault();
-    void this.upload(image);
+    void uploadImage(this.uploadOptions(), image);
   };
 
   constructor(options: CoverPickerOptions) {
@@ -98,8 +94,7 @@ export class CoverPicker extends TabbedPopover<Tab> {
         break;
       }
       case "upload": {
-        this.renderUpload();
-        this.renderVault();
+        renderUploadTab(this.body, this.uploadOptions());
         break;
       }
       case "link": {
@@ -159,86 +154,17 @@ export class CoverPicker extends TabbedPopover<Tab> {
     }
   }
 
-  /** Imagens que já estão no vault, logo abaixo do upload. */
-  private renderVault(): void {
-    this.body.createDiv({
-      cls: "mdp-picker-section-title",
-      text: t("vault.title"),
-    });
-    renderVaultImages(this.body, {
+  /** Aba "Carregar": envio e imagens do vault. Ao escolher, aplica e fecha. */
+  private uploadOptions(): UploadTabOptions {
+    return {
       app: this.options.plugin.app,
       current: this.current,
       pick: async (path) => {
         await this.choose(path);
         this.close();
       },
-    });
-  }
-
-  private renderUpload(): void {
-    const zone = this.body.createDiv({ cls: "mdp-picker-upload" });
-    const button = zone.createEl("button", {
-      cls: "mdp-picker-primary",
-      text: t("cover.uploadButton"),
-    });
-    zone.createDiv({
-      cls: "mdp-picker-hint",
-      text: t("cover.uploadHint"),
-    });
-    const input = zone.createEl("input", {
-      attr: { accept: "image/*" },
-      type: "file",
-    });
-    input.hide();
-
-    button.addEventListener("click", () => {
-      input.click();
-    });
-    input.addEventListener(
-      "change",
-      asyncListener(async () => {
-        const file = input.files?.[0];
-        if (file) {
-          await this.upload(file);
-        }
-      })
-    );
-    zone.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      zone.addClass("is-over");
-    });
-    zone.addEventListener("dragleave", () => {
-      zone.removeClass("is-over");
-    });
-    zone.addEventListener(
-      "drop",
-      asyncListener(async (event) => {
-        event.preventDefault();
-        zone.removeClass("is-over");
-        const file = event.dataTransfer?.files[0];
-        if (file) {
-          await this.upload(file);
-        }
-      })
-    );
-  }
-
-  private async upload(file: File): Promise<void> {
-    if (!file.type.startsWith("image/")) {
-      notify(t("notice.chooseImage"));
-      return;
-    }
-    try {
-      const path = await saveImageAttachment(
-        this.options.plugin.app,
-        file,
-        this.options.sourcePath
-      );
-      await this.choose(path);
-      this.close();
-    } catch (error) {
-      notify(t("notice.saveFailedReason", { reason: errorMessage(error) }));
-    }
+      sourcePath: this.options.sourcePath,
+    };
   }
 
   private renderLink(): void {

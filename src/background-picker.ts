@@ -1,3 +1,5 @@
+import { setIcon } from "obsidian";
+
 import { asyncListener } from "./async-listener";
 import { GRADIENTS } from "./gallery";
 import { t } from "./i18n";
@@ -5,20 +7,22 @@ import type CoverlyPlugin from "./main";
 import { isHexColor } from "./note-data";
 import { TabbedPopover } from "./popover";
 import type { PopoverTab } from "./popover";
-import { renderVaultImages } from "./vault-images";
+import { renderUploadTab } from "./upload-tab";
 
-type Tab = "colors" | "vault" | "link";
+type Tab = "colors" | "upload" | "link";
 
 const URL_PATTERN = /^https?:\/\//u;
 
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "colors", label: t("tab.colors") },
-  { id: "vault", label: t("tab.vault") },
+  { id: "upload", label: t("tab.upload") },
   { id: "link", label: t("tab.link") },
 ];
 
 export interface BackgroundPickerOptions {
   plugin: CoverlyPlugin;
+  /** Nota que recebe a imagem enviada como anexo. */
+  sourcePath: string;
   /** Botão que abriu o seletor; sem ele o popover abre centralizado. */
   anchor: HTMLElement | null;
   /** Fundo atual da nota, para marcar o selecionado e mostrar "Remover". */
@@ -27,7 +31,7 @@ export interface BackgroundPickerOptions {
   onRemove: () => Promise<void>;
 }
 
-/** Seletor de fundo da nota: cores e gradientes, imagem do vault ou link. */
+/** Seletor de fundo da nota: cores e gradientes, imagem enviada ou do vault, ou link. */
 export class BackgroundPicker extends TabbedPopover<Tab> {
   private readonly options: BackgroundPickerOptions;
   private current: string | undefined;
@@ -47,19 +51,22 @@ export class BackgroundPicker extends TabbedPopover<Tab> {
   }
 
   protected renderTab(tab: Tab): void {
+    // Só a aba de cores é estreita; as outras usam a largura cheia.
+    this.el.toggleClass("is-compact", tab === "colors");
     switch (tab) {
       case "colors": {
         this.renderColors();
         break;
       }
-      case "vault": {
-        renderVaultImages(this.body, {
+      case "upload": {
+        renderUploadTab(this.body, {
           app: this.options.plugin.app,
           current: this.current,
           pick: async (path) => {
             await this.choose(path);
             this.close();
           },
+          sourcePath: this.options.sourcePath,
         });
         break;
       }
@@ -111,6 +118,7 @@ export class BackgroundPicker extends TabbedPopover<Tab> {
       attr: { "aria-label": t("color.custom"), title: t("color.custom") },
       cls: "mdp-picker-tile is-custom",
     });
+    setIcon(custom.createSpan({ cls: "mdp-picker-tile-icon" }), "plus");
     const input = custom.createEl("input", {
       cls: "mdp-color-input",
       type: "color",
