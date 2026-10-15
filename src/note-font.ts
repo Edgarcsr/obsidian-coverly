@@ -81,8 +81,11 @@ export interface FontPopupOptions {
   onPickCustom: (family: string) => Promise<void>;
 }
 
-/** Quantas fontes da lista aparecem de uma vez; o filtro mostra as outras. */
-const MAX_LISTED = 60;
+/** Quantas fontes entram na lista por vez; o resto vem ao rolar até perto do fim. */
+const PAGE_SIZE = 60;
+
+/** Distância do fim da lista, em px, a partir da qual a próxima leva é desenhada. */
+const NEAR_END = 48;
 
 /**
  * Busca e lista das fontes instaladas no sistema, cada uma desenhada na
@@ -129,6 +132,37 @@ const renderCustomFonts = (
     }
   };
 
+  let matches: string[] = [];
+  let shown = 0;
+
+  const addItem = (family: string): void => {
+    const item = list.createEl("button", {
+      cls:
+        family === selectedFamily
+          ? "mdp-font-list-item is-selected"
+          : "mdp-font-list-item",
+      text: family,
+    });
+    // O nome já vem do sistema, mas passa pela mesma limpeza das digitadas.
+    const safe = cleanFamily(family);
+    if (safe) {
+      item.style.fontFamily = `"${safe}", var(--font-interface)`;
+    }
+    item.addEventListener(
+      "click",
+      asyncListener(async () => {
+        await choose(family);
+      })
+    );
+  };
+
+  const showMore = (): void => {
+    for (const family of matches.slice(shown, shown + PAGE_SIZE)) {
+      addItem(family);
+    }
+    shown = Math.min(matches.length, shown + PAGE_SIZE);
+  };
+
   const showList = (families: readonly string[] | null): void => {
     list.empty();
     if (!families) {
@@ -137,9 +171,8 @@ const renderCustomFonts = (
       return;
     }
     const query = input.value.trim().toLowerCase();
-    const matches = families.filter((family) =>
-      family.toLowerCase().includes(query)
-    );
+    matches = families.filter((family) => family.toLowerCase().includes(query));
+    shown = 0;
     if (matches.length === 0) {
       list.createDiv({
         cls: "mdp-font-list-hint",
@@ -147,27 +180,17 @@ const renderCustomFonts = (
       });
       return;
     }
-    for (const family of matches.slice(0, MAX_LISTED)) {
-      const item = list.createEl("button", {
-        cls:
-          family === selectedFamily
-            ? "mdp-font-list-item is-selected"
-            : "mdp-font-list-item",
-        text: family,
-      });
-      // O nome já vem do sistema, mas passa pela mesma limpeza das digitadas.
-      const safe = cleanFamily(family);
-      if (safe) {
-        item.style.fontFamily = `"${safe}", var(--font-interface)`;
-      }
-      item.addEventListener(
-        "click",
-        asyncListener(async () => {
-          await choose(family);
-        })
-      );
-    }
+    showMore();
   };
+
+  // Centenas de fontes desenhadas de uma vez travariam o quadro: entram por levas.
+  list.addEventListener("scroll", () => {
+    const nearEnd =
+      list.scrollTop + list.clientHeight >= list.scrollHeight - NEAR_END;
+    if (nearEnd && shown < matches.length) {
+      showMore();
+    }
+  });
 
   const loadList = async (): Promise<void> => {
     const families = await installedFonts();
