@@ -17,6 +17,8 @@ export interface IconUploadContext {
   sourcePath: string;
   pick: (value: string) => Promise<void>;
   close: () => void;
+  /** Conteúdo extra entre a área de upload e o rodapé (as imagens do vault). */
+  renderExtra?: (parent: HTMLElement) => void;
 }
 
 /** O que a aba deixa ligado e o seletor precisa desligar ao sair dela. */
@@ -59,6 +61,8 @@ export const renderIconUpload = (
     type: "file",
   });
   input.hide();
+
+  context.renderExtra?.(body.createDiv({ cls: "mdp-icon-upload-extra" }));
 
   const footer = body.createDiv({ cls: "mdp-icon-upload-footer" });
   const cancel = footer.createEl("button", {

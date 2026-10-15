@@ -196,6 +196,7 @@ export const pt = {
   "vault.empty": "Nenhuma imagem encontrada no vault.",
   "vault.more": "Mostrar mais",
   "vault.placeholder": "Buscar imagens no vault…",
+  "vault.title": "Do seu vault",
 } as const;
 
 export type MessageKey = keyof typeof pt;

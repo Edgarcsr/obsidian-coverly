@@ -194,4 +194,5 @@ export const en: Messages = {
   "vault.empty": "No images found in the vault.",
   "vault.more": "Show more",
   "vault.placeholder": "Search images in the vault…",
+  "vault.title": "From your vault",
 };

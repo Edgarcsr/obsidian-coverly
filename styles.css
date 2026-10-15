@@ -1580,17 +1580,22 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   background: transparent;
 }
 
-/* Fonte por nota: troca a variável de texto do Obsidian só dentro da view. */
+/* Fonte por nota. */
 body {
   --mdp-font-serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
 }
 
-.mdp-font-serif {
-  --font-text: var(--mdp-font-serif);
+/*
+ * Só o texto da nota (editor, leitura e título), não a interface em volta:
+ * trocar --font-text na view inteira mudaria também propriedades, botões e
+ * sumário. O !important vale só para o contêiner, e o código segue na sua fonte.
+ */
+.mdp-font-serif :is(.cm-content, .inline-title, .markdown-preview-section) {
+  font-family: var(--mdp-font-serif) !important;
 }
 
-.mdp-font-mono {
-  --font-text: var(--font-monospace);
+.mdp-font-mono :is(.cm-content, .inline-title, .markdown-preview-section) {
+  font-family: var(--font-monospace) !important;
 }
 
 /* Quadro de cores do nome da nota: reaproveita as classes da paleta de ícones. */

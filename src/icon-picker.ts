@@ -23,13 +23,12 @@ import type { PopoverTab } from "./popover";
 import { drawEmoji } from "./twemoji";
 import { renderVaultImages } from "./vault-images";
 
-type Tab = "emoji" | "icons" | "upload" | "vault";
+type Tab = "emoji" | "icons" | "upload";
 
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "emoji", label: t("tab.emoji") },
   { id: "icons", label: t("tab.icons") },
   { id: "upload", label: t("tab.uploadIcon") },
-  { id: "vault", label: t("tab.vault") },
 ];
 
 /**
@@ -160,17 +159,20 @@ export class IconPicker extends TabbedPopover<Tab> {
           pick: async (value) => {
             await this.pick(value);
           },
-          sourcePath: this.options.sourcePath,
-        });
-        break;
-      }
-      case "vault": {
-        renderVaultImages(this.body, {
-          app: this.options.app,
-          current: this.options.current,
-          pick: async (path) => {
-            await this.pick(path);
+          renderExtra: (parent) => {
+            parent.createDiv({
+              cls: "mdp-picker-section-title",
+              text: t("vault.title"),
+            });
+            renderVaultImages(parent, {
+              app: this.options.app,
+              current: this.options.current,
+              pick: async (path) => {
+                await this.pick(path);
+              },
+            });
           },
+          sourcePath: this.options.sourcePath,
         });
         break;
       }
