@@ -265,7 +265,11 @@ export class CoverPicker extends TabbedPopover<Tab> {
   }
 
   private renderUnsplash(): void {
-    const accessKey = this.options.plugin.settings.unsplashKey;
+    const { app, settings } = this.options.plugin;
+    // O campo guarda o nome do segredo; um valor sem segredo é uma chave colada antes do armazenamento seguro.
+    const accessKey = (
+      app.secretStorage.getSecret(settings.unsplashKey) ?? settings.unsplashKey
+    ).trim();
     if (!accessKey) {
       this.body.createDiv({
         cls: "mdp-picker-hint is-empty",
