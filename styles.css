@@ -1809,3 +1809,8 @@ body {
   width: 16px;
   height: 16px;
 }
+
+/* Respiro entre a busca e as miniaturas (vault e Unsplash) */
+.mdp-picker-search + .mdp-picker-photos {
+  margin-top: 8px;
+}
