@@ -131,6 +131,15 @@ export default class CoverlyPlugin extends Plugin {
     });
     this.addCommand({
       checkCallback: (checking) =>
+        this.settings.noteAccents &&
+        this.onActiveNote((path) => {
+          this.openAccentPopup(path);
+        })(checking),
+      id: "change-accent-color",
+      name: t("command.changeAccentColor"),
+    });
+    this.addCommand({
+      checkCallback: (checking) =>
         this.settings.nameColors &&
         this.onActiveNote((path) => {
           this.openColorPopup(path);
@@ -254,45 +263,50 @@ export default class CoverlyPlugin extends Plugin {
     );
   }
 
-  /**
-   * Abre o quadro de fonte da nota. Sem âncora, aparece no centro da nota aberta.
-   */
-  openFontPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
+  /** Onde abrir um quadro: junto à âncora, ou no centro da nota aberta. */
+  private popupPosition(anchor: HTMLElement | null): { x: number; y: number } {
     const box = (
       anchor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.contentEl
     )?.getBoundingClientRect();
-    const position = anchor
-      ? { x: box?.left ?? 0, y: box?.bottom ?? 0 }
-      : {
-          x: (box?.left ?? 0) + (box?.width ?? 0) / 2,
-          y: (box?.top ?? 0) + (box?.height ?? 0) / 3,
-        };
+    if (anchor) {
+      return { x: box?.left ?? 0, y: box?.bottom ?? 0 };
+    }
+    return {
+      x: (box?.left ?? 0) + (box?.width ?? 0) / 2,
+      y: (box?.top ?? 0) + (box?.height ?? 0) / 3,
+    };
+  }
+
+  /** Abre o quadro de fonte da nota. Sem âncora, aparece no centro da nota aberta. */
+  openFontPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
     showFontPopup({
       current: this.noteData(sourcePath).font,
       onPick: async (font) => {
         await this.setFont(sourcePath, font);
       },
-      position,
+      position: this.popupPosition(anchor),
     });
   }
 
   /** Abre o quadro de cores do nome da nota. Sem âncora, aparece no centro da nota aberta. */
   openColorPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
-    const box = (
-      anchor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.contentEl
-    )?.getBoundingClientRect();
-    const position = anchor
-      ? { x: box?.left ?? 0, y: box?.bottom ?? 0 }
-      : {
-          x: (box?.left ?? 0) + (box?.width ?? 0) / 2,
-          y: (box?.top ?? 0) + (box?.height ?? 0) / 3,
-        };
     showColorPopup({
       current: this.noteData(sourcePath).color,
       onPick: async (color) => {
         await this.setColor(sourcePath, color);
       },
-      position,
+      position: this.popupPosition(anchor),
+    });
+  }
+
+  /** Abre o quadro de cores de destaque da nota. Sem âncora, aparece no centro da nota aberta. */
+  openAccentPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
+    showColorPopup({
+      current: this.noteData(sourcePath).accent,
+      onPick: async (color) => {
+        await this.setAccent(sourcePath, color);
+      },
+      position: this.popupPosition(anchor),
     });
   }
 
@@ -398,6 +412,16 @@ export default class CoverlyPlugin extends Plugin {
         removeKeys(fm, [FM.font]);
       } else {
         fm[FM.font] = font;
+      }
+    });
+  }
+
+  async setAccent(sourcePath: string, color: string): Promise<void> {
+    await this.updateNote(sourcePath, (fm) => {
+      if (color === DEFAULT_COLOR) {
+        removeKeys(fm, [FM.accent]);
+      } else {
+        fm[FM.accent] = color;
       }
     });
   }

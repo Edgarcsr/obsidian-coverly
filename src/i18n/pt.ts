@@ -29,6 +29,7 @@ export const pt = {
   "color.violet": "Violeta",
   "color.yellow": "Amarelo",
 
+  "command.changeAccentColor": "Alterar cor de destaque da nota",
   "command.changeBackground": "Alterar fundo da nota",
   "command.changeCover": "Alterar capa",
   "command.changeFont": "Alterar fonte da nota",
@@ -102,6 +103,7 @@ export const pt = {
   "gradient.violet": "Violeta",
   "gradient.yellow": "Amarelo",
 
+  "header.accentColor": "Cor de destaque",
   "header.addBackground": "Adicionar fundo",
   "header.addCover": "Adicionar capa",
   "header.addIcon": "Adicionar ícone",
@@ -161,6 +163,9 @@ export const pt = {
   "settings.nameColors.desc":
     "Pinta o nome de cada nota no explorador de arquivos com a cor escolhida para ela (comando ou botão acima do título). Desligado por padrão.",
   "settings.nameColors.name": "Nomes coloridos no explorador",
+  "settings.noteAccents.desc":
+    "Deixa cada nota ter a própria cor de destaque (links, botões e caixas de seleção) no lugar da do tema, escolhida na paleta de comandos ou no botão acima do título. Desligado por padrão.",
+  "settings.noteAccents.name": "Cor de destaque por nota",
   "settings.noteBackgrounds.desc":
     "Deixa cada nota ter o próprio fundo: cor, gradiente ou imagem, escolhido na paleta de comandos ou no botão acima do título. Desligado por padrão.",
   "settings.noteBackgrounds.name": "Fundos por nota",

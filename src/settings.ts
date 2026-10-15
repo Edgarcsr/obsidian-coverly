@@ -39,6 +39,8 @@ export interface CoverlySettings {
   twemoji: boolean;
   /** Pinta o nome de cada nota no explorador com a cor escolhida para ela. */
   nameColors: boolean;
+  /** Deixa dar a cada nota uma cor de destaque própria, no lugar da do tema. */
+  noteAccents: boolean;
   /** Deixa dar a cada nota um fundo próprio (cor, gradiente ou imagem). */
   noteBackgrounds: boolean;
   /** Mostra o sumário de títulos na lateral direita da nota. */
@@ -59,6 +61,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   language: "auto",
   linkPreview: true,
   nameColors: false,
+  noteAccents: false,
   noteBackgrounds: false,
   recentEmojis: [],
   toc: true,
@@ -81,6 +84,7 @@ type ControlKey =
   | "toc"
   | "linkPreview"
   | "nameColors"
+  | "noteAccents"
   | "noteBackgrounds";
 
 export class CoverlySettingTab extends PluginSettingTab {
@@ -166,6 +170,10 @@ export class CoverlySettingTab extends PluginSettingTab {
         control: { key: "nameColors", type: "toggle" },
       },
       {
+        ...named("noteAccents"),
+        control: { key: "noteAccents", type: "toggle" },
+      },
+      {
         ...named("noteBackgrounds"),
         control: { key: "noteBackgrounds", type: "toggle" },
       },
@@ -205,6 +213,7 @@ export class CoverlySettingTab extends PluginSettingTab {
       key === "twemoji" ||
       key === "toc" ||
       key === "nameColors" ||
+      key === "noteAccents" ||
       key === "noteBackgrounds"
     ) {
       settings[key] = value as boolean;

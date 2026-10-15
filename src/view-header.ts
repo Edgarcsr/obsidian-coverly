@@ -3,6 +3,7 @@ import { MarkdownView } from "obsidian";
 import { buildHeader } from "./header";
 import { getLocale } from "./i18n";
 import type CoverlyPlugin from "./main";
+import { clearAccent, paintAccent } from "./note-accent";
 import { clearBackground, paintBackground } from "./note-background";
 import { dataFromFrontmatter } from "./note-data";
 import { applyFont } from "./note-font";
@@ -102,6 +103,7 @@ const clearState = (state: ViewState): void => {
   }
   state.headers = {};
   clearBackground(state.content);
+  clearAccent(state.content);
   applyFont(state.content);
   for (const title of state.titles) {
     clearTitleIcon(title);
@@ -224,9 +226,13 @@ export class HeaderManager {
       view.contentEl,
       this.plugin.settings.noteBackgrounds ? data.background : undefined
     );
+    paintAccent(
+      view.contentEl,
+      this.plugin.settings.noteAccents ? data.accent : undefined
+    );
     applyFont(view.contentEl, data.font);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
+    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;

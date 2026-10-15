@@ -9,6 +9,7 @@ import type { StoredFont } from "./note-font";
  * evita conflito com outros plugins que também usam `cover` e `icon`.
  */
 export const FM = {
+  accent: "coverly-accent",
   background: "coverly-background",
   color: "coverly-color",
   cover: "coverly-cover",
@@ -60,6 +61,7 @@ const read = (
 };
 
 export interface CoverData {
+  accent?: string;
   background?: string;
   color?: string;
   cover?: string;
@@ -103,6 +105,7 @@ export const dataFromFrontmatter = (
 ): CoverData => {
   const position = Number(read(fm, "position"));
   return {
+    accent: text(read(fm, "accent")),
     background: text(read(fm, "background")),
     color: text(read(fm, "color")),
     cover: text(read(fm, "cover")),

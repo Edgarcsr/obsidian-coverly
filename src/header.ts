@@ -342,6 +342,11 @@ export const buildHeader = (
   addButton(addRow, "type", t("header.font"), (button) => {
     plugin.openFontPopup(sourcePath, button);
   });
+  if (plugin.settings.noteAccents) {
+    addButton(addRow, "droplet", t("header.accentColor"), (button) => {
+      plugin.openAccentPopup(sourcePath, button);
+    });
+  }
   if (plugin.settings.noteBackgrounds) {
     const backgroundLabel = data.background
       ? t("header.changeBackground")

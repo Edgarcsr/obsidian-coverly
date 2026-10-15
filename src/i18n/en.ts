@@ -27,6 +27,7 @@ export const en: Messages = {
   "color.violet": "Violet",
   "color.yellow": "Yellow",
 
+  "command.changeAccentColor": "Change note accent color",
   "command.changeBackground": "Change note background",
   "command.changeCover": "Change cover",
   "command.changeFont": "Change note font",
@@ -100,6 +101,7 @@ export const en: Messages = {
   "gradient.violet": "Violet",
   "gradient.yellow": "Yellow",
 
+  "header.accentColor": "Accent color",
   "header.addBackground": "Add background",
   "header.addCover": "Add cover",
   "header.addIcon": "Add icon",
@@ -159,6 +161,9 @@ export const en: Messages = {
   "settings.nameColors.desc":
     "Color each note name in the file explorer with the color you pick for it (command or button above the title). Off by default.",
   "settings.nameColors.name": "Colored names in the explorer",
+  "settings.noteAccents.desc":
+    "Let each note have its own accent color (links, buttons and checkboxes) instead of the theme one, picked from the command palette or the button above the title. Off by default.",
+  "settings.noteAccents.name": "Accent color per note",
   "settings.noteBackgrounds.desc":
     "Let each note have its own background: a color, gradient or image, picked from the command palette or the button above the title. Off by default.",
   "settings.noteBackgrounds.name": "Note backgrounds",
