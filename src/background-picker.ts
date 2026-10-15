@@ -73,6 +73,10 @@ export class BackgroundPicker extends TabbedPopover<Tab> {
   }
 
   private renderColors(): void {
+    this.body.createDiv({
+      cls: "mdp-picker-section-title",
+      text: t("gallery.colorsAndGradients"),
+    });
     const grid = this.body.createDiv({ cls: "mdp-picker-grid" });
     for (const preset of GRADIENTS) {
       const value = `gradient:${preset.id}`;

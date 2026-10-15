@@ -1,3 +1,6 @@
+import { asyncListener } from "./async-listener";
+import { t } from "./i18n";
+
 /** Distância mínima entre o quadro e as bordas da janela. */
 const EDGE = 8;
 
@@ -55,5 +58,33 @@ export const openFloatingPopup = (
       }
     },
     { capture: true, signal: controller.signal }
+  );
+};
+
+/**
+ * Cabeçalho dos quadros: título à esquerda e, quando há o que tirar, "Remover"
+ * no canto direito, como na barra de abas dos seletores de capa e ícone.
+ */
+export const renderPopupHeader = (
+  popup: HTMLElement,
+  title: string,
+  onRemove: (() => Promise<void>) | null,
+  close: () => void
+): void => {
+  const header = popup.createDiv({ cls: "mdp-popup-header" });
+  header.createSpan({ cls: "mdp-popup-title", text: title });
+  if (!onRemove) {
+    return;
+  }
+  const remove = header.createEl("button", {
+    cls: "mdp-popup-remove",
+    text: t("common.remove"),
+  });
+  remove.addEventListener(
+    "click",
+    asyncListener(async () => {
+      close();
+      await onRemove();
+    })
   );
 };

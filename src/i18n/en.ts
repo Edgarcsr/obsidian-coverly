@@ -20,7 +20,6 @@ export const en: Messages = {
   "color.pink": "Pink",
   "color.purple": "Purple",
   "color.red": "Red",
-  "color.remove": "Remove color",
   "color.rose": "Rose",
   "color.sky": "Sky",
   "color.teal": "Teal",

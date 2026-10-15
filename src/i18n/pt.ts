@@ -22,7 +22,6 @@ export const pt = {
   "color.pink": "Rosa",
   "color.purple": "Roxo",
   "color.red": "Vermelho",
-  "color.remove": "Remover cor",
   "color.rose": "Rosé",
   "color.sky": "Céu",
   "color.teal": "Verde-azulado",

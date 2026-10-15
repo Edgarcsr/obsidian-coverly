@@ -1,5 +1,5 @@
 import { asyncListener } from "./async-listener";
-import { openFloatingPopup } from "./floating-popup";
+import { openFloatingPopup, renderPopupHeader } from "./floating-popup";
 import type { PopupPosition } from "./floating-popup";
 import { t } from "./i18n";
 import type { MessageKey } from "./i18n";
@@ -224,7 +224,16 @@ export const showFontPopup = (options: FontPopupOptions): void => {
   const selected = isCustom ? undefined : (options.current ?? "default");
 
   openFloatingPopup("mdp-font-popup", options.position, (popup, close) => {
-    popup.createDiv({ cls: "mdp-font-popup-title", text: t("font.title") });
+    renderPopupHeader(
+      popup,
+      t("font.title"),
+      selected === "default"
+        ? null
+        : async () => {
+            await options.onPick("default");
+          },
+      close
+    );
     const row = popup.createDiv({ cls: "mdp-font-options" });
 
     for (const font of NOTE_FONTS) {

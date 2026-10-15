@@ -299,6 +299,7 @@ export default class CoverlyPlugin extends Plugin {
         await this.setColor(sourcePath, color);
       },
       position: this.popupPosition(anchor),
+      title: t("header.nameColor"),
     });
   }
 
@@ -310,6 +311,7 @@ export default class CoverlyPlugin extends Plugin {
         await this.setAccent(sourcePath, color);
       },
       position: this.popupPosition(anchor),
+      title: t("header.accentColor"),
     });
   }
 

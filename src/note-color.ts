@@ -1,7 +1,7 @@
 import { setTooltip } from "obsidian";
 
 import { asyncListener } from "./async-listener";
-import { openFloatingPopup } from "./floating-popup";
+import { openFloatingPopup, renderPopupHeader } from "./floating-popup";
 import type { PopupPosition } from "./floating-popup";
 import { t } from "./i18n";
 import {
@@ -12,6 +12,8 @@ import {
 } from "./page-icon";
 
 export interface ColorPopupOptions {
+  /** Título do quadro, que diz o que a cor vai pintar. */
+  title: string;
   /** Cor atual da nota (id da paleta ou hexadecimal); vazio = a padrão. */
   current: string | undefined;
   position: PopupPosition;
@@ -29,26 +31,24 @@ export const showColorPopup = (options: ColorPopupOptions): void => {
   const current = options.current ?? DEFAULT_COLOR;
 
   openFloatingPopup("mdp-note-color", options.position, (popup, close) => {
-    const grid = popup.createDiv({ cls: "mdp-color-grid" });
-
     const choose = async (id: string): Promise<void> => {
       close();
       await options.onPick(id);
     };
 
-    // A cor padrão da paleta é só uma bolinha cinza; tirar a cor merece botão próprio.
-    if (options.current && options.current !== DEFAULT_COLOR) {
-      const remove = popup.createEl("button", {
-        cls: "mdp-color-remove",
-        text: t("color.remove"),
-      });
-      remove.addEventListener(
-        "click",
-        asyncListener(async () => {
-          await choose(DEFAULT_COLOR);
-        })
-      );
-    }
+    const hasColor =
+      Boolean(options.current) && options.current !== DEFAULT_COLOR;
+    renderPopupHeader(
+      popup,
+      options.title,
+      hasColor
+        ? async () => {
+            await options.onPick(DEFAULT_COLOR);
+          }
+        : null,
+      close
+    );
+    const grid = popup.createDiv({ cls: "mdp-color-grid" });
 
     for (const color of iconColors()) {
       const swatch = grid.createEl("button", {

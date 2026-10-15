@@ -1646,13 +1646,6 @@ body {
   padding: 10px;
 }
 
-.mdp-font-popup-title {
-  margin: 2px 4px 8px;
-  font-size: var(--font-ui-smaller);
-  font-weight: var(--font-semibold);
-  color: var(--text-muted);
-}
-
 .mdp-font-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1772,24 +1765,39 @@ body {
   color: var(--text-faint);
 }
 
-/* Botão para tirar a cor escolhida, abaixo das bolinhas. */
-.mdp-note-color .mdp-color-remove {
-  display: block;
-  width: 100%;
+/* Cabeçalho dos quadros: título à esquerda, Remover à direita, como nas abas dos seletores. */
+.mdp-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mdp-popup-title {
+  padding: 6px 8px;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+}
+
+.mdp-color-palette .mdp-popup-remove {
   height: auto;
   padding: 6px 8px;
-  margin-top: 6px;
-  font-size: var(--font-ui-smaller);
+  margin-left: auto;
+  font-size: var(--font-ui-small);
   color: var(--text-muted);
-  text-align: left;
   background: transparent;
   border: none;
   border-radius: 4px;
   box-shadow: none;
   cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
-.mdp-note-color .mdp-color-remove:hover {
+.mdp-color-palette .mdp-popup-remove:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
