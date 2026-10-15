@@ -13,6 +13,7 @@
     [data-property-key="coverly-color"],
     [data-property-key="coverly-cover"],
     [data-property-key="coverly-position"],
+    [data-property-key="coverly-zoom"],
     [data-property-key="coverly-credit"],
     [data-property-key="coverly-credit-url"],
     [data-property-key="coverly-icon"],
@@ -49,6 +50,7 @@
         [data-property-key="coverly-color"],
         [data-property-key="coverly-cover"],
         [data-property-key="coverly-position"],
+        [data-property-key="coverly-zoom"],
         [data-property-key="coverly-credit"],
         [data-property-key="coverly-credit-url"],
         [data-property-key="coverly-icon"],
@@ -74,6 +76,7 @@
         [data-property-key="coverly-color"],
         [data-property-key="coverly-cover"],
         [data-property-key="coverly-position"],
+        [data-property-key="coverly-zoom"],
         [data-property-key="coverly-credit"],
         [data-property-key="coverly-credit-url"],
         [data-property-key="coverly-icon"],
@@ -173,8 +176,12 @@
 }
 
 .mdp-cover.is-repositioning {
-  cursor: ns-resize;
+  cursor: grab;
   touch-action: none;
+}
+
+.mdp-cover.is-repositioning.is-dragging {
+  cursor: grabbing;
 }
 
 /* No modo de reposicionar, a pílula normal dá lugar a "Salvar posição | Cancelar" */
@@ -271,6 +278,22 @@
 .mdp-cover .mdp-toolbar-btn.is-icon svg {
   width: 14px;
   height: 14px;
+}
+
+/*
+ * Zoom pelos botões: tamanho e posição da imagem animam juntos. Pela roda a
+ * transição some: cada evento é um passo pequeno e precisa valer na hora, senão
+ * a posição (que tem transição própria) fica atrás do tamanho.
+ * A duração tem que ser a de ZOOM_SMOOTH_MS em header.ts.
+ */
+.mdp-cover.is-zoom-smooth .mdp-cover-image {
+  transition:
+    background-position 0.25s ease,
+    background-size 0.25s ease;
+}
+
+.mdp-cover.is-zoom-live .mdp-cover-image {
+  transition: none;
 }
 
 .mdp-credit {
@@ -970,6 +993,7 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 
 /* Fixos e posicionados em código, para não serem cortados pela área rolável do popover */
 .mdp-color-palette {
+  animation: mdp-picker-in 0.14s ease-out backwards;
   position: fixed;
   z-index: var(--layer-popover);
   overflow-y: auto;
@@ -1015,6 +1039,7 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 
 /* Variantes de cor do ícone clicado, logo abaixo dele */
 .mdp-color-variants {
+  animation: mdp-picker-in 0.14s ease-out backwards;
   position: fixed;
   z-index: var(--layer-popover);
   overflow-y: auto;
@@ -1353,6 +1378,10 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   .mdp-cover-image,
   .mdp-icon,
   .mdp-toolbar,
+  .mdp-cover.is-zoom-smooth .mdp-cover-image,
+  .mdp-color-palette,
+  .mdp-color-variants,
+  .mdp-link-card,
   .mdp-add-row {
     animation: none;
     transition: none;
@@ -1503,15 +1532,9 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-l);
   box-shadow: var(--shadow-l);
-  animation: mdp-link-card-in 120ms ease-out;
+  animation: mdp-picker-in 0.14s ease-out backwards;
 }
 
-@keyframes mdp-link-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(-2px);
-  }
-}
 
 /* A capa vai de borda a borda, compensando o padding do cartão */
 .mdp-link-card-cover {

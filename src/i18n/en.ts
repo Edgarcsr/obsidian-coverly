@@ -116,8 +116,10 @@ export const en: Messages = {
   "header.font": "Font",
   "header.nameColor": "Name color",
   "header.reposition": "Reposition",
-  "header.repositionHint": "Drag the image to reposition",
+  "header.repositionHint": "Drag to reposition, scroll or use the buttons to zoom",
   "header.savePosition": "Save position",
+  "header.zoomIn": "Zoom in",
+  "header.zoomOut": "Zoom out",
 
   "iconPicker.filterEmoji": "Filter…",
   "iconPicker.filterIcons": "Filter icons…",

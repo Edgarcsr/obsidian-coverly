@@ -4,7 +4,7 @@ import type { App } from "obsidian";
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
-import { resolveCoverSource } from "./note-data";
+import { ZOOM_STEP, clampZoom, resolveCoverSource } from "./note-data";
 import type { CoverData, CoverSource } from "./note-data";
 import { drawPageIcon } from "./page-icon";
 
@@ -48,59 +48,165 @@ const toolbarIconButton = (
   parent: HTMLElement,
   iconId: string,
   label: string,
-  onClick: () => void
-): void => {
+  onClick?: () => void
+): HTMLElement => {
   const button = parent.createEl("button", {
     attr: { "aria-label": label },
     cls: "mdp-toolbar-btn is-icon",
   });
   setIcon(button, iconId);
-  button.addEventListener("click", onClick);
+  if (onClick) {
+    button.addEventListener("click", onClick);
+  }
+  return button;
 };
 
 /**
- * Quantos px a capa pode deslizar na vertical: o quanto o fundo excede a
- * moldura. É o que converte a distância arrastada em porcentagem.
+ * Quanto o fundo excede a moldura em cada eixo, em px. É isso que converte a
+ * distância arrastada em porcentagem.
  */
-type OverflowMeasure = () => Promise<number>;
+interface Overflow {
+  x: number;
+  y: number;
+}
 
-/** O gradiente é desenhado mais alto que a capa; a sobra é o que dá para arrastar. */
+/** Dimensiona a camada da capa para um zoom e devolve a sobra em cada eixo. */
+type Layout = (zoom: number) => Promise<Overflow>;
+
+/** O degradê é desenhado maior que a capa; o zoom aumenta os dois lados. */
 const GRADIENT_SCALE = 2.5;
 
-const gradientOverflow =
-  (cover: HTMLElement): OverflowMeasure =>
-  () =>
-    Promise.resolve(cover.clientHeight * (GRADIENT_SCALE - 1));
+const gradientSize = (zoom: number): string =>
+  `${zoom}% ${GRADIENT_SCALE * zoom}%`;
 
-/** Para fotos a sobra depende do tamanho real da imagem (background-size: cover). */
-const imageOverflow =
-  (cover: HTMLElement, url: string): OverflowMeasure =>
-  async () => {
-    const probe = new Image();
-    probe.src = url;
-    try {
-      await probe.decode();
-    } catch {
-      // Imagem que não carrega não tem o que arrastar.
-      return 0;
-    }
-    const frameHeight = cover.clientHeight;
-    const scale = Math.max(
-      cover.clientWidth / probe.naturalWidth,
-      frameHeight / probe.naturalHeight
-    );
-    return probe.naturalHeight * scale - frameHeight;
+const gradientLayout =
+  (cover: HTMLElement, surface: HTMLElement): Layout =>
+  (zoom) => {
+    surface.style.backgroundSize = gradientSize(zoom);
+    return Promise.resolve({
+      x: cover.clientWidth * (zoom / 100 - 1),
+      y: cover.clientHeight * ((GRADIENT_SCALE * zoom) / 100 - 1),
+    });
   };
 
+interface NaturalSize {
+  height: number;
+  width: number;
+}
+
+/** Tamanho real das fotos, medido uma vez por endereço. */
+const naturalSizes = new Map<string, Promise<NaturalSize | null>>();
+
+const probeSize = async (url: string): Promise<NaturalSize | null> => {
+  const probe = new Image();
+  probe.src = url;
+  try {
+    await probe.decode();
+  } catch {
+    // Imagem que não carrega não tem o que arrastar.
+    return null;
+  }
+  return { height: probe.naturalHeight, width: probe.naturalWidth };
+};
+
+const naturalSize = async (url: string): Promise<NaturalSize | null> => {
+  let size = naturalSizes.get(url);
+  if (!size) {
+    size = probeSize(url);
+    naturalSizes.set(url, size);
+  }
+  const result = await size;
+  // Falha não fica guardada: a imagem pode aparecer no vault depois.
+  if (!result) {
+    naturalSizes.delete(url);
+  }
+  return result;
+};
+
 /**
- * Reposicionamento vertical por arrasto. A distância arrastada é convertida em
- * porcentagem usando o quanto o fundo excede a moldura (ver OverflowMeasure).
+ * Foto no encaixe "cobrir" da moldura, ampliada pelo zoom. O tamanho é em
+ * porcentagem de um dos lados, então continua certo ao redimensionar a janela.
+ */
+const photoLayout =
+  (cover: HTMLElement, surface: HTMLElement, url: string): Layout =>
+  async (zoom) => {
+    const natural = await naturalSize(url);
+    if (!natural) {
+      surface.style.backgroundSize = "cover";
+      return { x: 0, y: 0 };
+    }
+    const frameWidth = cover.clientWidth;
+    const frameHeight = cover.clientHeight;
+    // Se a foto é mais larga que a moldura, a altura cobre e a largura segue a proporção; senão, o contrário.
+    const wider = natural.width / natural.height >= frameWidth / frameHeight;
+    surface.style.backgroundSize = wider ? `auto ${zoom}%` : `${zoom}% auto`;
+    const drawnHeight = wider
+      ? (frameHeight * zoom) / 100
+      : (frameWidth * zoom * natural.height) / (100 * natural.width);
+    const drawnWidth = (drawnHeight * natural.width) / natural.height;
+    return {
+      x: Math.max(0, drawnWidth - frameWidth),
+      y: Math.max(0, drawnHeight - frameHeight),
+    };
+  };
+
+/** Ponto da moldura, em px, que fica parado enquanto o zoom muda. */
+interface Anchor {
+  x: number;
+  y: number;
+}
+
+/** Duração da animação do zoom pelos botões; é a mesma do CSS (.is-zoom-smooth). */
+const ZOOM_SMOOTH_MS = 250;
+/** Tempo que o zoom da roda fica sem transição, para tamanho e posição andarem juntos. */
+const ZOOM_LIVE_MS = 150;
+/** Quanto cada unidade de rolagem amplia: uma volta da roda (100) dá uns 16%. */
+const WHEEL_ZOOM_RATE = 0.0015;
+
+interface ZoomOptions {
+  /** Ponto da moldura que fica parado durante o zoom. */
+  anchor?: Anchor;
+  /** Anima tamanho e posição (botões); sem isso o zoom é aplicado na hora (roda). */
+  smooth?: boolean;
+}
+
+/**
+ * Nova posição (%) de um eixo que mantém sob o `anchor` o mesmo ponto da
+ * imagem depois do zoom. `before` e `after` são a sobra do eixo em cada zoom.
+ */
+const anchoredPosition = (
+  anchor: number,
+  position: number,
+  frame: number,
+  before: number,
+  after: number
+): number => {
+  if (after <= 0) {
+    return position;
+  }
+  // Fração da imagem que estava sob o âncora antes do zoom.
+  const point = (anchor + (position / 100) * before) / (frame + before);
+  return clamp(((point * (frame + after) - anchor) * 100) / after, 0, 100);
+};
+
+/**
+ * Reposicionamento por arrasto e zoom. A distância arrastada é convertida em
+ * porcentagem usando a sobra que `layout` devolve em cada eixo.
  */
 /** Botões que entram e saem do modo de reposicionar. */
 interface RepositionControls {
-  start: HTMLElement;
-  save: HTMLElement;
   cancel: HTMLElement;
+  save: HTMLElement;
+  start: HTMLElement;
+  zoomIn: HTMLElement;
+  zoomOut: HTMLElement;
+}
+
+/** Posição (em % nos dois eixos) e zoom: o ponto de partida e o de volta ao cancelar. */
+interface Frame {
+  x: number;
+  y: number;
+  zoom: number;
 }
 
 const attachReposition = (
@@ -108,33 +214,84 @@ const attachReposition = (
   cover: HTMLElement,
   surface: HTMLElement,
   controls: RepositionControls,
-  measureOverflow: OverflowMeasure,
-  initialPosition: number,
+  layout: Layout,
+  initial: Frame,
   sourcePath: string
 ): void => {
   let active = false;
   let dragging = false;
-  let overflow = 0;
+  let overflow: Overflow = { x: 0, y: 0 };
+  let startX = 0;
   let startY = 0;
-  let startPosition = initialPosition;
-  let current = initialPosition;
+  let startFrame = initial;
+  let current = initial;
+  let { zoom } = initial;
 
-  const setPosition = (position: number): void => {
-    current = position;
-    surface.style.backgroundPosition = `50% ${position}%`;
+  const setFrame = (x: number, y: number): void => {
+    current = { ...current, x, y };
+    surface.style.backgroundPosition = `${x}% ${y}%`;
   };
+
+  // Zoom muda a sobra da camada, então o arrasto passa a converter com a nova.
+  // Com `anchor`, a posição acompanha: o ponto sob ele não sai do lugar.
+  let zoomTimer = 0;
+  const setZoom = async (
+    next: number,
+    { anchor, smooth = false }: ZoomOptions = {}
+  ): Promise<void> => {
+    // Só uma das duas classes vale por vez; a transição some depois do zoom.
+    cover.toggleClass("is-zoom-smooth", smooth);
+    cover.toggleClass("is-zoom-live", !smooth);
+    window.clearTimeout(zoomTimer);
+    zoomTimer = window.setTimeout(
+      () => {
+        cover.removeClass("is-zoom-smooth");
+        cover.removeClass("is-zoom-live");
+      },
+      smooth ? ZOOM_SMOOTH_MS : ZOOM_LIVE_MS
+    );
+    const before = overflow;
+    zoom = clampZoom(next);
+    overflow = await layout(zoom);
+    if (anchor) {
+      setFrame(
+        anchoredPosition(
+          anchor.x,
+          current.x,
+          cover.clientWidth,
+          before.x,
+          overflow.x
+        ),
+        anchoredPosition(
+          anchor.y,
+          current.y,
+          cover.clientHeight,
+          before.y,
+          overflow.y
+        )
+      );
+    }
+  };
+
+  // Os botões ampliam a partir do centro da capa.
+  const center = (): Anchor => ({
+    x: cover.clientWidth / 2,
+    y: cover.clientHeight / 2,
+  });
 
   const exit = (): void => {
     active = false;
     dragging = false;
     cover.removeClass("is-repositioning");
+    cover.removeClass("is-dragging");
     // oxlint-disable-next-line no-use-before-define
     document.removeEventListener("keydown", onKeydown, true);
   };
 
-  // Cancelar (ou Esc) sai sem salvar e devolve a capa à posição anterior.
+  // Cancelar (ou Esc) sai sem salvar e devolve a capa à posição e ao zoom anteriores.
   const cancel = (): void => {
-    setPosition(initialPosition);
+    setFrame(initial.x, initial.y);
+    void setZoom(initial.zoom, { smooth: true });
     exit();
   };
 
@@ -156,24 +313,39 @@ const attachReposition = (
       active = true;
       cover.addClass("is-repositioning");
       document.addEventListener("keydown", onKeydown, true);
-      overflow = await measureOverflow();
+      overflow = await layout(zoom);
     })
   );
 
   controls.cancel.addEventListener("click", cancel);
 
+  controls.zoomIn.addEventListener("click", () => {
+    void setZoom(zoom + ZOOM_STEP, { anchor: center(), smooth: true });
+  });
+  controls.zoomOut.addEventListener("click", () => {
+    void setZoom(zoom - ZOOM_STEP, { anchor: center(), smooth: true });
+  });
+
   controls.save.addEventListener(
     "click",
     asyncListener(async () => {
       exit();
-      if (Math.round(current) !== Math.round(initialPosition)) {
-        await plugin.setPosition(sourcePath, Math.round(current));
+      const x = Math.round(current.x);
+      const y = Math.round(current.y);
+      // A roda dá passos fracionados; na nota o zoom fica em número inteiro.
+      const savedZoom = Math.round(zoom);
+      const changed =
+        x !== Math.round(initial.x) ||
+        y !== Math.round(initial.y) ||
+        savedZoom !== initial.zoom;
+      if (changed) {
+        await plugin.setFrame(sourcePath, { x, y, zoom: savedZoom });
       }
     })
   );
 
   cover.addEventListener("pointerdown", (event) => {
-    if (!active || overflow <= 0) {
+    if (!active || (overflow.x <= 0 && overflow.y <= 0)) {
       return;
     }
     // Clique na pílula não pode virar arrasto: a captura do ponteiro
@@ -185,8 +357,10 @@ const attachReposition = (
       return;
     }
     dragging = true;
+    cover.addClass("is-dragging");
+    startX = event.clientX;
     startY = event.clientY;
-    startPosition = current;
+    startFrame = current;
     cover.setPointerCapture(event.pointerId);
   });
 
@@ -194,20 +368,52 @@ const attachReposition = (
     if (!dragging) {
       return;
     }
-    const delta = event.clientY - startY;
-    setPosition(clamp(startPosition - (delta * 100) / overflow, 0, 100));
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+    // Eixo sem sobra (ex.: degradê na largura) não se move.
+    const x =
+      overflow.x > 0
+        ? clamp(startFrame.x - (dx * 100) / overflow.x, 0, 100)
+        : startFrame.x;
+    const y =
+      overflow.y > 0
+        ? clamp(startFrame.y - (dy * 100) / overflow.y, 0, 100)
+        : startFrame.y;
+    setFrame(x, y);
   });
 
   const stop = (): void => {
     dragging = false;
+    cover.removeClass("is-dragging");
   };
   cover.addEventListener("pointerup", stop);
   cover.addEventListener("pointercancel", stop);
+
+  // A roda aproxima ou afasta só no modo de reposicionar; fora dele a página rola.
+  cover.addEventListener(
+    "wheel",
+    (event) => {
+      if (!active) {
+        return;
+      }
+      event.preventDefault();
+      // Zoom proporcional: o touchpad, que manda muitos eventos pequenos,
+      // fica tão suave quanto a roda, sem disparar até o limite.
+      const frame = cover.getBoundingClientRect();
+      void setZoom(zoom * Math.exp(-event.deltaY * WHEEL_ZOOM_RATE), {
+        anchor: {
+          x: event.clientX - frame.left,
+          y: event.clientY - frame.top,
+        },
+      });
+    },
+    { passive: false }
+  );
 };
 
 /**
- * Pinta a capa da nota em `surface`: foto ou gradiente, na posição gravada.
- * O gradiente é desenhado mais alto que a moldura, como no reposicionamento.
+ * Pinta a capa da nota em `surface`: foto ou degradê, na posição gravada.
+ * A foto recebe o tamanho em `buildCover`, que conhece o zoom e a moldura.
  */
 export const paintCover = (
   app: App,
@@ -215,13 +421,14 @@ export const paintCover = (
   data: CoverData
 ): CoverSource | null => {
   const source = resolveCoverSource(app, data.cover);
-  surface.style.backgroundPosition = `50% ${data.position}%`;
+  surface.style.backgroundPosition = `${data.positionX}% ${data.position}%`;
   if (source?.kind === "image") {
     // Aspas no caminho quebrariam a declaração CSS, então são escapadas.
     surface.style.backgroundImage = `url("${source.url.replaceAll('"', "%22")}")`;
+    surface.style.backgroundSize = "cover";
   } else {
     surface.style.backgroundImage = source?.css ?? "";
-    surface.style.backgroundSize = `100% ${GRADIENT_SCALE * 100}%`;
+    surface.style.backgroundSize = gradientSize(data.zoom);
   }
   return source;
 };
@@ -233,13 +440,14 @@ const buildCover = (
 ): HTMLElement => {
   const cover = createDiv({ cls: "mdp-cover" });
 
-  // Foto e gradiente ficam na mesma camada, então os dois podem ser reposicionados.
+  // Foto e degradê ficam na mesma camada, então os dois podem ser reposicionados.
   const surface = cover.createDiv({ cls: "mdp-cover-image" });
   const source = paintCover(plugin.app, surface, data);
-  const measureOverflow: OverflowMeasure =
+  const layout: Layout =
     source?.kind === "image"
-      ? imageOverflow(cover, source.url)
-      : gradientOverflow(cover);
+      ? photoLayout(cover, surface, source.url)
+      : gradientLayout(cover, surface);
+  void layout(data.zoom);
 
   // Pílula normal, visível ao passar o mouse.
   const toolbar = cover.createDiv({ cls: "mdp-toolbar is-idle" });
@@ -259,6 +467,9 @@ const buildCover = (
 
   // Pílula e dica do modo de reposicionar; o CSS troca uma pela outra.
   const editbar = cover.createDiv({ cls: "mdp-toolbar is-editing" });
+  // Os botões de zoom são ligados em attachReposition, que guarda o zoom atual.
+  const zoomOut = toolbarIconButton(editbar, "zoom-out", t("header.zoomOut"));
+  const zoomIn = toolbarIconButton(editbar, "zoom-in", t("header.zoomIn"));
   const save = toolbarButton(editbar, t("header.savePosition"));
   const cancel = toolbarButton(editbar, t("common.cancel"));
   cover.createDiv({
@@ -270,9 +481,9 @@ const buildCover = (
     plugin,
     cover,
     surface,
-    { cancel, save, start },
-    measureOverflow,
-    data.position,
+    { cancel, save, start, zoomIn, zoomOut },
+    layout,
+    { x: data.positionX, y: data.position, zoom: data.zoom },
     sourcePath
   );
 

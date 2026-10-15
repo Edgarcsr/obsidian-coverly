@@ -9,6 +9,7 @@ import { LinkPreview } from "./link-preview";
 import { DEFAULT_COLOR, showColorPopup } from "./note-color";
 import {
   COVER_KEYS,
+  DEFAULT_ZOOM,
   FM,
   dataFromFrontmatter,
   migrateLegacyKeys,
@@ -394,6 +395,9 @@ export default class CoverlyPlugin extends Plugin {
       }
       fm[FM.cover] = value;
       fm[FM.position] = 50;
+      fm[FM.positionX] = 50;
+      // Foto nova começa no encaixe padrão, sem o zoom da anterior.
+      removeKeys(fm, [FM.zoom]);
       if (credit) {
         fm[FM.credit] = credit.name;
         fm[FM.creditUrl] = credit.url;
@@ -444,9 +448,20 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
-  async setPosition(sourcePath: string, position: number): Promise<void> {
+  async setFrame(
+    sourcePath: string,
+    frame: { x: number; y: number; zoom: number }
+  ): Promise<void> {
+    const { x, y, zoom } = frame;
     await this.updateNote(sourcePath, (fm) => {
-      fm[FM.position] = position;
+      fm[FM.position] = y;
+      fm[FM.positionX] = x;
+      // O zoom padrão não precisa ficar gravado na nota.
+      if (zoom === DEFAULT_ZOOM) {
+        removeKeys(fm, [FM.zoom]);
+      } else {
+        fm[FM.zoom] = zoom;
+      }
     });
   }
 

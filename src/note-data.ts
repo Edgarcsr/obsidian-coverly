@@ -16,6 +16,8 @@ export const FM = {
   font: "coverly-font",
   icon: "coverly-icon",
   position: "coverly-position",
+  positionX: "coverly-position-x",
+  zoom: "coverly-zoom",
 } as const;
 
 /** Nomes usados antes do prefixo. Ainda são lidos e migrados ao gravar a nota. */
@@ -31,6 +33,8 @@ export const LEGACY_FM: Partial<Record<keyof typeof FM, string>> = {
 export const COVER_KEYS: readonly string[] = [
   FM.cover,
   FM.position,
+  FM.positionX,
+  FM.zoom,
   FM.credit,
   FM.creditUrl,
 ];
@@ -64,6 +68,10 @@ export interface CoverData {
   color?: string;
   cover?: string;
   position: number;
+  /** Posição horizontal da foto, em %: 50 é centralizada. */
+  positionX: number;
+  /** Zoom da foto ou do degradê, em porcentagem: 100 é o encaixe padrão. */
+  zoom: number;
   icon?: string;
   credit?: string;
   creditUrl?: string;
@@ -82,8 +90,16 @@ export type CoverSource =
 
 const DEFAULT_POSITION = 50;
 
+/** Zoom padrão e limites, em porcentagem. Abaixo de 100 sobrariam bordas vazias. */
+export const DEFAULT_ZOOM = 100;
+export const ZOOM_STEP = 20;
+const ZOOM_MAX = 300;
+
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
+
+export const clampZoom = (value: number): number =>
+  clamp(value, DEFAULT_ZOOM, ZOOM_MAX);
 
 const text = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
@@ -98,6 +114,8 @@ export const dataFromFrontmatter = (
   fm: Record<string, unknown> | null | undefined
 ): CoverData => {
   const position = Number(read(fm, "position"));
+  const positionX = Number(read(fm, "positionX"));
+  const zoom = Number(read(fm, "zoom"));
   return {
     accent: text(read(fm, "accent")),
     background: text(read(fm, "background")),
@@ -110,6 +128,10 @@ export const dataFromFrontmatter = (
     position: Number.isFinite(position)
       ? clamp(position, 0, 100)
       : DEFAULT_POSITION,
+    positionX: Number.isFinite(positionX)
+      ? clamp(positionX, 0, 100)
+      : DEFAULT_POSITION,
+    zoom: Number.isFinite(zoom) ? clampZoom(zoom) : DEFAULT_ZOOM,
   };
 };
 

@@ -118,8 +118,10 @@ export const pt = {
   "header.font": "Fonte",
   "header.nameColor": "Cor do nome",
   "header.reposition": "Reposicionar",
-  "header.repositionHint": "Arraste a imagem para reposicionar",
+  "header.repositionHint": "Arraste para reposicionar, role ou use os botões para dar zoom",
   "header.savePosition": "Salvar posição",
+  "header.zoomIn": "Aumentar zoom",
+  "header.zoomOut": "Diminuir zoom",
 
   "iconPicker.filterEmoji": "Filtrar…",
   "iconPicker.filterIcons": "Filtrar ícones…",
