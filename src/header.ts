@@ -334,6 +334,11 @@ export const buildHeader = (
       plugin.openIconPicker(sourcePath, button);
     });
   }
+  if (plugin.settings.nameColors) {
+    addButton(addRow, "palette", t("header.nameColor"), (button) => {
+      plugin.openColorPopup(sourcePath, button);
+    });
+  }
   addButton(addRow, "type", t("header.font"), (button) => {
     plugin.openFontMenu(sourcePath, button);
   });

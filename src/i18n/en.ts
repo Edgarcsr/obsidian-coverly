@@ -31,6 +31,7 @@ export const en: Messages = {
   "command.changeCover": "Change cover",
   "command.changeFont": "Change note font",
   "command.changeIcon": "Change icon",
+  "command.changeNameColor": "Change note name color",
   "command.removeBackground": "Remove note background",
   "command.removeCover": "Remove cover",
 
@@ -105,6 +106,7 @@ export const en: Messages = {
   "header.changeBackground": "Change background",
   "header.changeIcon": "Change icon",
   "header.font": "Font",
+  "header.nameColor": "Name color",
   "header.reposition": "Reposition",
   "header.repositionHint": "Drag the image to reposition",
   "header.savePosition": "Save position",
@@ -153,6 +155,9 @@ export const en: Messages = {
   "settings.linkPreview.desc":
     "When the mouse rests on a link to another note, shows a card with its icon, folders, title and first lines. Hold Ctrl to open Obsidian's native preview instead.",
   "settings.linkPreview.name": "Link preview",
+  "settings.nameColors.desc":
+    "Color each note name in the file explorer with the color you pick for it (command or button above the title). Off by default.",
+  "settings.nameColors.name": "Colored names in the explorer",
   "settings.toc.desc":
     "Shows one line per heading on the right edge of the note, with the current section highlighted. Hover to see the headings and select one to jump to it.",
   "settings.toc.name": "Outline on the side",

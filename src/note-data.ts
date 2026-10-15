@@ -10,6 +10,7 @@ import type { StoredFont } from "./note-font";
  */
 export const FM = {
   background: "coverly-background",
+  color: "coverly-color",
   cover: "coverly-cover",
   credit: "coverly-credit",
   creditUrl: "coverly-credit-url",
@@ -60,6 +61,7 @@ const read = (
 
 export interface CoverData {
   background?: string;
+  color?: string;
   cover?: string;
   position: number;
   icon?: string;
@@ -102,6 +104,7 @@ export const dataFromFrontmatter = (
   const position = Number(read(fm, "position"));
   return {
     background: text(read(fm, "background")),
+    color: text(read(fm, "color")),
     cover: text(read(fm, "cover")),
     credit: text(read(fm, "credit")),
     creditUrl: text(read(fm, "creditUrl")),

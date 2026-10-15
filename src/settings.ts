@@ -37,6 +37,8 @@ export interface CoverlySettings {
   recentEmojis: string[];
   /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */
   twemoji: boolean;
+  /** Pinta o nome de cada nota no explorador com a cor escolhida para ela. */
+  nameColors: boolean;
   /** Mostra o sumário de títulos na lateral direita da nota. */
   toc: boolean;
   /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
@@ -54,6 +56,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   iconPosition: "above",
   language: "auto",
   linkPreview: true,
+  nameColors: false,
   recentEmojis: [],
   toc: true,
   treeIconPosition: "indent",
@@ -73,7 +76,8 @@ type ControlKey =
   | "treeIconPosition"
   | "twemoji"
   | "toc"
-  | "linkPreview";
+  | "linkPreview"
+  | "nameColors";
 
 export class CoverlySettingTab extends PluginSettingTab {
   private readonly plugin: CoverlyPlugin;
@@ -153,6 +157,10 @@ export class CoverlySettingTab extends PluginSettingTab {
         ...named("linkPreview"),
         control: { key: "linkPreview", type: "toggle" },
       },
+      {
+        ...named("nameColors"),
+        control: { key: "nameColors", type: "toggle" },
+      },
     ];
   }
 
@@ -185,7 +193,7 @@ export class CoverlySettingTab extends PluginSettingTab {
       plugin.applyCoverStyle();
     } else if (key === "linkPreview") {
       settings.linkPreview = value as boolean;
-    } else if (key === "twemoji" || key === "toc") {
+    } else if (key === "twemoji" || key === "toc" || key === "nameColors") {
       settings[key] = value as boolean;
       plugin.refreshHeaders();
     } else {

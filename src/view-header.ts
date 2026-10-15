@@ -222,7 +222,7 @@ export class HeaderManager {
     paintBackground(this.plugin.app, view.contentEl, data.background);
     applyFont(view.contentEl, data.font);
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${JSON.stringify(data)}`;
+    const key = `${file.path}\n${getLocale()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;

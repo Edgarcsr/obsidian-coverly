@@ -33,6 +33,7 @@ export const pt = {
   "command.changeCover": "Alterar capa",
   "command.changeFont": "Alterar fonte da nota",
   "command.changeIcon": "Alterar ícone",
+  "command.changeNameColor": "Alterar cor do nome da nota",
   "command.removeBackground": "Remover fundo da nota",
   "command.removeCover": "Remover capa",
 
@@ -107,6 +108,7 @@ export const pt = {
   "header.changeBackground": "Trocar fundo",
   "header.changeIcon": "Trocar ícone",
   "header.font": "Fonte",
+  "header.nameColor": "Cor do nome",
   "header.reposition": "Reposicionar",
   "header.repositionHint": "Arraste a imagem para reposicionar",
   "header.savePosition": "Salvar posição",
@@ -155,6 +157,9 @@ export const pt = {
   "settings.linkPreview.desc":
     "Ao parar o mouse sobre um link para outra nota, mostra um cartão com o ícone, as pastas, o título e o começo dela. Com Ctrl pressionado, abre a prévia nativa do Obsidian.",
   "settings.linkPreview.name": "Prévia dos links",
+  "settings.nameColors.desc":
+    "Pinta o nome de cada nota no explorador de arquivos com a cor escolhida para ela (comando ou botão acima do título). Desligado por padrão.",
+  "settings.nameColors.name": "Nomes coloridos no explorador",
   "settings.toc.desc":
     "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles.",
   "settings.toc.name": "Sumário na lateral",

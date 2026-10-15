@@ -5,6 +5,7 @@ import { CoverPicker } from "./cover-picker";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
 import { LinkPreview } from "./link-preview";
+import { DEFAULT_COLOR, showColorPopup } from "./note-color";
 import {
   COVER_KEYS,
   FM,
@@ -123,6 +124,15 @@ export default class CoverlyPlugin extends Plugin {
       }),
       id: "change-font",
       name: t("command.changeFont"),
+    });
+    this.addCommand({
+      checkCallback: (checking) =>
+        this.settings.nameColors &&
+        this.onActiveNote((path) => {
+          this.openColorPopup(path);
+        })(checking),
+      id: "change-name-color",
+      name: t("command.changeNameColor"),
     });
   }
 
@@ -262,6 +272,26 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
+  /** Abre o quadro de cores do nome da nota. Sem âncora, aparece no centro da nota aberta. */
+  openColorPopup(sourcePath: string, anchor: HTMLElement | null = null): void {
+    const box = (
+      anchor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.contentEl
+    )?.getBoundingClientRect();
+    const position = anchor
+      ? { x: box?.left ?? 0, y: box?.bottom ?? 0 }
+      : {
+          x: (box?.left ?? 0) + (box?.width ?? 0) / 2,
+          y: (box?.top ?? 0) + (box?.height ?? 0) / 3,
+        };
+    showColorPopup({
+      current: this.noteData(sourcePath).color,
+      onPick: async (color) => {
+        await this.setColor(sourcePath, color);
+      },
+      position,
+    });
+  }
+
   /** Põe o emoji no topo da seção Recentes. Ícones Lucide e imagens não entram. */
   private async rememberEmoji(value: string): Promise<void> {
     if (parseLucide(value) !== null || isImageIcon(this.app, value)) {
@@ -364,6 +394,16 @@ export default class CoverlyPlugin extends Plugin {
         removeKeys(fm, [FM.font]);
       } else {
         fm[FM.font] = font;
+      }
+    });
+  }
+
+  async setColor(sourcePath: string, color: string): Promise<void> {
+    await this.updateNote(sourcePath, (fm) => {
+      if (color === DEFAULT_COLOR) {
+        removeKeys(fm, [FM.color]);
+      } else {
+        fm[FM.color] = color;
       }
     });
   }

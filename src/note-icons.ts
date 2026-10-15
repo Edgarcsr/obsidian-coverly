@@ -2,10 +2,19 @@ import { MarkdownView } from "obsidian";
 
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
-import { drawPageIcon } from "./page-icon";
+import type { CoverData } from "./note-data";
+import { drawPageIcon, iconColorCss } from "./page-icon";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
 
 const ICON_CLASS = "mdp-inline-icon";
+const NAME_CLASS = "mdp-name-colored";
+
+const clearName = (el: HTMLElement): void => {
+  if (el.hasClass(NAME_CLASS)) {
+    el.style.removeProperty("color");
+    el.removeClass(NAME_CLASS);
+  }
+};
 
 /**
  * Ícone da nota, em miniatura, onde o nome dela aparece fora do cabeçalho:
@@ -51,6 +60,11 @@ export class NoteIconDecorator {
     for (const icon of document.querySelectorAll(`.${ICON_CLASS}`)) {
       icon.remove();
     }
+    for (const name of document.querySelectorAll<HTMLElement>(
+      `.${NAME_CLASS}`
+    )) {
+      clearName(name);
+    }
     for (const title of this.titles) {
       clearTitleIcon(title);
     }
@@ -72,7 +86,9 @@ export class NoteIconDecorator {
           ":scope > .nav-file-title-content"
         );
         if (content) {
-          this.place(title, content, title.dataset.path ?? "");
+          const path = title.dataset.path ?? "";
+          this.place(title, content, path);
+          this.paintName(content, path);
         }
       }
     }
@@ -124,16 +140,34 @@ export class NoteIconDecorator {
     this.observers.set(el, observer);
   }
 
-  /** Ícone gravado no frontmatter da nota, se houver. */
-  private iconFor(path: string): string | undefined {
+  /** Dados do frontmatter da nota, se ela existir. */
+  private dataFor(path: string): CoverData | null {
     const { app } = this.plugin;
     const file = path ? app.vault.getFileByPath(path) : null;
     if (!file) {
-      return undefined;
+      return null;
     }
     return dataFromFrontmatter(
       app.metadataCache.getFileCache(file)?.frontmatter
-    ).icon;
+    );
+  }
+
+  /** Ícone gravado no frontmatter da nota, se houver. */
+  private iconFor(path: string): string | undefined {
+    return this.dataFor(path)?.icon;
+  }
+
+  /** Pinta o nome da nota no explorador com a cor dela, se a opção estiver ligada. */
+  private paintName(content: HTMLElement, path: string): void {
+    const color = this.plugin.settings.nameColors
+      ? this.dataFor(path)?.color
+      : undefined;
+    if (!color) {
+      clearName(content);
+      return;
+    }
+    content.style.color = iconColorCss(color);
+    content.addClass(NAME_CLASS);
   }
 
   /** Põe, troca ou tira o ícone de `parent`, logo antes de `before`. */
