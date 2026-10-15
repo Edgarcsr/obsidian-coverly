@@ -1,3 +1,4 @@
+import { copyFileSync, existsSync, mkdirSync, watch } from "node:fs";
 import { builtinModules } from "node:module";
 import process from "node:process";
 
@@ -10,6 +11,30 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = process.argv[2] === "production";
+
+// Em dev, copia os arquivos do plugin para a pasta dele no vault. Defina
+// COVERLY_PLUGIN_DIR com o caminho de <Vault>/.obsidian/plugins/coverly.
+const pluginDir = prod ? undefined : process.env.COVERLY_PLUGIN_DIR;
+const PLUGIN_FILES = ["main.js", "manifest.json", "styles.css"];
+
+const copyToVault = (files = PLUGIN_FILES) => {
+  if (!pluginDir) {
+    return;
+  }
+  mkdirSync(pluginDir, { recursive: true });
+  for (const file of files) {
+    if (existsSync(file)) {
+      copyFileSync(file, `${pluginDir}/${file}`);
+    }
+  }
+};
+
+const copyPlugin = {
+  name: "copy-to-vault",
+  setup(build) {
+    build.onEnd(() => copyToVault(["main.js"]));
+  },
+};
 
 const context = await esbuild.context({
   banner: {
@@ -37,6 +62,7 @@ const context = await esbuild.context({
   logLevel: "info",
   minify: prod,
   outfile: "main.js",
+  plugins: [copyPlugin],
   sourcemap: prod ? false : "inline",
   target: "es2021",
   treeShaking: true,
@@ -47,4 +73,10 @@ if (prod) {
   process.exit(0);
 } else {
   await context.watch();
+  if (pluginDir) {
+    copyToVault();
+    for (const file of ["manifest.json", "styles.css"]) {
+      watch(file, () => copyToVault([file]));
+    }
+  }
 }
