@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/banner.png" alt="Coverly: Notion-style page covers and icons for Obsidian" width="100%">
+<img src="assets/banner/banner.png" alt="Coverly: Notion-style page covers and icons for Obsidian" width="100%">
 
 <p>&nbsp;</p>
 
