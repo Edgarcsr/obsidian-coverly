@@ -26,3 +26,7 @@ twemoji-cache.json
 
 # Local dev settings (path to the vault plugin folder)
 .env
+
+# Banner: the built banner.html embeds every asset (see assets/banner/CREDITS.md)
+assets/banner/banner.html
+assets/banner/art/tokyo.png

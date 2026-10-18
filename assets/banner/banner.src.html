@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Coverly banner</title>
+    <style>
+      @font-face { font-family: "Geist"; src: url("./fonts/geist.woff2") format("woff2"); font-weight: 100 900; }
+
+      :root {
+        --bg: #0b0d0d;
+        --fg: #ffffff;
+        --accent: #a68af9;
+        --teal: #7f6df2;
+        --app-bg: #1e1e1e;
+        --app-bar: #161616;
+        --app-fg: #dadada;
+        --app-muted: #9a9a9a;
+        --app-border: rgb(255 255 255 / 0.08);
+        --font: "Geist", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; margin: 0; }
+
+      html, body { width: 1200px; height: 630px; overflow: hidden; background: transparent; color: var(--fg); font-family: var(--font); }
+
+      .banner {
+        position: relative; width: 1200px; height: 630px; overflow: hidden;
+        /* Small rounded outer corners; the PNG is rendered with a transparent background. */
+        background: var(--bg);
+        border-radius: 16px;
+      }
+      #art { position: absolute; inset: 0; z-index: 0; }
+      .glow {
+        position: absolute; inset: 0; z-index: 0;
+        background:
+          radial-gradient(55% 80% at 88% 35%, rgb(127 109 242 / 0.26), transparent 70%),
+          radial-gradient(40% 50% at 8% 5%, rgb(166 138 249 / 0.12), transparent 70%);
+      }
+
+      .brand { position: absolute; z-index: 2; top: 60px; left: 66px; display: flex; align-items: center; gap: 18px; }
+      .logo { width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(145deg, #a68af9, #6d4ee0); display: grid; place-items: center; box-shadow: 0 8px 28px rgb(127 109 242 / 0.45); }
+      .logo svg { width: 34px; height: 34px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px rgb(0 0 0 / 0.2)); }
+      .brand-name { font-size: 48px; font-weight: 700; letter-spacing: -0.03em; color: var(--accent); }
+
+      .title { position: absolute; z-index: 2; top: 134px; left: 66px; width: 800px; font-size: 62px; line-height: 1.1; font-weight: 500; letter-spacing: -0.03em; }
+
+      .mockup {
+        position: absolute; z-index: 3; left: 56px; top: 322px; width: 1180px; height: 420px;
+        border-radius: 30px 0 0 0;
+        border: 7px solid rgb(255 255 255 / 0.16);
+        border-bottom: 0; border-right: 0;
+        background: var(--app-bg);
+        background-clip: padding-box;
+        box-shadow: 0 0 0 1px rgb(255 255 255 / 0.07), 0 -20px 80px rgb(0 0 0 / 0.55);
+        font-size: 14px;
+        color: var(--app-fg);
+        overflow: hidden;
+      }
+
+      svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+      /* tab bar */
+      .bar { height: 40px; background: var(--app-bar); display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; border-bottom: 1px solid var(--app-border); }
+      .bar .nav { color: var(--app-muted); display: flex; gap: 10px; margin-right: 6px; }
+      .tab { height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 8px; background: rgb(255 255 255 / 0.06); font-size: 13px; }
+      .tab svg.i { width: 14px; height: 14px; color: #a68af9; }
+
+      /* note */
+      .note { position: relative; }
+      .cover { position: relative; height: 150px; overflow: hidden; }
+      .cover img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; display: block; }
+      .cover::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40px; background: linear-gradient(to top, rgb(30 30 30 / 0.55), transparent); }
+      .cbtns { position: absolute; z-index: 2; top: 14px; right: 40px; display: flex; border-radius: 8px; background: rgb(24 24 24 / 0.92); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08); font-size: 13px; overflow: hidden; }
+      .cbtns span { padding: 6px 12px; }
+      .cbtns span + span { border-left: 1px solid rgb(255 255 255 / 0.1); }
+
+      .col { width: 700px; margin-left: 232px; }
+      .icon { width: 78px; height: 78px; margin-top: -40px; position: relative; z-index: 2; }
+      .icon img { width: 100%; height: 100%; display: block; }
+      h1.note-title { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; color: #e6e6e6; margin-top: 10px; line-height: 1.2; }
+      p.body { margin-top: 12px; font-size: 16px; line-height: 1.6; color: var(--app-fg); }
+      p.body .link { color: #a78bfa; text-decoration: underline; text-decoration-color: rgb(167 139 250 / 0.4); text-underline-offset: 3px; }
+
+      /* heading outline on the right edge */
+      .outline { position: absolute; z-index: 3; top: 190px; right: 120px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; width: 180px; }
+      .outline div { height: 3px; border-radius: 2px; background: rgb(255 255 255 / 0.22); }
+      .outline div.on { background: var(--teal); }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <div class="glow"></div>
+      <canvas id="art" width="1200" height="630"></canvas>
+
+      <div class="brand">
+        <div class="logo"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg></div>
+        <div class="brand-name">Coverly</div>
+      </div>
+      <h1 class="title">Notion-style covers and icons for Obsidian</h1>
+
+      <div class="mockup">
+        <div class="bar">
+          <div class="nav"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></div>
+          <div class="tab"><svg class="i" viewBox="0 0 24 24"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg>Japan trip</div>
+        </div>
+
+        <div class="note">
+          <div class="cover">
+            <img src="./art/tokyo.png" alt="" />
+            <div class="cbtns"><span>Change cover</span><span>Reposition</span></div>
+          </div>
+          <div class="outline"><div style="width:64px"></div><div class="on" style="width:100px"></div><div style="width:76px"></div><div style="width:52px"></div></div>
+          <div class="col">
+            <div class="icon"><img src="./art/mahjong-emoji.svg" alt="" /></div>
+            <h1 class="note-title">Japan trip</h1>
+            <p class="body">Where to eat and what to see, starting with <span class="link">Shibuya Crossing</span>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // A notebook with a pen (lucide "notebook-pen"), dithered: Coverly dresses up your notes.
+      window.BANNER_ART = {
+        palette: ["#0f0a26", "#4a2fb8", "#8b6cf7", "#e4dbff"],
+        style: "shape",
+        shapePath:
+          "M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4 M2 6h4 M2 10h4 M2 14h4 M2 18h4 M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z",
+        shapeStroke: 1.5,
+        shapeBase: 0.85,
+        shapeContrast: 0.3,
+        shapeSize: [24, 24],
+        rotate: 8,
+        cx: 1000,
+        cy: 172,
+        radius: 118,
+        light: [-0.7, -0.6],
+      };
+    </script>
+    <script src="./dither.js"></script>
+  </body>
+</html>
