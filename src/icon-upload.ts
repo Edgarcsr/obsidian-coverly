@@ -2,9 +2,10 @@ import { Notice, setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import { asyncListener } from "./async-listener";
-import { firstImage, saveImageAttachment } from "./attachments";
+import { firstImage } from "./attachments";
 import { t } from "./i18n";
 import { URL_PATTERN } from "./page-icon";
+import { savePluginImage } from "./plugin-images";
 
 /** Imagem escolhida na aba, à espera de "Salvar". */
 type Staged =
@@ -138,11 +139,7 @@ export const renderIconUpload = (
       try {
         const value =
           staged.kind === "file"
-            ? await saveImageAttachment(
-                context.app,
-                staged.file,
-                context.sourcePath
-              )
+            ? await savePluginImage(context.app, staged.file, "icons")
             : staged.url;
         await context.pick(value);
       } catch (error) {

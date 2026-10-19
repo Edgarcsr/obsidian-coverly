@@ -36,6 +36,7 @@ export const pt = {
   "command.changeIcon": "Alterar ícone",
   "command.changeNameColor": "Alterar cor do nome da nota",
   "command.downloadCovers": "Baixar todas as capas usadas no vault",
+  "command.openSettings": "Abrir configurações do Coverly",
   "command.removeBackground": "Remover fundo da nota (beta)",
   "command.removeCover": "Remover capa",
 
@@ -136,6 +137,8 @@ export const pt = {
   "iconUpload.choose": "Carregar uma imagem",
   "iconUpload.pasteHint": "ou Ctrl+V para colar uma imagem ou link",
 
+  "linkPreview.dates": "Editada {modified} · criada em {created}",
+
   "notice.chooseImage": "Escolha um arquivo de imagem.",
   "notice.coversDisabled":
     'Ative "Baixar capas" nas configurações do Coverly primeiro.',
@@ -144,6 +147,11 @@ export const pt = {
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
+  "saved.title": "Salvas no Coverly",
+
+  "settings.askIconColor.desc":
+    "Ao clicar num ícone, mostra as variantes de cor para escolher. Desligado, usa a última cor escolhida.",
+  "settings.askIconColor.name": "Perguntar sempre a cor do ícone",
   "settings.colorPalette.desc":
     "Cores oferecidas no seletor de ícones. Os ícones já escolhidos mantêm a cor que têm.",
   "settings.colorPalette.name": "Cores dos ícones",
@@ -156,7 +164,7 @@ export const pt = {
     "Quanto da capa, de baixo para cima, some em degradê até a nota. Zero desliga o efeito.",
   "settings.coverFade.name": "Degradê na parte de baixo",
   "settings.coverFolder.desc":
-    "Pasta do vault para as capas baixadas. Um nome que começa com ponto fica escondido do explorador e da busca.",
+    "Pasta do vault para as capas baixadas e as miniaturas (em thumbs/), que aparecem enquanto a foto carrega. Um nome que começa com ponto fica escondido do explorador e da busca.",
   "settings.coverFolder.name": "Pasta das capas",
   "settings.coverHeight.desc": "Altura padrão da capa em pixels.",
   "settings.coverHeight.name": "Altura da capa",
@@ -172,6 +180,9 @@ export const pt = {
   "settings.downloadCovers.desc":
     "Guarda no vault uma cópia das capas da internet, para abrirem do disco em vez de carregar pela rede toda vez. A nota mantém o link original.",
   "settings.downloadCovers.name": "Baixar capas",
+  "settings.hideFileTooltip.desc":
+    "No explorador de arquivos, esconde a dica do Obsidian com as datas das notas e imagens; o cartão de prévia já mostra as datas.",
+  "settings.hideFileTooltip.name": "Esconder a dica do Obsidian no explorador",
   "settings.iconPosition.above": "Sobre a capa",
   "settings.iconPosition.desc":
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",
@@ -198,9 +209,21 @@ export const pt = {
   "settings.section.icons": "Ícones",
   "settings.section.navigation": "Navegação",
   "settings.section.perNote": "Opções por nota (desligadas por padrão)",
+  "settings.storage.clear": "Limpar cache",
+  "settings.storage.loading": "Calculando…",
+  "settings.storage.name": "Espaço usado",
+  "settings.storage.usage":
+    "{total} no total: capas baixadas {downloads}, miniaturas e versões leves {thumbs}, banners enviados {banners}, ícones enviados {icons}. Limpar o cache apaga só as capas baixadas e as miniaturas, que voltam sozinhas; banners e ícones enviados ficam.",
   "settings.toc.desc":
     "Mostra um traço por título na borda direita da nota, com a seção atual em destaque. Passe o mouse para ver os títulos e clique para ir até um deles.",
   "settings.toc.name": "Sumário na lateral",
+  "settings.treeBackgrounds.both": "Imagens e notas",
+  "settings.treeBackgrounds.desc":
+    "Usa uma miniatura borrada como fundo dos itens do explorador de arquivos: a própria imagem nos arquivos de imagem, e a capa nas notas que têm foto de capa.",
+  "settings.treeBackgrounds.images": "Só imagens",
+  "settings.treeBackgrounds.name": "Fundos no explorador",
+  "settings.treeBackgrounds.notes": "Só notas",
+  "settings.treeBackgrounds.off": "Desligado",
   "settings.treeIconPosition.desc":
     "Onde fica o ícone das notas no explorador de arquivos: no recuo à esquerda, mantendo o nome alinhado, ou no começo do nome, empurrando o texto.",
   "settings.treeIconPosition.indent": "No recuo à esquerda",

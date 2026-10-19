@@ -1,3 +1,4 @@
+import { setTooltip } from "obsidian";
 import type { App, TFile } from "obsidian";
 
 import { asyncListener } from "./async-listener";
@@ -25,11 +26,15 @@ export interface VaultImagesContext {
   pick: (path: string) => Promise<void>;
 }
 
+/** Arquivo de imagem que dá para mostrar (e usar como capa ou ícone). */
+export const isImageFile = (file: TFile): boolean =>
+  IMAGE_EXTENSIONS.has(file.extension.toLowerCase());
+
 /** Imagens do vault, as mais recentes primeiro. */
 export const vaultImages = (app: App): TFile[] =>
   app.vault
     .getFiles()
-    .filter((file) => IMAGE_EXTENSIONS.has(file.extension.toLowerCase()))
+    .filter(isImageFile)
     .toSorted((a, b) => b.stat.mtime - a.stat.mtime);
 
 /** Aba "Vault": busca por nome e grade de miniaturas das imagens do próprio vault. */
@@ -42,7 +47,8 @@ export const renderVaultImages = (
 
   const search = body.createDiv({ cls: "mdp-picker-search" });
   const input = searchField(search, t("vault.placeholder"));
-  const grid = body.createDiv({ cls: "mdp-picker-photos" });
+  // Os mesmos ladrilhos da galeria; o nome vai na dica.
+  const grid = body.createDiv({ cls: "mdp-picker-grid is-framed" });
   const status = body.createDiv({ cls: "mdp-picker-hint is-empty" });
   const more = body.createEl("button", {
     cls: "mdp-picker-ghost",
@@ -54,11 +60,11 @@ export const renderVaultImages = (
 
   const addCard = (file: TFile): void => {
     const card = grid.createEl("button", {
-      attr: { "aria-label": file.path, title: file.path },
+      attr: { "aria-label": file.path },
       cls:
         file.path === context.current
-          ? "mdp-picker-photo is-selected"
-          : "mdp-picker-photo",
+          ? "mdp-picker-tile is-selected"
+          : "mdp-picker-tile",
     });
     card.createEl("img", {
       attr: {
@@ -67,7 +73,7 @@ export const renderVaultImages = (
         src: app.vault.getResourcePath(file),
       },
     });
-    card.createSpan({ cls: "mdp-picker-photo-credit", text: file.basename });
+    setTooltip(card, file.path);
     card.addEventListener(
       "click",
       asyncListener(async () => {

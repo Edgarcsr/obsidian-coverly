@@ -1,13 +1,33 @@
 import { MarkdownView } from "obsidian";
 
+import { coverThumbUrl } from "./cover-thumbs";
 import type CoverlyPlugin from "./main";
-import { dataFromFrontmatter } from "./note-data";
+import { dataFromFrontmatter, isHexColor } from "./note-data";
 import type { CoverData } from "./note-data";
 import { drawPageIcon, iconColorCss } from "./page-icon";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
+import { isImageFile } from "./vault-images";
 
 const ICON_CLASS = "mdp-inline-icon";
 const NAME_CLASS = "mdp-name-colored";
+const TREE_COVER_CLASS = "mdp-tree-cover";
+const TREE_COVER_VAR = "--mdp-tree-cover";
+
+/** Camada CSS do fundo: só fotos, pela miniatura; degradês e cores ficam de fora. */
+const treeCoverLayer = (cover: string | undefined): string | null => {
+  if (!cover || cover.startsWith("gradient:") || isHexColor(cover)) {
+    return null;
+  }
+  const thumb = coverThumbUrl(cover);
+  return thumb ? `url("${thumb.replaceAll('"', "%22")}")` : null;
+};
+
+const clearTreeCover = (el: HTMLElement): void => {
+  if (el.hasClass(TREE_COVER_CLASS)) {
+    el.style.removeProperty(TREE_COVER_VAR);
+    el.removeClass(TREE_COVER_CLASS);
+  }
+};
 
 const clearName = (el: HTMLElement): void => {
   if (el.hasClass(NAME_CLASS)) {
@@ -32,6 +52,8 @@ export class NoteIconDecorator {
   /** Títulos das abas com ícone, para limpar ao descarregar o plugin. */
   private readonly titles = new Set<HTMLElement>();
   private frame: number | null = null;
+  /** Fundos (item + imagem) que já apareceram, para animar só a primeira vez. */
+  private readonly shownBackgrounds = new Set<string>();
 
   constructor(plugin: CoverlyPlugin) {
     this.plugin = plugin;
@@ -46,6 +68,15 @@ export class NoteIconDecorator {
       this.frame = null;
       this.decorateAll();
     });
+  }
+
+  /** Desenha já, cancelando a passada agendada para o próximo frame. */
+  flush(): void {
+    if (this.frame !== null) {
+      window.cancelAnimationFrame(this.frame);
+      this.frame = null;
+    }
+    this.decorateAll();
   }
 
   destroy(): void {
@@ -64,6 +95,11 @@ export class NoteIconDecorator {
       `.${NAME_CLASS}`
     )) {
       clearName(name);
+    }
+    for (const title of document.querySelectorAll<HTMLElement>(
+      `.${TREE_COVER_CLASS}`
+    )) {
+      clearTreeCover(title);
     }
     for (const title of this.titles) {
       clearTitleIcon(title);
@@ -89,6 +125,7 @@ export class NoteIconDecorator {
           const path = title.dataset.path ?? "";
           this.place(title, content, path);
           this.paintName(content, path);
+          this.paintTreeCover(title, path);
         }
       }
     }
@@ -133,8 +170,11 @@ export class NoteIconDecorator {
     if (this.observers.has(el)) {
       return;
     }
+    // Na mesma hora, não no próximo frame: o explorador refaz linhas ao clicar
+    // e rolar, e esperar um frame deixava a linha nova piscar sem fundo/ícone.
+    // Cada passada só mexe no DOM se algo mudou, então isto não entra em laço.
     const observer = new MutationObserver(() => {
-      this.schedule();
+      this.flush();
     });
     observer.observe(el, { childList: true, subtree: true });
     this.observers.set(el, observer);
@@ -168,6 +208,43 @@ export class NoteIconDecorator {
     }
     content.style.color = iconColorCss(color);
     content.addClass(NAME_CLASS);
+  }
+
+  /**
+   * Fundo da linha da nota no explorador: a miniatura da capa (ver
+   * cover-thumbs.ts), só para capas com foto. Enquanto a miniatura é gerada, a
+   * linha fica sem fundo; ela volta a ser pintada quando a miniatura chega.
+   */
+  private paintTreeCover(title: HTMLElement, path: string): void {
+    const layer = treeCoverLayer(this.treeBackgroundFor(path));
+    if (!layer) {
+      clearTreeCover(title);
+      return;
+    }
+    if (title.style.getPropertyValue(TREE_COVER_VAR) !== layer) {
+      title.style.setProperty(TREE_COVER_VAR, layer);
+      // Só a primeira aparição anima: o Obsidian refaz as linhas ao rolar e
+      // clicar, e animar de novo a cada vez pareceria piscar.
+      const seen = `${path}\n${layer}`;
+      title.toggleClass("is-fresh", !this.shownBackgrounds.has(seen));
+      this.shownBackgrounds.add(seen);
+    }
+    title.addClass(TREE_COVER_CLASS);
+  }
+
+  /** Imagem que vai no fundo do item: a própria imagem, ou a capa da nota. */
+  private treeBackgroundFor(path: string): string | undefined {
+    const mode = this.plugin.settings.treeBackgrounds;
+    const file = path ? this.plugin.app.vault.getFileByPath(path) : null;
+    if (mode === "off" || !file) {
+      return undefined;
+    }
+    if (isImageFile(file)) {
+      return mode === "images" || mode === "both" ? file.path : undefined;
+    }
+    return mode === "notes" || mode === "both"
+      ? this.dataFor(path)?.cover
+      : undefined;
   }
 
   /** Põe, troca ou tira o ícone de `parent`, logo antes de `before`. */

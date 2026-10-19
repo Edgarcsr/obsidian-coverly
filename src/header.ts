@@ -2,6 +2,7 @@ import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import { asyncListener } from "./async-listener";
+import { coverDisplayUrl, coverThumbUrl } from "./cover-thumbs";
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { ZOOM_STEP, clampZoom, resolveCoverSource } from "./note-data";
@@ -97,6 +98,9 @@ interface NaturalSize {
 /** Tamanho real das fotos, medido uma vez por endereço. */
 const naturalSizes = new Map<string, Promise<NaturalSize | null>>();
 
+/** URLs já decodificadas nesta sessão: a capa delas aparece sem transição. */
+const decoded = new Set<string>();
+
 const probeSize = async (url: string): Promise<NaturalSize | null> => {
   const probe = new Image();
   probe.src = url;
@@ -106,6 +110,7 @@ const probeSize = async (url: string): Promise<NaturalSize | null> => {
     // Imagem que não carrega não tem o que arrastar.
     return null;
   }
+  decoded.add(url);
   return { height: probe.naturalHeight, width: probe.naturalWidth };
 };
 
@@ -412,22 +417,72 @@ const attachReposition = (
 };
 
 /**
+ * Começa a carregar e decodificar a capa da nota antes de ela abrir (ao passar
+ * o mouse pelo link ou pelo item do explorador), para ela já estar pronta.
+ */
+export const preloadCover = (app: App, cover: string | undefined): void => {
+  const source = resolveCoverSource(app, cover);
+  if (source?.kind !== "image" || !cover) {
+    return;
+  }
+  void naturalSize(coverDisplayUrl(cover) ?? source.url);
+};
+
+/** `url(...)` para o CSS. Aspas no caminho quebrariam a declaração, então são escapadas. */
+const cssUrl = (url: string): string => `url("${url.replaceAll('"', "%22")}")`;
+
+/**
  * Pinta a capa da nota em `surface`: foto ou degradê, na posição gravada.
  * A foto recebe o tamanho em `buildCover`, que conhece o zoom e a moldura.
+ * `onReady` roda quando já há algo da foto para mostrar (a miniatura ou a
+ * imagem inteira, a que chegar primeiro).
  */
 export const paintCover = (
   app: App,
   surface: HTMLElement,
-  data: CoverData
+  data: CoverData,
+  onReady?: () => void
 ): CoverSource | null => {
-  const source = resolveCoverSource(app, data.cover);
+  const resolved = resolveCoverSource(app, data.cover);
+  // A versão de exibição (até 2560px, já no disco) abre bem mais rápido que a
+  // foto original, que pode ter vários MB para decodificar.
+  const display =
+    resolved?.kind === "image" && data.cover
+      ? coverDisplayUrl(data.cover)
+      : null;
+  const source: CoverSource | null = display
+    ? { kind: "image", url: display }
+    : resolved;
   surface.style.backgroundPosition = `${data.positionX}% ${data.position}%`;
+  surface.removeClass("mdp-has-thumb", "is-loaded");
   if (source?.kind === "image") {
-    // Aspas no caminho quebrariam a declaração CSS, então são escapadas.
     surface.setCssStyles({
-      backgroundImage: `url("${source.url.replaceAll('"', "%22")}")`,
+      backgroundImage: cssUrl(source.url),
       backgroundSize: "cover",
     });
+    // Já decodificada (nota aberta antes nesta sessão): aparece direto.
+    if (decoded.has(source.url)) {
+      onReady?.();
+      return source;
+    }
+    // A miniatura fica numa camada por cima (::before, com o mesmo tamanho e
+    // posição) e se dissolve quando a foto termina de carregar.
+    const thumb = data.cover ? coverThumbUrl(data.cover) : null;
+    if (thumb) {
+      surface.style.setProperty("--mdp-cover-thumb", cssUrl(thumb));
+      surface.addClass("mdp-has-thumb");
+    }
+    void (async () => {
+      if (thumb) {
+        await Promise.race([naturalSize(thumb), naturalSize(source.url)]);
+        onReady?.();
+        await naturalSize(source.url);
+        surface.addClass("is-loaded");
+        return;
+      }
+      await naturalSize(source.url);
+      onReady?.();
+    })();
   } else {
     surface.style.backgroundImage = source?.css ?? "";
     surface.style.backgroundSize = gradientSize(data.zoom);
@@ -444,7 +499,15 @@ const buildCover = (
 
   // Foto e degradê ficam na mesma camada, então os dois podem ser reposicionados.
   const surface = cover.createDiv({ cls: "mdp-cover-image" });
-  const source = paintCover(plugin.app, surface, data);
+  // A animação de entrada espera ter o que mostrar; senão ela rodaria sobre a
+  // moldura vazia e a foto "apareceria" depois dela, como se recomeçasse.
+  cover.addClass("is-pending");
+  const source = paintCover(plugin.app, surface, data, () => {
+    cover.removeClass("is-pending");
+  });
+  if (source?.kind !== "image") {
+    cover.removeClass("is-pending");
+  }
   const layout: Layout =
     source?.kind === "image"
       ? photoLayout(cover, surface, source.url)

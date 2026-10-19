@@ -34,6 +34,7 @@ export const en: Messages = {
   "command.changeIcon": "Change icon",
   "command.changeNameColor": "Change note name color",
   "command.downloadCovers": "Download all covers used in the vault",
+  "command.openSettings": "Open Coverly settings",
   "command.removeBackground": "Remove note background (beta)",
   "command.removeCover": "Remove cover",
 
@@ -134,6 +135,8 @@ export const en: Messages = {
   "iconUpload.choose": "Upload an image",
   "iconUpload.pasteHint": "or press Ctrl+V to paste an image or link",
 
+  "linkPreview.dates": "Edited {modified} · created {created}",
+
   "notice.chooseImage": "Choose an image file.",
   "notice.coversDisabled":
     'Turn on "Download covers" in the Coverly settings first.',
@@ -142,6 +145,11 @@ export const en: Messages = {
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
+  "saved.title": "Saved in Coverly",
+
+  "settings.askIconColor.desc":
+    "When you click an icon, show its color variants to choose from. When off, the last chosen color is used.",
+  "settings.askIconColor.name": "Always ask for the icon color",
   "settings.colorPalette.desc":
     "Colors offered in the icon picker. Icons already chosen keep the color they have.",
   "settings.colorPalette.name": "Icon colors",
@@ -154,7 +162,7 @@ export const en: Messages = {
     "How much of the cover, from the bottom up, fades out into the note. Zero turns the effect off.",
   "settings.coverFade.name": "Fade at the bottom",
   "settings.coverFolder.desc":
-    "Vault folder for the downloaded covers. A name starting with a dot stays hidden from the file explorer and from search.",
+    "Vault folder for downloaded covers and thumbnails (in thumbs/), which show while the full image loads. A name starting with a dot stays hidden from the file explorer and from search.",
   "settings.coverFolder.name": "Cover folder",
   "settings.coverHeight.desc": "Default cover height in pixels.",
   "settings.coverHeight.name": "Cover height",
@@ -170,6 +178,9 @@ export const en: Messages = {
   "settings.downloadCovers.desc":
     "Save a copy of covers from the internet in the vault, so they open from disk instead of loading over the network each time. The note keeps the original link.",
   "settings.downloadCovers.name": "Download covers",
+  "settings.hideFileTooltip.desc":
+    "In the file explorer, hide Obsidian's tooltip with the dates of notes and images; the preview card already shows them.",
+  "settings.hideFileTooltip.name": "Hide Obsidian's tooltip in the explorer",
   "settings.iconPosition.above": "Over the cover",
   "settings.iconPosition.desc":
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",
@@ -196,9 +207,21 @@ export const en: Messages = {
   "settings.section.icons": "Icons",
   "settings.section.navigation": "Navigation",
   "settings.section.perNote": "Per-note options (off by default)",
+  "settings.storage.clear": "Clear cache",
+  "settings.storage.loading": "Calculating…",
+  "settings.storage.name": "Storage used",
+  "settings.storage.usage":
+    "{total} in total: downloaded covers {downloads}, thumbnails and light versions {thumbs}, uploaded banners {banners}, uploaded icons {icons}. Clearing the cache only removes downloaded covers and thumbnails, which come back on their own; uploaded banners and icons stay.",
   "settings.toc.desc":
     "Shows one line per heading on the right edge of the note, with the current section highlighted. Hover to see the headings and select one to jump to it.",
   "settings.toc.name": "Outline on the side",
+  "settings.treeBackgrounds.both": "Images and notes",
+  "settings.treeBackgrounds.desc":
+    "Use a blurred thumbnail as the background of file explorer items: the image itself for image files, and the cover for notes with a photo cover.",
+  "settings.treeBackgrounds.images": "Images only",
+  "settings.treeBackgrounds.name": "Backgrounds in the explorer",
+  "settings.treeBackgrounds.notes": "Notes only",
+  "settings.treeBackgrounds.off": "Off",
   "settings.treeIconPosition.desc":
     "Where note icons go in the file explorer: in the left indent, keeping names aligned, or at the start of the name, pushing the text.",
   "settings.treeIconPosition.indent": "In the left indent",

@@ -11,19 +11,14 @@ import { t } from "./i18n";
 import { renderIconUpload } from "./icon-upload";
 import type { IconUploadHandle } from "./icon-upload";
 import { normalize, searchLucide } from "./lucide-search";
-import {
-  drawLucide,
-  isImageIcon,
-  lucideNames,
-  lucideValue,
-  parseLucide,
-} from "./page-icon";
+import { drawLucide, lucideNames, lucideValue, parseLucide } from "./page-icon";
+import { renderSavedImages } from "./plugin-images";
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
 import { drawEmoji } from "./twemoji";
 import { renderVaultImages } from "./vault-images";
 
-type Tab = "emoji" | "icons" | "upload";
+export type Tab = "emoji" | "icons" | "upload";
 
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "emoji", label: t("tab.emoji") },
@@ -78,18 +73,14 @@ export interface IconPickerOptions {
   recentEmojis: readonly string[];
   /** Desenha os emojis no estilo do X em vez do emoji do sistema. */
   twemoji: boolean;
+  /** Aba em que o seletor abre (a última usada). */
+  tab: Tab;
+  onTabChange: (tab: Tab) => void;
   onPick: (value: string) => Promise<void>;
   onColorChange: (color: string) => Promise<void>;
   onAskColorChange: (askColor: boolean) => Promise<void>;
   onRemove: () => Promise<void>;
 }
-
-const initialTab = (app: App, current: string): Tab => {
-  if (parseLucide(current) !== null) {
-    return "icons";
-  }
-  return current && isImageIcon(app, current) ? "upload" : "emoji";
-};
 
 /** Seletor de ícone da página: emoji, ícone Lucide ou imagem, como no Notion. */
 export class IconPicker extends TabbedPopover<Tab> {
@@ -110,12 +101,7 @@ export class IconPicker extends TabbedPopover<Tab> {
   };
 
   constructor(options: IconPickerOptions) {
-    super(
-      options.anchor,
-      tabs(),
-      initialTab(options.app, options.current ?? ""),
-      "mdp-icon-picker"
-    );
+    super(options.anchor, tabs(), options.tab, "mdp-icon-picker");
     this.options = options;
     this.colorState = { askColor: options.askColor, color: options.color };
   }
@@ -129,6 +115,10 @@ export class IconPicker extends TabbedPopover<Tab> {
     document.removeEventListener("paste", this.onPaste, true);
     this.resetTab();
     super.close();
+  }
+
+  protected override onTabChange(tab: Tab): void {
+    this.options.onTabChange(tab);
   }
 
   protected hasRemove(): boolean {
@@ -160,6 +150,14 @@ export class IconPicker extends TabbedPopover<Tab> {
             await this.pick(value);
           },
           renderExtra: (parent) => {
+            void renderSavedImages(parent.createDiv(), {
+              app: this.options.app,
+              current: this.options.current,
+              kind: "icons",
+              pick: async (path) => {
+                await this.pick(path);
+              },
+            });
             parent.createDiv({
               cls: "mdp-picker-section-title",
               text: t("vault.title"),

@@ -2,6 +2,7 @@ import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import type { MessageKey } from "./i18n";
+import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
 import { drawEmoji } from "./twemoji";
 
 /**
@@ -161,7 +162,11 @@ export const iconImageSource = (app: App, value: string): string | null => {
     return value;
   }
   const file = app.vault.getFileByPath(value);
-  return file ? app.vault.getResourcePath(file) : null;
+  if (file) {
+    return app.vault.getResourcePath(file);
+  }
+  // Ícone enviado pelo Coverly: fica na pasta oculta, fora do índice do vault.
+  return isPluginImagePath(value) ? pluginImageUrl(app, value) : null;
 };
 
 /** O ícone é uma imagem (link ou arquivo do vault), não emoji nem Lucide. */

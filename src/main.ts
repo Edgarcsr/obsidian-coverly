@@ -1,8 +1,18 @@
 import { MarkdownView, Plugin } from "obsidian";
 
 import { BackgroundPicker } from "./background-picker";
-import { cacheCover, configureCoverCache } from "./cover-cache";
+import {
+  DEFAULT_COVER_FOLDER,
+  LEGACY_COVER_FOLDER,
+  cacheCover,
+  configureCoverCache,
+} from "./cover-cache";
 import { CoverPicker } from "./cover-picker";
+import {
+  configureCoverThumbs,
+  setThumbListener,
+  warmCoverThumbs,
+} from "./cover-thumbs";
 import { downloadAllCovers } from "./download-covers";
 import type { PopupPosition } from "./floating-popup";
 import { setLanguage, t } from "./i18n";
@@ -33,11 +43,20 @@ import { TocManager } from "./toc";
 import { closeTwemojiCache, loadTwemojiCache } from "./twemoji";
 import { HeaderManager } from "./view-header";
 
+/** Espera depois do layout pronto antes de gerar as miniaturas em segundo plano. */
+const WARM_THUMBS_DELAY_MS = 3000;
+
 /** Uma linha da grade de emojis. */
 const MAX_RECENT_EMOJIS = 12;
 
 /** SVGs do Twemoji já baixados, na pasta do plugin (ver twemoji.ts). */
 const TWEMOJI_CACHE_FILE = "twemoji-cache.json";
+
+/** Parte não documentada do `app` que abre a tela de configurações. */
+interface SettingManager {
+  open: () => void;
+  openTabById: (id: string) => void;
+}
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
 
@@ -83,9 +102,32 @@ export default class CoverlyPlugin extends Plugin {
     );
 
     // Antes do primeiro desenho, para as capas já baixadas abrirem do disco.
+    await this.migrateCoverFolder();
     await this.configureCoverCache();
+    // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
+    setThumbListener(() => {
+      this.noteIcons.schedule();
+    });
+
+    // Com o vault já indexado, adianta as miniaturas sem disputar o início.
+    this.app.workspace.onLayoutReady(() => {
+      const timer = window.setTimeout(() => {
+        warmCoverThumbs(this.app);
+      }, WARM_THUMBS_DELAY_MS);
+      this.register(() => {
+        window.clearTimeout(timer);
+      });
+    });
 
     this.addSettingTab(new CoverlySettingTab(this.app, this));
+    // O Obsidian ordena a barra pela ordem de registro, e os plugins do núcleo
+    // põem os botões deles só quando o layout fica pronto: registrar aqui,
+    // no onload, deixava o do Coverly em primeiro.
+    this.app.workspace.onLayoutReady(() => {
+      this.addRibbonIcon("swatch-book", t("command.openSettings"), () => {
+        this.openSettings();
+      });
+    });
     this.registerHeaderSync();
     this.linkPreview.register();
     this.popoverHeaders.register();
@@ -155,6 +197,13 @@ export default class CoverlyPlugin extends Plugin {
       name: t("command.changeNameColor"),
     });
     this.addCommand({
+      callback: () => {
+        this.openSettings();
+      },
+      id: "open-settings",
+      name: t("command.openSettings"),
+    });
+    this.addCommand({
       callback: async () => {
         await downloadAllCovers(this.app);
       },
@@ -163,17 +212,54 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
-  /** Aplica as opções de cópia local das capas (ver cover-cache.ts). */
+  /**
+   * Abre a tela de configurações já na aba do Coverly. `app.setting` não está
+   * na API pública; sem ele (versão diferente do Obsidian), nada acontece.
+   */
+  openSettings(): void {
+    const { setting } = this.app as unknown as { setting?: SettingManager };
+    setting?.open();
+    setting?.openTabById(this.manifest.id);
+  }
+
+  /** Aplica as opções de cópia local das capas (ver cover-cache.ts) e das miniaturas. */
   async configureCoverCache(): Promise<void> {
     await configureCoverCache({
       app: this.app,
       enabled: this.settings.downloadCovers,
       folder: this.settings.coverFolder,
     });
+    await configureCoverThumbs(this.app);
+  }
+
+  /**
+   * A pasta padrão era `.cover`; agora é `.coverly`, que é do plugin inteiro.
+   * Quem ainda usa o nome antigo tem a pasta renomeada uma vez. Se já existe
+   * uma `.coverly`, nada é movido e a configuração fica como estava.
+   */
+  private async migrateCoverFolder(): Promise<void> {
+    if (this.settings.coverFolder !== LEGACY_COVER_FOLDER) {
+      return;
+    }
+    const { adapter } = this.app.vault;
+    try {
+      if (await adapter.exists(DEFAULT_COVER_FOLDER)) {
+        return;
+      }
+      if (await adapter.exists(LEGACY_COVER_FOLDER)) {
+        await adapter.rename(LEGACY_COVER_FOLDER, DEFAULT_COVER_FOLDER);
+      }
+    } catch {
+      // Sem permissão para renomear: segue com a pasta antiga.
+      return;
+    }
+    this.settings.coverFolder = DEFAULT_COVER_FOLDER;
+    await this.saveSettings();
   }
 
   onunload(): void {
     this.picker?.close();
+    setThumbListener(null);
     this.headers.destroy();
     this.noteIcons.destroy();
     this.toc.destroy();
@@ -219,6 +305,12 @@ export default class CoverlyPlugin extends Plugin {
       ...DEFAULT_SETTINGS,
       ...((await this.loadData()) as Partial<CoverlySettings> | null),
     };
+    // A opção "capas no explorador" (liga/desliga) virou uma escolha.
+    const legacy = this.settings as Partial<Record<"treeCovers", boolean>>;
+    if (legacy.treeCovers !== undefined) {
+      this.settings.treeBackgrounds = legacy.treeCovers ? "notes" : "off";
+      Reflect.deleteProperty(legacy, "treeCovers");
+    }
     // Uma paleta que não existe mais (ou valor estranho) volta para a padrão.
     if (!isColorPalette(this.settings.colorPalette)) {
       this.settings.colorPalette = DEFAULT_SETTINGS.colorPalette;
@@ -384,8 +476,13 @@ export default class CoverlyPlugin extends Plugin {
       onRemove: async () => {
         await this.setIcon(sourcePath, null);
       },
+      onTabChange: (tab) => {
+        this.settings.iconTab = tab;
+        void this.saveSettings();
+      },
       recentEmojis: this.settings.recentEmojis,
       sourcePath,
+      tab: this.settings.iconTab,
       twemoji: this.settings.twemoji,
     });
     this.showPicker(picker);

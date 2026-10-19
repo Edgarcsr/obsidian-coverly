@@ -116,6 +116,12 @@ export abstract class TabbedPopover<T extends string> {
   /** Conteúdo da aba ativa, desenhado em `this.body` já vazio. */
   protected abstract renderTab(tab: T): void;
 
+  /** Chamado quando o usuário troca de aba; quem quiser lembrar a escolha sobrescreve. */
+  // oxlint-disable-next-line class-methods-use-this
+  protected onTabChange(_tab: T): void {
+    // Por padrão não faz nada.
+  }
+
   /** "Remover" à direita das abas, quando existe algo para remover. */
   protected abstract hasRemove(): boolean;
 
@@ -139,6 +145,7 @@ export abstract class TabbedPopover<T extends string> {
       button.createSpan({ text: tab.label });
       button.addEventListener("click", () => {
         this.tab = tab.id;
+        this.onTabChange(tab.id);
         this.renderTabs();
         this.renderBody();
       });

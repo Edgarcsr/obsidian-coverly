@@ -2,13 +2,13 @@ import { Notice } from "obsidian";
 import type { App } from "obsidian";
 
 import { asyncListener } from "./async-listener";
-import { saveImageAttachment } from "./attachments";
 import { t } from "./i18n";
+import { renderSavedImages, savePluginImage } from "./plugin-images";
 import { renderVaultImages } from "./vault-images";
 
 export interface UploadTabOptions {
   app: App;
-  /** Nota que recebe o anexo, para a pasta de anexos do Obsidian. */
+  /** Nota que recebe a imagem. */
   sourcePath: string;
   /** Valor atual, para marcar a imagem do vault selecionada. */
   current: string | undefined;
@@ -22,7 +22,10 @@ const errorMessage = (error: unknown): string =>
 /** Mostra um aviso e devolve a notificação, sem efeito colateral solto no chamador. */
 const notify = (message: string): Notice => new Notice(message);
 
-/** Salva a imagem como anexo da nota e a aplica. Também serve para colar (Ctrl+V). */
+/**
+ * Salva a imagem em `.coverly/banners` (separada dos ícones) e a aplica.
+ * Também serve para colar (Ctrl+V).
+ */
 export const uploadImage = async (
   options: UploadTabOptions,
   file: File
@@ -32,11 +35,7 @@ export const uploadImage = async (
     return;
   }
   try {
-    const path = await saveImageAttachment(
-      options.app,
-      file,
-      options.sourcePath
-    );
+    const path = await savePluginImage(options.app, file, "banners");
     await options.pick(path);
   } catch (error) {
     notify(t("notice.saveFailedReason", { reason: errorMessage(error) }));
@@ -94,6 +93,13 @@ export const renderUploadTab = (
     })
   );
 
+  // Fica antes das imagens do vault, mesmo carregando depois (lê o disco).
+  void renderSavedImages(body.createDiv(), {
+    app: options.app,
+    current: options.current,
+    kind: "banners",
+    pick: options.pick,
+  });
   body.createDiv({
     cls: "mdp-picker-section-title",
     text: t("vault.title"),

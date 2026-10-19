@@ -1,10 +1,14 @@
-import { Component, MarkdownRenderer, getLinkpath } from "obsidian";
-import type { App, Events, TFile } from "obsidian";
+import { Component, MarkdownRenderer, getLinkpath, moment } from "obsidian";
+import type { App, Events, TFile, View } from "obsidian";
 
-import { paintCover } from "./header";
+import { coverThumbUrl } from "./cover-thumbs";
+import { paintCover, preloadCover } from "./header";
+import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 import { drawPageIcon } from "./page-icon";
+import { formatSize } from "./storage";
+import { isImageFile } from "./vault-images";
 
 /** Tempo com o mouse parado no link antes do cartão aparecer, como no Notion. */
 const SHOW_DELAY = 450;
@@ -52,6 +56,28 @@ export const resolveHoverFile = (
     );
   return file?.extension === "md" ? file : null;
 };
+
+/**
+ * Nota ou imagem apontada por um `hover-link`. Imagens só pelo caminho exato
+ * (o explorador e os links para imagens mandam o caminho).
+ */
+const resolvePreviewFile = (app: App, info: HoverLinkInfo): TFile | null => {
+  const exact = app.vault.getFileByPath(info.linktext);
+  if (exact && isImageFile(exact)) {
+    return exact;
+  }
+  return resolveHoverFile(app, info);
+};
+
+/** Item de arquivo no explorador (onde o Obsidian mostra a dica com as datas). */
+const EXPLORER_ITEM = ".nav-files-container .nav-file-title[data-path]";
+
+/** "Editada há 2 horas · criada em 12 de out. de 2025", no idioma do Obsidian. */
+const datesLine = (file: TFile): string =>
+  t("linkPreview.dates", {
+    created: moment(file.stat.ctime).format("ll"),
+    modified: moment(file.stat.mtime).fromNow(),
+  });
 
 /** A prévia nativa do Obsidian (plugin "Pré-visualização de página") já está aberta. */
 const nativePreviewOpen = (): boolean =>
@@ -107,6 +133,18 @@ export class LinkPreview {
     const hide = (): void => {
       this.hide();
     };
+    // No explorador, o Obsidian mostra a dica (datas) e dispara o `hover-link`
+    // no mesmo `pointerover`. Com a opção ligada, esse evento é parado antes de
+    // chegar ao explorador e só o `hover-link` é disparado: a dica nem chega a
+    // existir (escondê-la depois deixava um resto piscando ao sair do item).
+    plugin.registerDomEvent(
+      document,
+      "pointerover",
+      (event) => {
+        this.onExplorerPointerover(event);
+      },
+      true
+    );
     plugin.registerDomEvent(document, "mousedown", hide, true);
     plugin.registerDomEvent(document, "keydown", hide, true);
     plugin.registerDomEvent(document, "wheel", hide, {
@@ -119,8 +157,57 @@ export class LinkPreview {
     this.hide();
   }
 
+  private onExplorerPointerover(event: PointerEvent): void {
+    const { app, settings } = this.plugin;
+    if (!(settings.linkPreview && settings.hideFileTooltip)) {
+      return;
+    }
+    const title =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>(EXPLORER_ITEM)
+        : null;
+    const file = title
+      ? app.vault.getFileByPath(title.dataset.path ?? "")
+      : null;
+    if (!(title && file && (file.extension === "md" || isImageFile(file)))) {
+      return;
+    }
+    event.stopPropagation();
+    // Como no Obsidian, só conta a entrada no item, não andar entre os filhos dele.
+    const from = event.relatedTarget;
+    if (from instanceof Node && title.contains(from)) {
+      return;
+    }
+    const view = app.workspace
+      .getLeavesOfType("file-explorer")
+      .find((leaf) => leaf.view.containerEl.contains(title))?.view;
+    // A prévia nativa (Ctrl + mouse) também ouve este evento, então ela continua.
+    const hover: HoverLinkInfo & { hoverParent?: View; source: string } = {
+      event,
+      hoverParent: view,
+      linktext: file.path,
+      source: "file-explorer",
+      sourcePath: "",
+      targetEl: title,
+    };
+    app.workspace.trigger("hover-link", hover);
+  }
+
   private onHover(info: HoverLinkInfo): void {
-    if (!this.plugin.settings.linkPreview || info.targetEl === this.target) {
+    if (info.targetEl === this.target) {
+      return;
+    }
+    const hovered = resolvePreviewFile(this.plugin.app, info);
+    // Quem para o mouse num link costuma abrir a nota: a capa já vai carregando.
+    if (hovered?.extension === "md") {
+      preloadCover(
+        this.plugin.app,
+        dataFromFrontmatter(
+          this.plugin.app.metadataCache.getFileCache(hovered)?.frontmatter
+        ).cover
+      );
+    }
+    if (!this.plugin.settings.linkPreview) {
       return;
     }
     this.hide();
@@ -128,7 +215,7 @@ export class LinkPreview {
       return;
     }
 
-    const file = resolveHoverFile(this.plugin.app, info);
+    const file = hovered;
     if (!file) {
       return;
     }
@@ -150,6 +237,11 @@ export class LinkPreview {
   private async show(file: TFile, target: HTMLElement): Promise<void> {
     if (nativePreviewOpen() || !target.isConnected) {
       this.hide();
+      return;
+    }
+
+    if (isImageFile(file)) {
+      this.showImage(file, target);
       return;
     }
 
@@ -181,6 +273,10 @@ export class LinkPreview {
       });
     }
     card.createDiv({ cls: "mdp-link-card-title", text: file.basename });
+    // No explorador, as datas que a dica do Obsidian mostraria.
+    if (target.closest(EXPLORER_ITEM)) {
+      card.createDiv({ cls: "mdp-link-card-meta", text: datesLine(file) });
+    }
     const body = card.createDiv({
       cls: "mdp-link-card-body markdown-rendered",
     });
@@ -205,6 +301,42 @@ export class LinkPreview {
     if (this.card === card) {
       position(card, target);
     }
+  }
+
+  /** Cartão de uma imagem: a própria imagem, pasta, nome, tamanho e datas. */
+  private showImage(file: TFile, target: HTMLElement): void {
+    const { app } = this.plugin;
+    const card = document.body.createDiv({ cls: "mdp-link-card is-image" });
+    this.card = card;
+
+    const frame = card.createDiv({ cls: "mdp-link-card-image" });
+    // A miniatura (se já existe) aparece enquanto a imagem carrega.
+    const thumb = coverThumbUrl(file.path);
+    if (thumb) {
+      frame.style.backgroundImage = `url("${thumb.replaceAll('"', "%22")}")`;
+    }
+    const image = frame.createEl("img", {
+      attr: { alt: "", src: app.vault.getResourcePath(file) },
+    });
+
+    const folder = file.parent?.isRoot() === false ? file.parent.path : "";
+    if (folder !== "") {
+      card.createDiv({
+        cls: "mdp-link-card-path",
+        text: folder.split("/").join(" / "),
+      });
+    }
+    card.createDiv({ cls: "mdp-link-card-title", text: file.name });
+    const size = card.createDiv({
+      cls: "mdp-link-card-meta",
+      text: formatSize(file.stat.size),
+    });
+    card.createDiv({ cls: "mdp-link-card-meta", text: datesLine(file) });
+    image.addEventListener("load", () => {
+      const dimensions = `${image.naturalWidth} × ${image.naturalHeight}`;
+      size.setText(`${dimensions} · ${formatSize(file.stat.size)}`);
+    });
+    position(card, target);
   }
 
   private hide(): void {

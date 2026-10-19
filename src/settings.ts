@@ -1,16 +1,22 @@
-import type { App, SettingDefinitionItem } from "obsidian";
+import type { App, Setting, SettingDefinitionItem } from "obsidian";
 import { PluginSettingTab } from "obsidian";
 
+import { asyncListener } from "./async-listener";
+import { DEFAULT_COVER_FOLDER } from "./cover-cache";
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
 import type { ColorPalette } from "./page-icon";
+import { clearCoverCache, coverlyUsage, describeUsage } from "./storage";
 
 export type IconPosition = "above" | "inline";
 
 /** Ícone no explorador: no recuo à esquerda ("indent") ou empurrando o nome ("inline"). */
 export type TreeIconPosition = "indent" | "inline";
+
+/** Fundos no explorador: nenhum, só nos arquivos de imagem, só nas notas com capa, ou em ambos. */
+export type TreeBackgrounds = "off" | "images" | "notes" | "both";
 
 export interface CoverlySettings {
   /** Idioma da interface: um fixo ou "auto", que segue o do Obsidian. */
@@ -35,12 +41,16 @@ export interface CoverlySettings {
   iconPosition: IconPosition;
   /** Onde fica o ícone das notas no explorador de arquivos. */
   treeIconPosition: TreeIconPosition;
+  /** Miniaturas como fundo dos itens do explorador (imagens, notas com capa, ambos). */
+  treeBackgrounds: TreeBackgrounds;
   /** Cores dos ícones: as do Notion ou as do Tailwind (a paleta original). */
   colorPalette: ColorPalette;
   /** Última cor usada na aba Ícones, para abrir já com ela. */
   iconColor: string;
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
   askIconColor: boolean;
+  /** Última aba aberta no seletor de ícone, para abrir nela da próxima vez. */
+  iconTab: "emoji" | "icons" | "upload";
   /** Emojis usados por último, do mais recente para o mais antigo. */
   recentEmojis: string[];
   /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */
@@ -55,21 +65,25 @@ export interface CoverlySettings {
   toc: boolean;
   /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
   linkPreview: boolean;
+  /** Esconde a dica do Obsidian (datas) nas notas do explorador, já que o cartão as mostra. */
+  hideFileTooltip: boolean;
 }
 
 export const DEFAULT_SETTINGS: CoverlySettings = {
-  askIconColor: false,
+  askIconColor: true,
   colorPalette: "tailwind",
   coverAnimation: false,
   coverFade: 0,
-  coverFolder: ".cover",
+  coverFolder: DEFAULT_COVER_FOLDER,
   coverHeight: 240,
   coverRadius: 0,
   coverShade: 35,
   customFonts: false,
   downloadCovers: false,
+  hideFileTooltip: true,
   iconColor: "default",
   iconPosition: "above",
+  iconTab: "emoji",
   language: "auto",
   linkPreview: true,
   nameColors: false,
@@ -77,6 +91,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   noteBackgrounds: false,
   recentEmojis: [],
   toc: true,
+  treeBackgrounds: "off",
   treeIconPosition: "indent",
   twemoji: true,
   unsplashKey: "",
@@ -96,9 +111,12 @@ type ControlKey =
   | "colorPalette"
   | "iconPosition"
   | "treeIconPosition"
+  | "treeBackgrounds"
   | "twemoji"
   | "toc"
   | "linkPreview"
+  | "hideFileTooltip"
+  | "askIconColor"
   | "nameColors"
   | "noteAccents"
   | "noteBackgrounds";
@@ -159,6 +177,19 @@ export class CoverlySettingTab extends PluginSettingTab {
             control: { key: "coverAnimation", type: "toggle" },
           },
           {
+            ...named("treeBackgrounds"),
+            control: {
+              key: "treeBackgrounds",
+              options: {
+                both: t("settings.treeBackgrounds.both"),
+                images: t("settings.treeBackgrounds.images"),
+                notes: t("settings.treeBackgrounds.notes"),
+                off: t("settings.treeBackgrounds.off"),
+              },
+              type: "dropdown",
+            },
+          },
+          {
             ...named("downloadCovers"),
             control: { key: "downloadCovers", type: "toggle" },
           },
@@ -166,8 +197,14 @@ export class CoverlySettingTab extends PluginSettingTab {
             ...named("coverFolder"),
             control: {
               key: "coverFolder",
-              placeholder: ".cover",
+              placeholder: DEFAULT_COVER_FOLDER,
               type: "text",
+            },
+          },
+          {
+            name: t("settings.storage.name"),
+            render: (setting) => {
+              this.renderStorage(setting);
             },
           },
         ],
@@ -209,6 +246,10 @@ export class CoverlySettingTab extends PluginSettingTab {
               type: "dropdown",
             },
           },
+          {
+            ...named("askIconColor"),
+            control: { key: "askIconColor", type: "toggle" },
+          },
           { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
         ],
         type: "group",
@@ -243,10 +284,35 @@ export class CoverlySettingTab extends PluginSettingTab {
             ...named("linkPreview"),
             control: { key: "linkPreview", type: "toggle" },
           },
+          {
+            ...named("hideFileTooltip"),
+            control: { key: "hideFileTooltip", type: "toggle" },
+          },
         ],
         type: "group",
       },
     ];
+  }
+
+  /** Espaço usado pela pasta do Coverly e o botão de limpar o que se refaz. */
+  private renderStorage(setting: Setting): void {
+    const { app } = this.plugin;
+    const refresh = async (): Promise<void> => {
+      setting.setDesc(describeUsage(await coverlyUsage(app)));
+    };
+    setting.setDesc(t("settings.storage.loading"));
+    setting.addButton((button) => {
+      button.setButtonText(t("settings.storage.clear")).onClick(
+        asyncListener(async () => {
+          button.setDisabled(true);
+          await clearCoverCache(app);
+          await this.plugin.configureCoverCache();
+          await refresh();
+          button.setDisabled(false);
+        })
+      );
+    });
+    void refresh();
   }
 
   getControlValue(key: string): unknown {
@@ -273,6 +339,9 @@ export class CoverlySettingTab extends PluginSettingTab {
     } else if (key === "iconPosition") {
       settings.iconPosition = value as IconPosition;
       plugin.refreshHeaders();
+    } else if (key === "treeBackgrounds") {
+      settings.treeBackgrounds = value as TreeBackgrounds;
+      plugin.refreshHeaders();
     } else if (key === "treeIconPosition") {
       settings.treeIconPosition = value as TreeIconPosition;
       plugin.applyCoverStyle();
@@ -282,7 +351,12 @@ export class CoverlySettingTab extends PluginSettingTab {
     } else if (key === "coverFolder") {
       settings.coverFolder = String(value).trim();
       await plugin.configureCoverCache();
-    } else if (key === "linkPreview" || key === "coverAnimation") {
+    } else if (
+      key === "linkPreview" ||
+      key === "coverAnimation" ||
+      key === "hideFileTooltip" ||
+      key === "askIconColor"
+    ) {
       // Vale a partir da próxima nota aberta; não precisa redesenhar.
       settings[key] = value as boolean;
     } else if (

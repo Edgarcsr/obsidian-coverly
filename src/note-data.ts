@@ -2,6 +2,7 @@ import type { App } from "obsidian";
 
 import { cacheCoverInBackground, cachedCoverUrl } from "./cover-cache";
 import { GRADIENTS } from "./gallery";
+import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
 
 /**
  * Nomes das propriedades gravadas no frontmatter da nota. O prefixo `coverly-`
@@ -179,6 +180,10 @@ export const resolveCoverSource = (
   const file = app.vault.getFileByPath(value);
   if (file) {
     return { kind: "image", url: app.vault.getResourcePath(file) };
+  }
+  // Imagem enviada pelo Coverly: fica na pasta oculta, fora do índice do vault.
+  if (isPluginImagePath(value)) {
+    return { kind: "image", url: pluginImageUrl(app, value) };
   }
 
   // Arquivo removido do vault: cai no gradiente padrão em vez de quebrar a nota.

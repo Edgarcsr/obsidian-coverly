@@ -85,6 +85,12 @@
   animation: mdp-fade-in 0.45s ease both;
 }
 
+/* Segura a animação de entrada até a foto (ou a miniatura) estar pronta. */
+.mdp-cover.is-pending,
+.mdp-cover.is-pending .mdp-cover-image {
+  animation-play-state: paused;
+}
+
 .mdp-cover-image {
   position: absolute;
   inset: 0;
@@ -99,6 +105,33 @@
     #000 calc(100% - var(--mdp-cover-fade, 0%)),
     transparent
   );
+}
+
+/*
+ * Miniatura borrada por cima da capa enquanto a foto carrega (ver paintCover).
+ * Herda tamanho e posição, então cobre exatamente a mesma área, e se dissolve
+ * quando a foto fica pronta.
+ */
+.mdp-has-thumb::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background-image: var(--mdp-cover-thumb);
+  background-size: inherit;
+  background-position: inherit;
+  background-repeat: no-repeat;
+  filter: blur(3px);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.mdp-has-thumb.is-loaded::before {
+  opacity: 0;
+}
+
+.mdp-link-card-cover.mdp-has-thumb {
+  position: relative;
+  overflow: hidden;
 }
 
 /*
@@ -526,6 +559,15 @@
   gap: 8px;
 }
 
+/*
+ * Grades de imagens do vault e do Coverly: o contorno do ladrilho selecionado
+ * (2px + 2px de distância) passa da grade, e o corpo do seletor, que rola,
+ * cortava a borda da primeira fileira e das pontas. A folga deixa o contorno inteiro.
+ */
+.mdp-picker-grid.is-framed {
+  padding: 8px 4px 4px;
+}
+
 .mdp-picker .mdp-picker-tile {
   height: 64px;
   padding: 0;
@@ -543,6 +585,20 @@
   height: 100%;
   object-fit: cover;
   border-radius: inherit;
+}
+
+/* Ícones salvos: inteiros e centralizados, não cortados como fotos. */
+.mdp-picker .mdp-picker-tile.is-icon {
+  background: var(--background-modifier-hover);
+}
+
+.mdp-picker .mdp-picker-tile.is-icon img {
+  padding: 10px;
+  object-fit: contain;
+}
+
+.mdp-picker-saved {
+  margin-bottom: 12px;
 }
 
 .mdp-picker .mdp-picker-tile:hover {
@@ -1177,6 +1233,45 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   margin-inline-end: 6px;
 }
 
+/*
+ * Opção "Capas no explorador": a miniatura da capa (ou o degradê) entra pela
+ * direita e some para a esquerda, deixando o nome legível e o realce de
+ * hover/seleção do tema visível. Fica num ::before atrás do conteúdo.
+ */
+.nav-file-title.mdp-tree-cover {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.nav-file-title.mdp-tree-cover::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: var(--mdp-tree-cover) center / cover no-repeat;
+  opacity: 0.45;
+  mask-image: linear-gradient(to left, #000 15%, transparent 85%);
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+/* Na primeira vez que o fundo aparece nesta sessão, ele entra esmaecendo. */
+.nav-file-title.mdp-tree-cover.is-fresh::before {
+  animation: mdp-tree-cover-in 0.6s ease backwards;
+}
+
+@keyframes mdp-tree-cover-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.nav-file-title.mdp-tree-cover:hover::before,
+.nav-file-title.mdp-tree-cover.is-active::before {
+  opacity: 0.7;
+}
+
 /* Opção "no começo do nome": o ícone fica no fluxo e empurra o texto. */
 .mdp-tree-icon-inline .nav-file-title .mdp-inline-icon {
   margin-inline-start: 2.5px;
@@ -1481,6 +1576,39 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 }
 
 /* A capa vai de borda a borda, compensando o padding do cartão */
+/* Linha discreta logo abaixo do título: datas, tamanho da imagem. */
+.mdp-link-card-meta {
+  margin: -10px 0 12px;
+  overflow: hidden;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.4;
+  color: var(--text-faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mdp-link-card-meta + .mdp-link-card-meta {
+  margin-top: -10px;
+}
+
+/* Cartão de imagem: a imagem no topo, de borda a borda, e o texto embaixo. */
+.mdp-link-card.is-image {
+  padding-bottom: 2px;
+}
+
+.mdp-link-card-image {
+  height: 150px;
+  margin: -16px -18px 12px;
+  background: var(--background-modifier-hover) center / cover no-repeat;
+}
+
+.mdp-link-card-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .mdp-link-card-cover {
   height: 72px;
   margin: -16px -18px 14px;

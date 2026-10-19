@@ -5,7 +5,7 @@ import type { App } from "obsidian";
  * Cópia local das capas que vêm da internet (Unsplash, MET, links colados).
  *
  * A nota continua guardando a URL; o arquivo baixado fica numa pasta do vault
- * (por padrão `.cover`, que o Obsidian não indexa nem mostra no explorador) com
+ * (por padrão `.coverly`, que o Obsidian não indexa nem mostra no explorador) com
  * um nome derivado da URL. Assim a capa abre do disco, sem esperar a rede, e a
  * nota continua funcionando em outro vault, onde a URL ainda vale.
  */
@@ -18,6 +18,12 @@ const EXTENSIONS: Record<string, string> = {
   "image/svg+xml": "svg",
   "image/webp": "webp",
 };
+
+/** Pasta padrão do plugin no vault: capas baixadas e, em `thumbs/`, as miniaturas. */
+export const DEFAULT_COVER_FOLDER = ".coverly";
+
+/** Nome antigo da pasta, renomeado para o atual na primeira carga (ver main.ts). */
+export const LEGACY_COVER_FOLDER = ".cover";
 
 interface CacheState {
   app: App | null;
@@ -32,7 +38,7 @@ const state: CacheState = {
   app: null,
   enabled: false,
   files: new Map(),
-  folder: ".cover",
+  folder: DEFAULT_COVER_FOLDER,
   pending: new Map(),
 };
 
@@ -44,7 +50,7 @@ const MOD_B = 2_147_483_629;
  * Hash curto e estável da URL, para nomear o arquivo: dois hashes polinomiais
  * com módulos diferentes, juntos (~62 bits, colisão improvável na prática).
  */
-const hashUrl = (url: string): string => {
+export const hashUrl = (url: string): string => {
   let a = 7;
   let b = 11;
   for (const char of url) {
@@ -57,9 +63,13 @@ const hashUrl = (url: string): string => {
 
 const stem = (name: string): string => name.replace(/\.[^.]+$/u, "");
 
+/** Caminho da cópia baixada → URL de recurso (ver `cachedCoverUrl`). */
+const resourceUrls = new Map<string, string>();
+
 /** Lê a pasta e monta o índice dos arquivos já baixados. */
 const scan = async (): Promise<void> => {
   state.files.clear();
+  resourceUrls.clear();
   const { app, folder } = state;
   if (!app || !(await app.vault.adapter.exists(folder))) {
     return;
@@ -78,19 +88,35 @@ export const configureCoverCache = async (options: {
 }): Promise<void> => {
   state.app = options.app;
   state.enabled = options.enabled;
-  state.folder = normalizePath(options.folder.trim() || ".cover");
+  state.folder = normalizePath(options.folder.trim() || DEFAULT_COVER_FOLDER);
   await scan();
 };
 
 export const isCoverCacheEnabled = (): boolean => state.enabled;
 
+/** Pasta atual das capas baixadas, já normalizada. */
+export const coverFolder = (): string => state.folder;
+
+/** Caminho no vault da cópia baixada, ou `null` se ela não existe (ou o recurso está desligado). */
+export const cachedCoverPath = (url: string): string | null => {
+  const name = state.enabled ? state.files.get(hashUrl(url)) : undefined;
+  return name ? `${state.folder}/${name}` : null;
+};
+
 /** URL local da cópia baixada, ou `null` se ela não existe (ou o recurso está desligado). */
 export const cachedCoverUrl = (url: string): string | null => {
-  const { app, enabled, files, folder } = state;
-  const name = enabled ? files.get(hashUrl(url)) : undefined;
-  return app && name
-    ? app.vault.adapter.getResourcePath(`${folder}/${name}`)
-    : null;
+  const path = cachedCoverPath(url);
+  if (!(state.app && path)) {
+    return null;
+  }
+  // Fora do índice do vault, cada chamada traria um carimbo de tempo novo (e
+  // a imagem seria recarregada); a primeira URL fica guardada.
+  let local = resourceUrls.get(path);
+  if (!local) {
+    local = state.app.vault.adapter.getResourcePath(path);
+    resourceUrls.set(path, local);
+  }
+  return local;
 };
 
 const download = async (url: string, key: string): Promise<boolean> => {
