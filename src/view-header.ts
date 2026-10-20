@@ -260,7 +260,59 @@ const watchTitles = (view: MarkdownView, state: ViewState): void => {
  * padding e a largura de leitura do tema. A conta parte da margem atual, então
  * chamadas repetidas convergem sem precisar zerar o estilo (evita tremer na rolagem).
  */
+/**
+ * Onde começa o texto da nota: o título inline, ou (sem ele) a primeira linha
+ * do conteúdo. É a referência para alinhar o ícone e os botões.
+ */
+const contentStart = (header: HTMLElement): HTMLElement | null => {
+  const title = header.parentElement?.querySelector<HTMLElement>(
+    ":scope > .inline-title"
+  );
+  if (title) {
+    return title;
+  }
+  const source = header.closest(".markdown-source-view");
+  if (source) {
+    return source.querySelector<HTMLElement>(".cm-content");
+  }
+  return (
+    header
+      .closest(".markdown-preview-sizer")
+      ?.querySelector<HTMLElement>(
+        ":scope > :not(.markdown-preview-pusher, .mod-header, .mdp-header)"
+      ) ?? null
+  );
+};
+
+/**
+ * Alinha o ícone e os botões com o texto da nota. No tema padrão eles já
+ * coincidem; temas como o Minimal limitam a largura de cada linha do texto
+ * (e do título), mas não do contêiner onde o cabeçalho entra, e o ícone
+ * ficava colado na borda esquerda, longe do título.
+ */
+const alignToContent = (header: HTMLElement): void => {
+  const target = contentStart(header);
+  if (!target || target.clientWidth === 0) {
+    return;
+  }
+  const box = header.getBoundingClientRect();
+  const text = target.getBoundingClientRect();
+  const start = Math.max(0, text.left - box.left);
+  const width = Math.min(box.width - start, text.width);
+  const current = pixels(header.style.getPropertyValue("--mdp-content-start"));
+  if (Math.abs(start - current) > 0.5) {
+    header.style.setProperty("--mdp-content-start", `${start}px`);
+  }
+  const maxWidth = start > 0.5 ? `${width}px` : "";
+  if (header.style.getPropertyValue("--mdp-content-width") !== maxWidth) {
+    header.style.setProperty("--mdp-content-width", maxWidth);
+  }
+};
+
 export const bleed = (header: HTMLElement, scroller: HTMLElement): void => {
+  if (header.isConnected && scroller.clientWidth > 0) {
+    alignToContent(header);
+  }
   const cover = header.querySelector<HTMLElement>(":scope > .mdp-cover");
   // Fora do documento (ex.: `.mod-header` desmontado) não há o que medir.
   if (!cover || !header.isConnected || scroller.clientWidth === 0) {

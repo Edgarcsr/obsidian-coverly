@@ -300,6 +300,9 @@
   z-index: 1;
   display: flex;
   align-items: flex-end;
+  /* Alinhado ao texto da nota em temas que limitam a largura das linhas (bleed() em view-header.ts) */
+  max-width: var(--mdp-content-width, none);
+  margin-inline-start: var(--mdp-content-start, 0px);
 }
 
 .has-cover.has-icon .mdp-icon-row {
@@ -353,7 +356,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  margin-left: -6px;
+  max-width: var(--mdp-content-width, none);
+  margin-left: calc(var(--mdp-content-start, 0px) - 6px);
   padding: 4px 0;
   opacity: 0;
   transition: opacity 0.2s ease;
