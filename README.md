@@ -44,6 +44,14 @@ Coverly works offline. It only reaches the network for these features:
 
 No note content, file names or personal data are sent anywhere.
 
+## Vault and clipboard access
+
+Everything below stays on your device:
+
+- **File list**: the cover and icon pickers list the images in your vault (**From your vault**). Coverly also reads the frontmatter of your notes from Obsidian's cache to prepare cover thumbnails, to count which notes use an image before you delete it, and for **Download all covers used in the vault**.
+- **Clipboard**: images and links are read only when you paste them with Ctrl/Cmd+V into the cover or icon picker. The clipboard is written only when you select **Copy JSON** in the performance report.
+- **Performance monitor** (off by default, **Settings → Coverly → Developer**): measures timings in memory only. Nothing is saved or sent.
+
 ## Installation
 
 Until Coverly is listed in the community catalog, install it manually:

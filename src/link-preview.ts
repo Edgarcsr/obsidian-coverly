@@ -2,7 +2,6 @@ import {
   Component,
   MarkdownRenderer,
   getLinkpath,
-  moment,
   setIcon,
   setTooltip,
 } from "obsidian";
@@ -107,13 +106,13 @@ const renderDates = (card: HTMLElement, file: TFile): void => {
     row,
     "pencil",
     t("linkPreview.modified"),
-    moment(file.stat.mtime).fromNow()
+    window.moment(file.stat.mtime).fromNow()
   );
   dateItem(
     row,
     "calendar",
     t("linkPreview.created"),
-    moment(file.stat.ctime).format("ll")
+    window.moment(file.stat.ctime).format("ll")
   );
 };
 

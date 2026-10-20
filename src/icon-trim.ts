@@ -87,7 +87,7 @@ const contentBox = (image: HTMLImageElement): Box | null => {
   const scale = Math.min(1, SCAN_SIZE / Math.max(image.width, image.height));
   const width = Math.max(1, Math.round(image.width * scale));
   const height = Math.max(1, Math.round(image.height * scale));
-  const canvas = document.createElement("canvas");
+  const canvas = createEl("canvas");
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -148,7 +148,7 @@ const crop = async (
   const size = Math.min(OUTPUT_SIZE, Math.round(side));
   const edge = side;
   const ratio = size / edge;
-  const canvas = document.createElement("canvas");
+  const canvas = createEl("canvas");
   canvas.width = size;
   canvas.height = size;
   const context = canvas.getContext("2d");
