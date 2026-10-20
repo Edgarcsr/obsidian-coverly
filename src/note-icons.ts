@@ -1,17 +1,27 @@
 import { MarkdownView } from "obsidian";
+import type { TFile } from "obsidian";
 
 import { coverThumbUrl } from "./cover-thumbs";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter, isHexColor } from "./note-data";
 import type { CoverData } from "./note-data";
 import { drawPageIcon, iconColorCss } from "./page-icon";
+import { measure } from "./perf";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
 import { isImageFile } from "./vault-images";
+
+/** Arquivo e dados lidos uma vez por passada, por caminho. */
+interface DecorPass {
+  files: Map<string, TFile | null>;
+  data: Map<string, CoverData | null>;
+}
 
 const ICON_CLASS = "mdp-inline-icon";
 const NAME_CLASS = "mdp-name-colored";
 const TREE_COVER_CLASS = "mdp-tree-cover";
 const TREE_COVER_VAR = "--mdp-tree-cover";
+/** Espaçamento mínimo entre as passadas completas do explorador. */
+const SWEEP_DELAY_MS = 180;
 
 /** Camada CSS do fundo: só fotos, pela miniatura; degradês e cores ficam de fora. */
 const treeCoverLayer = (cover: string | undefined): string | null => {
@@ -52,6 +62,8 @@ export class NoteIconDecorator {
   /** Títulos das abas com ícone, para limpar ao descarregar o plugin. */
   private readonly titles = new Set<HTMLElement>();
   private frame: number | null = null;
+  private sweepTimer: number | null = null;
+  private pass: DecorPass | null = null;
   /** Fundos (item + imagem) que já apareceram, para animar só a primeira vez. */
   private readonly shownBackgrounds = new Set<string>();
 
@@ -70,19 +82,14 @@ export class NoteIconDecorator {
     });
   }
 
-  /** Desenha já, cancelando a passada agendada para o próximo frame. */
-  flush(): void {
-    if (this.frame !== null) {
-      window.cancelAnimationFrame(this.frame);
-      this.frame = null;
-    }
-    this.decorateAll();
-  }
-
   destroy(): void {
     if (this.frame !== null) {
       window.cancelAnimationFrame(this.frame);
       this.frame = null;
+    }
+    if (this.sweepTimer !== null) {
+      window.clearTimeout(this.sweepTimer);
+      this.sweepTimer = null;
     }
     for (const observer of this.observers.values()) {
       observer.disconnect();
@@ -108,25 +115,28 @@ export class NoteIconDecorator {
   }
 
   private decorateAll(): void {
+    measure("explorer.decorateAll", () => {
+      this.withPass(() => this.decorateAllInPass());
+    });
+  }
+
+  /** Observers ligados (explorador e abas), para o relatório de desempenho. */
+  observerCount(): number {
+    return this.observers.size;
+  }
+
+  private decorateAllInPass(): void {
     const { workspace } = this.plugin.app;
     const alive = new Set<HTMLElement>();
 
     for (const leaf of workspace.getLeavesOfType("file-explorer")) {
       const root = leaf.view.containerEl;
       alive.add(root);
-      this.observe(root);
+      this.observe(root, true);
       for (const title of root.querySelectorAll<HTMLElement>(
         ".nav-file-title[data-path]"
       )) {
-        const content = title.querySelector<HTMLElement>(
-          ":scope > .nav-file-title-content"
-        );
-        if (content) {
-          const path = title.dataset.path ?? "";
-          this.place(title, content, path);
-          this.paintName(content, path);
-          this.paintTreeCover(title, path);
-        }
+        this.decorateTitle(title);
       }
     }
 
@@ -142,7 +152,7 @@ export class NoteIconDecorator {
         continue;
       }
       alive.add(container);
-      this.observe(container);
+      this.observe(container, false);
       this.titles.add(title);
       paintTitleIcon(
         this.plugin.app,
@@ -166,30 +176,123 @@ export class NoteIconDecorator {
     }
   }
 
-  private observe(el: HTMLElement): void {
+  private observe(el: HTMLElement, delayedSweep: boolean): void {
     if (this.observers.has(el)) {
       return;
     }
-    // Na mesma hora, não no próximo frame: o explorador refaz linhas ao clicar
-    // e rolar, e esperar um frame deixava a linha nova piscar sem fundo/ícone.
-    // Cada passada só mexe no DOM se algo mudou, então isto não entra em laço.
-    const observer = new MutationObserver(() => {
-      this.flush();
+    // As linhas novas são decoradas na mesma hora, ainda antes do frame: o
+    // explorador refaz linhas ao clicar e rolar, e esperar deixava a linha
+    // piscar sem fundo/ícone. Só o que foi adicionado é visitado aqui; a
+    // passada completa fica espaçada. No cabeçalho da nota ela continua no
+    // próximo frame, para o ícone não sumir.
+    const observer = new MutationObserver((records) => {
+      this.decorateAdded(records);
+      if (delayedSweep) {
+        this.scheduleSweep();
+      } else {
+        this.schedule();
+      }
     });
     observer.observe(el, { childList: true, subtree: true });
     this.observers.set(el, observer);
   }
 
-  /** Dados do frontmatter da nota, se ela existir. */
-  private dataFor(path: string): CoverData | null {
-    const { app } = this.plugin;
-    const file = path ? app.vault.getFileByPath(path) : null;
-    if (!file) {
-      return null;
+  private scheduleSweep(): void {
+    if (this.sweepTimer !== null) {
+      return;
     }
-    return dataFromFrontmatter(
-      app.metadataCache.getFileCache(file)?.frontmatter
+    this.sweepTimer = window.setTimeout(() => {
+      this.sweepTimer = null;
+      this.schedule();
+    }, SWEEP_DELAY_MS);
+  }
+
+  /** Decora só as linhas que acabaram de entrar no DOM. */
+  private decorateAdded(records: MutationRecord[]): void {
+    if (records.every((record) => record.addedNodes.length === 0)) {
+      return;
+    }
+    measure("explorer.decorateAdded", () => {
+      this.withPass(() => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node.instanceOf(HTMLElement)) {
+              this.decorateAddedNode(node);
+            }
+          }
+        }
+      });
+    });
+  }
+
+  private decorateAddedNode(node: HTMLElement): void {
+    // O próprio ícone inserido por esta passada não pede outra.
+    if (node.hasClass(ICON_CLASS)) {
+      return;
+    }
+    if (node.matches(".nav-file-title[data-path]")) {
+      this.decorateTitle(node);
+      return;
+    }
+    const parent = node.closest<HTMLElement>(".nav-file-title[data-path]");
+    if (parent) {
+      this.decorateTitle(parent);
+      return;
+    }
+    for (const title of node.querySelectorAll<HTMLElement>(
+      ".nav-file-title[data-path]"
+    )) {
+      this.decorateTitle(title);
+    }
+  }
+
+  private decorateTitle(title: HTMLElement): void {
+    const content = title.querySelector<HTMLElement>(
+      ":scope > .nav-file-title-content"
     );
+    if (!content) {
+      return;
+    }
+    const path = title.dataset.path ?? "";
+    this.place(title, content, path);
+    this.paintName(content, path);
+    this.paintTreeCover(title, path);
+  }
+
+  private withPass<T>(fn: () => T): T {
+    const previous = this.pass;
+    this.pass = { data: new Map(), files: new Map() };
+    try {
+      return fn();
+    } finally {
+      this.pass = previous;
+    }
+  }
+
+  /** Arquivo da nota, se ela existir. Guardado durante a passada. */
+  private fileFor(path: string): TFile | null {
+    const cache = this.pass?.files;
+    if (cache?.has(path)) {
+      return cache.get(path) ?? null;
+    }
+    const file = path ? this.plugin.app.vault.getFileByPath(path) : null;
+    cache?.set(path, file);
+    return file;
+  }
+
+  /** Dados do frontmatter da nota, se ela existir. Guardados durante a passada. */
+  private dataFor(path: string): CoverData | null {
+    const cache = this.pass?.data;
+    if (cache?.has(path)) {
+      return cache.get(path) ?? null;
+    }
+    const { app } = this.plugin;
+    const file = this.fileFor(path);
+    const data = file
+      ? dataFromFrontmatter(app.metadataCache.getFileCache(file)?.frontmatter)
+      : null;
+    cache?.set(path, data);
+    return data;
   }
 
   /** Ícone gravado no frontmatter da nota, se houver. */
@@ -235,8 +338,11 @@ export class NoteIconDecorator {
   /** Imagem que vai no fundo do item: a própria imagem, ou a capa da nota. */
   private treeBackgroundFor(path: string): string | undefined {
     const mode = this.plugin.settings.treeBackgrounds;
-    const file = path ? this.plugin.app.vault.getFileByPath(path) : null;
-    if (mode === "off" || !file) {
+    if (mode === "off" || !path) {
+      return undefined;
+    }
+    const file = this.fileFor(path);
+    if (!file) {
       return undefined;
     }
     if (isImageFile(file)) {
@@ -258,8 +364,10 @@ export class NoteIconDecorator {
       return;
     }
 
-    // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${this.plugin.settings.twemoji}\n${value}`;
+    // O estilo do emoji e o corte das margens entram na chave para redesenhar
+    // quando a opção muda.
+    const { iconTrim, twemoji } = this.plugin.settings;
+    const key = `${twemoji}\n${iconTrim}\n${value}`;
     const placed =
       existing?.dataset.key === key && existing.nextElementSibling === before;
     if (placed) {

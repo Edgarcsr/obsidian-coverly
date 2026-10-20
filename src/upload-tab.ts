@@ -3,6 +3,7 @@ import type { App } from "obsidian";
 
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
+import { imageUsage, releaseImage } from "./image-usage";
 import { renderSavedImages, savePluginImage } from "./plugin-images";
 import { renderVaultImages } from "./vault-images";
 
@@ -99,6 +100,8 @@ export const renderUploadTab = (
     current: options.current,
     kind: "banners",
     pick: options.pick,
+    release: (path) => releaseImage(options.app, path),
+    usage: (path) => imageUsage(options.app, path),
   });
   body.createDiv({
     cls: "mdp-picker-section-title",

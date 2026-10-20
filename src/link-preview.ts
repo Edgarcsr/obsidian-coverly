@@ -1,4 +1,11 @@
-import { Component, MarkdownRenderer, getLinkpath, moment } from "obsidian";
+import {
+  Component,
+  MarkdownRenderer,
+  getLinkpath,
+  moment,
+  setIcon,
+  setTooltip,
+} from "obsidian";
 import type { App, Events, TFile, View } from "obsidian";
 
 import { coverThumbUrl } from "./cover-thumbs";
@@ -7,6 +14,7 @@ import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter } from "./note-data";
 import { drawPageIcon } from "./page-icon";
+import { measureAsync } from "./perf";
 import { formatSize } from "./storage";
 import { isImageFile } from "./vault-images";
 
@@ -72,12 +80,42 @@ const resolvePreviewFile = (app: App, info: HoverLinkInfo): TFile | null => {
 /** Item de arquivo no explorador (onde o Obsidian mostra a dica com as datas). */
 const EXPLORER_ITEM = ".nav-files-container .nav-file-title[data-path]";
 
-/** "Editada há 2 horas · criada em 12 de out. de 2025", no idioma do Obsidian. */
-const datesLine = (file: TFile): string =>
-  t("linkPreview.dates", {
-    created: moment(file.stat.ctime).format("ll"),
-    modified: moment(file.stat.mtime).fromNow(),
+/** Uma data com ícone; o rótulo ("Editada", "Criada") fica na dica. */
+const dateItem = (
+  parent: HTMLElement,
+  icon: string,
+  label: string,
+  text: string
+): void => {
+  const item = parent.createSpan({
+    attr: { "aria-label": `${label}: ${text}` },
+    cls: "mdp-link-card-date",
   });
+  setIcon(item.createSpan({ cls: "mdp-link-card-date-icon" }), icon);
+  item.createSpan({ text });
+  setTooltip(item, label);
+};
+
+/**
+ * "✎ há 2 horas  📅 12 de out. de 2025", no idioma do Obsidian. Com ícones no
+ * lugar de "Editada"/"Criada", as duas datas cabem numa linha; se ainda não
+ * couberem, a segunda desce inteira em vez de ser cortada.
+ */
+const renderDates = (card: HTMLElement, file: TFile): void => {
+  const row = card.createDiv({ cls: "mdp-link-card-meta mdp-link-card-dates" });
+  dateItem(
+    row,
+    "pencil",
+    t("linkPreview.modified"),
+    moment(file.stat.mtime).fromNow()
+  );
+  dateItem(
+    row,
+    "calendar",
+    t("linkPreview.created"),
+    moment(file.stat.ctime).format("ll")
+  );
+};
 
 /** A prévia nativa do Obsidian (plugin "Pré-visualização de página") já está aberta. */
 const nativePreviewOpen = (): boolean =>
@@ -226,7 +264,7 @@ export class LinkPreview {
     target.addEventListener("mouseleave", this.onLeave);
     this.timer = window.setTimeout(() => {
       this.timer = null;
-      void this.show(file, target);
+      void measureAsync("linkPreview.show", () => this.show(file, target));
     }, SHOW_DELAY);
   }
 
@@ -255,7 +293,15 @@ export class LinkPreview {
     // Capa e ícone só quando a nota tem; nada é posto no lugar.
     if (data.cover) {
       card.addClass("has-cover");
-      paintCover(app, card.createDiv({ cls: "mdp-link-card-cover" }), data);
+      // O cartão é pequeno: a miniatura basta e evita decodificar a foto
+      // original (ou gerar a versão de 2560px) só por causa de um hover.
+      paintCover(
+        app,
+        card.createDiv({ cls: "mdp-link-card-cover" }),
+        data,
+        undefined,
+        true
+      );
     }
     if (data.icon) {
       drawPageIcon(
@@ -275,7 +321,7 @@ export class LinkPreview {
     card.createDiv({ cls: "mdp-link-card-title", text: file.basename });
     // No explorador, as datas que a dica do Obsidian mostraria.
     if (target.closest(EXPLORER_ITEM)) {
-      card.createDiv({ cls: "mdp-link-card-meta", text: datesLine(file) });
+      renderDates(card, file);
     }
     const body = card.createDiv({
       cls: "mdp-link-card-body markdown-rendered",
@@ -331,7 +377,7 @@ export class LinkPreview {
       cls: "mdp-link-card-meta",
       text: formatSize(file.stat.size),
     });
-    card.createDiv({ cls: "mdp-link-card-meta", text: datesLine(file) });
+    renderDates(card, file);
     image.addEventListener("load", () => {
       const dimensions = `${image.naturalWidth} × ${image.naturalHeight}`;
       size.setText(`${dimensions} · ${formatSize(file.stat.size)}`);

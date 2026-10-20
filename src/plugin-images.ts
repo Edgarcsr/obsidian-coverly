@@ -1,9 +1,11 @@
-import { normalizePath, setTooltip } from "obsidian";
+import { normalizePath, setIcon, setTooltip } from "obsidian";
 import type { App } from "obsidian";
 
 import { asyncListener } from "./async-listener";
+import { confirmDelete } from "./confirm-delete";
 import { coverFolder } from "./cover-cache";
 import { t } from "./i18n";
+import { trimIconImage } from "./icon-trim";
 
 /**
  * Imagens enviadas pelo Coverly, separadas por uso dentro da pasta do plugin
@@ -108,12 +110,55 @@ export const listPluginImages = async (
   return images.toSorted((a, b) => b.mtime - a.mtime);
 };
 
+/** Apaga a imagem da pasta do Coverly. As notas que a citam não são alteradas. */
+export const deletePluginImage = async (
+  app: App,
+  path: string
+): Promise<void> => {
+  await app.vault.adapter.remove(path);
+  urls.delete(path);
+};
+
+/**
+ * Lixeira no canto do ladrilho. Pede confirmação por cima do seletor antes de
+ * excluir (dizendo em quantas notas a imagem é usada).
+ */
+const addDeleteButton = (
+  item: HTMLElement,
+  context: SavedImagesContext,
+  image: PluginImage,
+  onDeleted: () => void
+): void => {
+  const button = item.createEl("button", {
+    attr: { "aria-label": t("saved.delete") },
+    cls: "mdp-picker-delete",
+  });
+  setIcon(button, "trash-2");
+  setTooltip(button, t("saved.delete"));
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    confirmDelete(item.closest<HTMLElement>(".mdp-picker") ?? document.body, {
+      name: image.name,
+      onConfirm: async () => {
+        await context.release(image.path);
+        await deletePluginImage(context.app, image.path);
+        onDeleted();
+      },
+      usage: context.usage(image.path),
+    });
+  });
+};
+
 export interface SavedImagesContext {
   app: App;
   kind: ImageKind;
   /** Valor atual da nota, para marcar a imagem selecionada. */
   current: string | undefined;
   pick: (path: string) => Promise<void>;
+  /** Quantas notas usam a imagem, para avisar antes de excluir. */
+  usage: (path: string) => number;
+  /** Tira a imagem das notas que a usam; roda antes de o arquivo ser apagado. */
+  release: (path: string) => Promise<void>;
 }
 
 /**
@@ -135,9 +180,15 @@ export const renderSavedImages = async (
     cls: "mdp-picker-section-title",
     text: t("saved.title"),
   });
-  const grid = section.createDiv({ cls: "mdp-picker-grid is-framed" });
+  const grid = section.createDiv({
+    cls:
+      context.kind === "icons"
+        ? "mdp-picker-grid is-framed is-square"
+        : "mdp-picker-grid is-framed",
+  });
   for (const image of images) {
-    const tile = grid.createEl("button", {
+    const item = grid.createDiv({ cls: "mdp-picker-item" });
+    const tile = item.createEl("button", {
       attr: { "aria-label": image.name },
       cls:
         image.path === context.current
@@ -147,13 +198,19 @@ export const renderSavedImages = async (
     if (context.kind === "icons") {
       tile.addClass("is-icon");
     }
-    tile.createEl("img", {
+    const img = tile.createEl("img", {
       attr: {
         alt: image.name,
         loading: "lazy",
         src: pluginImageUrl(app, image.path),
       },
     });
+    if (context.kind === "icons") {
+      trimIconImage(img, {
+        path: image.path,
+        read: () => app.vault.adapter.readBinary(image.path),
+      });
+    }
     setTooltip(tile, image.name);
     tile.addEventListener(
       "click",
@@ -161,5 +218,11 @@ export const renderSavedImages = async (
         await context.pick(image.path);
       })
     );
+    addDeleteButton(item, context, image, () => {
+      item.remove();
+      if (!grid.hasChildNodes()) {
+        section.remove();
+      }
+    });
   }
 };

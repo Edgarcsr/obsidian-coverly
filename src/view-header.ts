@@ -8,6 +8,7 @@ import { clearAccent, paintAccent } from "./note-accent";
 import { clearBackground, paintBackground } from "./note-background";
 import { dataFromFrontmatter } from "./note-data";
 import { applyFont } from "./note-font";
+import { count, measure } from "./perf";
 import { markEmptyProperties } from "./properties";
 import { clearTitleIcon, paintTitleIcon } from "./title-icon";
 
@@ -326,7 +327,18 @@ export class HeaderManager {
     this.syncAll();
   }
 
+  /** Notas abertas com cabeçalho, para o relatório de desempenho. */
+  viewCount(): number {
+    return this.states.size;
+  }
+
   syncAll(): void {
+    measure("header.sync", () => {
+      this.syncViews();
+    });
+  }
+
+  private syncViews(): void {
     const alive = new Set<MarkdownView>();
     for (const leaf of this.plugin.app.workspace.getLeavesOfType("markdown")) {
       if (leaf.view instanceof MarkdownView) {
@@ -380,7 +392,7 @@ export class HeaderManager {
     // Só o que a capa mostra (e os textos dos botões dela) decide se ela é refeita.
     const coverKey = `${file.path}\n${getLocale()}\n${JSON.stringify([data.cover, data.position, data.positionX, data.zoom, data.credit, data.creditUrl])}`;
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${coverKey}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
+    const key = `${coverKey}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconTrim}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;
@@ -413,12 +425,15 @@ export class HeaderManager {
         // O modo escondido não anima: a animação rodaria só quando ele
         // aparecesse, e a capa "entraria" de novo ao trocar de modo.
         const visible = slot.scroller.clientWidth > 0;
-        header = buildHeader(
-          this.plugin,
-          data,
-          file.path,
-          entering && visible && this.plugin.settings.coverAnimation,
-          reuse
+        count("header.rebuild");
+        header = measure("header.build", () =>
+          buildHeader(
+            this.plugin,
+            data,
+            file.path,
+            entering && visible && this.plugin.settings.coverAnimation,
+            reuse
+          )
         );
         header.dataset.key = key;
         const built = header.querySelector<HTMLElement>(":scope > .mdp-cover");

@@ -597,6 +597,21 @@
   object-fit: contain;
 }
 
+/* Ícones são quadrados e menores que as capas: seis por fileira. */
+.mdp-picker-grid.is-square {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.mdp-picker-grid.is-square .mdp-picker-tile {
+  height: auto;
+  aspect-ratio: 1;
+}
+
+/* Ladrilhos menores precisam de menos folga, ou o ícone encolhe demais. */
+.mdp-picker-grid.is-square .mdp-picker-tile.is-icon img {
+  padding: 4px;
+}
+
 .mdp-picker-saved {
   margin-bottom: 12px;
 }
@@ -1180,23 +1195,6 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   display: flex;
 }
 
-.mdp-icon-upload-preview {
-  width: 28px;
-  height: 28px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.mdp-icon-upload-footer {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 14px;
-}
-
-.mdp-icon-upload-footer .mdp-picker-primary {
-  width: auto;
-}
-
 /* ---------- Ícone em miniatura: explorador de arquivos e título da aba ---------- */
 .mdp-inline-icon {
   --mdp-inline-size: 14px;
@@ -1348,7 +1346,7 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 }
 
 .mdp-inline-icon.is-image img {
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 3px;
 }
 
@@ -1377,7 +1375,7 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   display: block;
   width: 68px;
   height: 68px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
 }
 
@@ -1589,6 +1587,30 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 
 .mdp-link-card-meta + .mdp-link-card-meta {
   margin-top: -10px;
+}
+
+/* Datas com ícone, lado a lado; sem espaço, a segunda desce inteira. */
+.mdp-link-card-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  white-space: normal;
+}
+
+.mdp-link-card-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.mdp-link-card-date-icon {
+  display: flex;
+}
+
+.mdp-link-card-date-icon svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* Cartão de imagem: a imagem no topo, de borda a borda, e o texto embaixo. */
@@ -1973,4 +1995,146 @@ body {
   padding: 0;
   pointer-events: none;
   opacity: 0;
+}
+
+/* Relatório de desempenho (Developer → performance monitor). */
+.mdp-perf-modal {
+  width: min(720px, 92vw);
+}
+
+.mdp-perf-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mdp-perf-table {
+  width: 100%;
+  font-size: var(--font-ui-smaller);
+  font-variant-numeric: tabular-nums;
+}
+
+.mdp-perf-table th,
+.mdp-perf-table td {
+  padding: 2px 8px;
+  text-align: right;
+}
+
+.mdp-perf-table th:first-child,
+.mdp-perf-table td:first-child {
+  text-align: left;
+}
+
+.mdp-perf-empty {
+  color: var(--text-muted);
+}
+
+/* Lixeira no canto dos ladrilhos das imagens salvas. */
+.mdp-picker-item {
+  position: relative;
+}
+
+.mdp-picker-item .mdp-picker-tile {
+  width: 100%;
+}
+
+/* Folga no topo e na direita para a lixeira, que sai um pouco do ladrilho. */
+.mdp-picker-saved .mdp-picker-grid.is-framed {
+  padding: 10px 10px 4px 4px;
+}
+
+/* `.mdp-picker` na frente: temas (ex.: Cupertino) dão padding a todo botão. */
+.mdp-picker .mdp-picker-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  cursor: pointer;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-s);
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.mdp-picker .mdp-picker-delete svg {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+}
+
+.mdp-picker-item:hover .mdp-picker-delete,
+.mdp-picker .mdp-picker-delete:focus-visible {
+  opacity: 1;
+}
+
+.mdp-picker-item .mdp-picker-delete:hover {
+  color: var(--text-on-accent);
+  background: var(--background-modifier-error);
+  border-color: var(--background-modifier-error);
+}
+
+/* Pergunta de exclusão por cima do seletor. */
+.mdp-confirm {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 45%);
+}
+
+.mdp-confirm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, 100%);
+  padding: 16px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-l);
+}
+
+.mdp-confirm-title {
+  font-weight: var(--font-semibold);
+}
+
+.mdp-confirm-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.mdp-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.mdp-confirm .mdp-confirm-delete {
+  color: var(--text-on-accent);
+  background: var(--background-modifier-error);
+  box-shadow: none;
+}
+
+.mdp-confirm .mdp-confirm-delete:hover {
+  color: var(--text-on-accent);
+  background: var(--background-modifier-error-hover);
 }

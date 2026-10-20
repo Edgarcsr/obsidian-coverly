@@ -2,12 +2,18 @@ import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import { asyncListener } from "./async-listener";
+import {
+  coverPlaceholder,
+  placeholderCount,
+  preparePlaceholder,
+} from "./cover-placeholder";
 import { coverDisplayUrl, coverThumbUrl } from "./cover-thumbs";
 import { t } from "./i18n";
 import type CoverlyPlugin from "./main";
 import { ZOOM_STEP, clampZoom, resolveCoverSource } from "./note-data";
 import type { CoverData, CoverSource } from "./note-data";
 import { drawPageIcon } from "./page-icon";
+import { count } from "./perf";
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -96,36 +102,79 @@ interface NaturalSize {
 }
 
 /** Tamanho real das fotos, medido uma vez por endereço. */
-const naturalSizes = new Map<string, Promise<NaturalSize | null>>();
+const naturalSizes = new Map<string, NaturalSize>();
 
-/** URLs já decodificadas nesta sessão: a capa delas aparece sem transição. */
-const decoded = new Set<string>();
+/**
+ * Fotos "quentes": as últimas capas decodificadas, guardadas vivas. Enquanto
+ * um `Image` aponta para a foto, o navegador não a descarta da memória, e a
+ * capa aparece sem transição. Antes era só uma lista de endereços já vistos:
+ * depois de um tempo o navegador descartava a foto, a lista continuava
+ * dizendo "pronta", e a moldura ficava vazia até a foto voltar do disco.
+ */
+const HOT_LIMIT = 6;
+const hot = new Map<string, HTMLImageElement>();
+const decoding = new Map<string, Promise<HTMLImageElement | null>>();
 
-const probeSize = async (url: string): Promise<NaturalSize | null> => {
-  const probe = new Image();
-  probe.src = url;
+const keepHot = (url: string, image: HTMLImageElement): void => {
+  hot.delete(url);
+  hot.set(url, image);
+  const oldest = hot.keys().next().value;
+  if (hot.size > HOT_LIMIT && oldest !== undefined) {
+    hot.delete(oldest);
+  }
+};
+
+/** A foto está na memória agora (e passa a ser a mais recente). */
+const isHot = (url: string): boolean => {
+  const image = hot.get(url);
+  if (image) {
+    keepHot(url, image);
+  }
+  return image !== undefined;
+};
+
+const decodeImage = async (url: string): Promise<HTMLImageElement | null> => {
+  const image = new Image();
+  image.src = url;
   try {
-    await probe.decode();
+    await image.decode();
   } catch {
     // Imagem que não carrega não tem o que arrastar.
     return null;
+  } finally {
+    decoding.delete(url);
   }
-  decoded.add(url);
-  return { height: probe.naturalHeight, width: probe.naturalWidth };
+  keepHot(url, image);
+  naturalSizes.set(url, {
+    height: image.naturalHeight,
+    width: image.naturalWidth,
+  });
+  return image;
+};
+
+/** Carrega e decodifica a foto (uma vez, mesmo com vários pedidos juntos). */
+const loadDecoded = (url: string): Promise<HTMLImageElement | null> => {
+  const image = hot.get(url);
+  if (image) {
+    return Promise.resolve(image);
+  }
+  let pending = decoding.get(url);
+  if (!pending) {
+    pending = decodeImage(url);
+    decoding.set(url, pending);
+  }
+  return pending;
 };
 
 const naturalSize = async (url: string): Promise<NaturalSize | null> => {
-  let size = naturalSizes.get(url);
-  if (!size) {
-    size = probeSize(url);
-    naturalSizes.set(url, size);
+  const known = naturalSizes.get(url);
+  if (known) {
+    return known;
   }
-  const result = await size;
-  // Falha não fica guardada: a imagem pode aparecer no vault depois.
-  if (!result) {
-    naturalSizes.delete(url);
-  }
-  return result;
+  const image = await loadDecoded(url);
+  return image
+    ? { height: image.naturalHeight, width: image.naturalWidth }
+    : null;
 };
 
 /**
@@ -416,20 +465,109 @@ const attachReposition = (
   );
 };
 
+/** Tamanhos dos caches de imagem, para o relatório de desempenho. */
+export const headerCacheStats = (): Record<string, number> => ({
+  hot: hot.size,
+  naturalSizes: naturalSizes.size,
+  placeholders: placeholderCount(),
+});
+
 /**
- * Começa a carregar e decodificar a capa da nota antes de ela abrir (ao passar
- * o mouse pelo link ou pelo item do explorador), para ela já estar pronta.
+ * Adianta a prévia borrada da capa antes de a nota abrir (ao passar o mouse
+ * pelo link ou pelo item do explorador). Só ela: decodificar a versão de
+ * 2560px no hover custaria caro para uma nota que talvez nem seja aberta.
  */
 export const preloadCover = (app: App, cover: string | undefined): void => {
   const source = resolveCoverSource(app, cover);
   if (source?.kind !== "image" || !cover) {
     return;
   }
-  void naturalSize(coverDisplayUrl(cover) ?? source.url);
+  // Pede a miniatura se ainda não existe; a prévia sai dela.
+  coverThumbUrl(cover);
+  void preparePlaceholder(app, cover);
 };
 
 /** `url(...)` para o CSS. Aspas no caminho quebrariam a declaração, então são escapadas. */
 const cssUrl = (url: string): string => `url("${url.replaceAll('"', "%22")}")`;
+
+interface CoverVariants {
+  display: string | null;
+  thumb: string | null;
+}
+
+/** Versões em disco da capa; a de exibição fica de fora quando só a miniatura serve. */
+const coverVariants = (
+  cover: string | undefined,
+  resolved: CoverSource | null,
+  preferThumb: boolean
+): CoverVariants => {
+  if (resolved?.kind !== "image" || !cover) {
+    return { display: null, thumb: null };
+  }
+  return {
+    display: preferThumb ? null : coverDisplayUrl(cover),
+    thumb: coverThumbUrl(cover),
+  };
+};
+
+/**
+ * Põe a foto na capa sem nunca deixar a moldura vazia:
+ *
+ * - por baixo da foto fica a prévia borrada (`data:` URL, desenhada na hora;
+ *   ver cover-placeholder.ts). Se o navegador ainda não tem a foto pronta,
+ *   aparece a prévia, e não um buraco;
+ * - foto quente (na memória): aparece direto, sem transição;
+ * - foto fria: a prévia fica também por cima, borrada, e se dissolve quando a
+ *   foto termina de decodificar.
+ */
+const paintPhoto = (
+  app: App,
+  surface: HTMLElement,
+  cover: string,
+  url: string,
+  thumb: string | null,
+  onReady?: () => void
+): void => {
+  const placeholder = coverPlaceholder(cover);
+  // Sem prévia ainda (primeira vez desta capa), a miniatura do disco serve.
+  const under = placeholder ?? (thumb && thumb !== url ? thumb : null);
+  // Para a próxima vez: a prévia fica pronta em segundo plano.
+  void preparePlaceholder(app, cover);
+  surface.setCssStyles({
+    backgroundImage: under ? `${cssUrl(url)}, ${cssUrl(under)}` : cssUrl(url),
+    backgroundSize: "cover",
+  });
+  // Cartão pequeno (prévia de link) mostrando a própria miniatura: ela é leve
+  // e não ocupa o lugar das fotos quentes.
+  if (url === thumb) {
+    onReady?.();
+    return;
+  }
+  if (isHot(url)) {
+    count("cover.hot");
+    onReady?.();
+    return;
+  }
+  count(placeholder ? "cover.cold" : "cover.coldNoPlaceholder");
+  if (under) {
+    surface.style.setProperty("--mdp-cover-thumb", cssUrl(under));
+    surface.addClass("mdp-has-thumb");
+  }
+  void (async () => {
+    // A prévia em memória já está na tela; a miniatura do disco, não.
+    if (placeholder) {
+      onReady?.();
+    } else if (under) {
+      await Promise.race([naturalSize(under), loadDecoded(url)]);
+      onReady?.();
+    }
+    await loadDecoded(url);
+    surface.addClass("is-loaded");
+    if (!under) {
+      onReady?.();
+    }
+  })();
+};
 
 /**
  * Pinta a capa da nota em `surface`: foto ou degradê, na posição gravada.
@@ -441,48 +579,40 @@ export const paintCover = (
   app: App,
   surface: HTMLElement,
   data: CoverData,
-  onReady?: () => void
+  onReady?: () => void,
+  // Cartões pequenos (prévia de link) ficam bem servidos pela miniatura.
+  preferThumb = false
 ): CoverSource | null => {
+  count("header.paintCover");
   const resolved = resolveCoverSource(app, data.cover);
   // A versão de exibição (até 2560px, já no disco) abre bem mais rápido que a
   // foto original, que pode ter vários MB para decodificar.
-  const display =
-    resolved?.kind === "image" && data.cover
-      ? coverDisplayUrl(data.cover)
-      : null;
-  const source: CoverSource | null = display
-    ? { kind: "image", url: display }
-    : resolved;
+  const { display, thumb } = coverVariants(data.cover, resolved, preferThumb);
+  let source: CoverSource | null = resolved;
+  // Se a foto original já está na tela e a versão de exibição acabou de ficar
+  // pronta, continua na original: trocar de endereço refaria a transição
+  // borrada (visível ao salvar a posição). A troca vem no próximo
+  // carregamento da nota.
+  const keepOriginal =
+    display !== null && resolved?.kind === "image" && hot.has(resolved.url);
+  if (display && keepOriginal) {
+    void loadDecoded(display);
+  } else if (display) {
+    source = { kind: "image", url: display };
+  } else if (preferThumb && thumb) {
+    source = { kind: "image", url: thumb };
+  }
   surface.style.backgroundPosition = `${data.positionX}% ${data.position}%`;
   surface.removeClass("mdp-has-thumb", "is-loaded");
   if (source?.kind === "image") {
-    surface.setCssStyles({
-      backgroundImage: cssUrl(source.url),
-      backgroundSize: "cover",
-    });
-    // Já decodificada (nota aberta antes nesta sessão): aparece direto.
-    if (decoded.has(source.url)) {
-      onReady?.();
-      return source;
-    }
-    // A miniatura fica numa camada por cima (::before, com o mesmo tamanho e
-    // posição) e se dissolve quando a foto termina de carregar.
-    const thumb = data.cover ? coverThumbUrl(data.cover) : null;
-    if (thumb) {
-      surface.style.setProperty("--mdp-cover-thumb", cssUrl(thumb));
-      surface.addClass("mdp-has-thumb");
-    }
-    void (async () => {
-      if (thumb) {
-        await Promise.race([naturalSize(thumb), naturalSize(source.url)]);
-        onReady?.();
-        await naturalSize(source.url);
-        surface.addClass("is-loaded");
-        return;
-      }
-      await naturalSize(source.url);
-      onReady?.();
-    })();
+    paintPhoto(
+      app,
+      surface,
+      data.cover ?? source.url,
+      source.url,
+      thumb,
+      onReady
+    );
   } else {
     surface.style.backgroundImage = source?.css ?? "";
     surface.style.backgroundSize = gradientSize(data.zoom);
@@ -601,7 +731,7 @@ export const buildHeader = (
     });
     drawPageIcon(plugin.app, icon, data.icon, plugin.settings.twemoji);
     icon.addEventListener("click", () => {
-      plugin.openIconPicker(sourcePath, icon);
+      void plugin.openIconPicker(sourcePath, icon);
     });
   }
 
@@ -611,7 +741,7 @@ export const buildHeader = (
   if (!data.icon || inline) {
     const label = data.icon ? t("header.changeIcon") : t("header.addIcon");
     addButton(addRow, "smile", label, (button) => {
-      plugin.openIconPicker(sourcePath, button);
+      void plugin.openIconPicker(sourcePath, button);
     });
   }
   if (plugin.settings.nameColors) {

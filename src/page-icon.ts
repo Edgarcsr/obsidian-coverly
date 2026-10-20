@@ -2,6 +2,8 @@ import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import type { MessageKey } from "./i18n";
+import { trimIconImage } from "./icon-trim";
+import type { IconFile } from "./icon-trim";
 import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
 import { drawEmoji } from "./twemoji";
 
@@ -169,6 +171,18 @@ export const iconImageSource = (app: App, value: string): string | null => {
   return isPluginImagePath(value) ? pluginImageUrl(app, value) : null;
 };
 
+/** Como ler os bytes do ícone local (para cortar as margens); link da internet não tem. */
+export const iconFile = (app: App, value: string): IconFile | null => {
+  const file = app.vault.getFileByPath(value);
+  if (file) {
+    return { path: value, read: () => app.vault.readBinary(file) };
+  }
+  if (isPluginImagePath(value)) {
+    return { path: value, read: () => app.vault.adapter.readBinary(value) };
+  }
+  return null;
+};
+
 /** O ícone é uma imagem (link ou arquivo do vault), não emoji nem Lucide. */
 export const isImageIcon = (app: App, value: string): boolean =>
   iconImageSource(app, value) !== null;
@@ -194,6 +208,9 @@ export const drawPageIcon = (
   } else if (image === null) {
     drawEmoji(el, value, twemoji);
   } else {
-    el.createEl("img", { attr: { alt: "", src: image } });
+    trimIconImage(
+      el.createEl("img", { attr: { alt: "", src: image } }),
+      iconFile(app, value)
+    );
   }
 };

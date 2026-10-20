@@ -5,9 +5,11 @@ import { asyncListener } from "./async-listener";
 import { DEFAULT_COVER_FOLDER } from "./cover-cache";
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
+import { setIconTrim } from "./icon-trim";
 import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
 import type { ColorPalette } from "./page-icon";
+import { setPerfEnabled } from "./perf";
 import { clearCoverCache, coverlyUsage, describeUsage } from "./storage";
 
 export type IconPosition = "above" | "inline";
@@ -67,6 +69,10 @@ export interface CoverlySettings {
   linkPreview: boolean;
   /** Esconde a dica do Obsidian (datas) nas notas do explorador, já que o cartão as mostra. */
   hideFileTooltip: boolean;
+  /** Mede o tempo dos trechos mais caros (só na memória, sem enviar nada). */
+  perfMonitor: boolean;
+  /** Corta as margens vazias das imagens usadas como ícone (sem alterar os arquivos). */
+  iconTrim: boolean;
 }
 
 export const DEFAULT_SETTINGS: CoverlySettings = {
@@ -84,11 +90,13 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   iconColor: "default",
   iconPosition: "above",
   iconTab: "emoji",
+  iconTrim: false,
   language: "auto",
   linkPreview: true,
   nameColors: false,
   noteAccents: false,
   noteBackgrounds: false,
+  perfMonitor: false,
   recentEmojis: [],
   toc: true,
   treeBackgrounds: "off",
@@ -119,7 +127,9 @@ type ControlKey =
   | "askIconColor"
   | "nameColors"
   | "noteAccents"
-  | "noteBackgrounds";
+  | "noteBackgrounds"
+  | "perfMonitor"
+  | "iconTrim";
 
 export class CoverlySettingTab extends PluginSettingTab {
   private readonly plugin: CoverlyPlugin;
@@ -251,6 +261,10 @@ export class CoverlySettingTab extends PluginSettingTab {
             control: { key: "askIconColor", type: "toggle" },
           },
           { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
+          {
+            ...named("iconTrim"),
+            control: { key: "iconTrim", type: "toggle" },
+          },
         ],
         type: "group",
       },
@@ -291,6 +305,16 @@ export class CoverlySettingTab extends PluginSettingTab {
         ],
         type: "group",
       },
+      {
+        heading: t("settings.section.developer"),
+        items: [
+          {
+            ...named("perfMonitor"),
+            control: { key: "perfMonitor", type: "toggle" },
+          },
+        ],
+        type: "group",
+      },
     ];
   }
 
@@ -320,10 +344,29 @@ export class CoverlySettingTab extends PluginSettingTab {
   }
 
   async setControlValue(key: string, value: unknown): Promise<void> {
-    await this.applyChange(key as ControlKey, value);
+    if (key === "iconTrim") {
+      this.plugin.settings.iconTrim = value as boolean;
+      setIconTrim(this.plugin.settings.iconTrim);
+      this.plugin.refreshHeaders();
+      await this.plugin.saveSettings();
+      return;
+    }
+    if (key === "perfMonitor") {
+      this.plugin.settings.perfMonitor = value as boolean;
+      setPerfEnabled(this.plugin.settings.perfMonitor);
+      await this.plugin.saveSettings();
+      return;
+    }
+    await this.applyChange(
+      key as Exclude<ControlKey, "iconTrim" | "perfMonitor">,
+      value
+    );
   }
 
-  private async applyChange(key: ControlKey, value: unknown): Promise<void> {
+  private async applyChange(
+    key: Exclude<ControlKey, "iconTrim" | "perfMonitor">,
+    value: unknown
+  ): Promise<void> {
     const { plugin } = this;
     const { settings } = plugin;
 

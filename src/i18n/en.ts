@@ -38,9 +38,9 @@ export const en: Messages = {
   "command.removeBackground": "Remove note background (beta)",
   "command.removeCover": "Remove cover",
 
+  "command.showPerformanceReport": "Show performance report",
   "common.cancel": "Cancel",
   "common.remove": "Remove",
-  "common.save": "Save",
 
   "cover.linkHint": "Works with any image on the web.",
   "cover.linkPlaceholder": "Paste the image link…",
@@ -118,7 +118,8 @@ export const en: Messages = {
   "header.font": "Font",
   "header.nameColor": "Name color",
   "header.reposition": "Reposition",
-  "header.repositionHint": "Drag to reposition, scroll or use the buttons to zoom",
+  "header.repositionHint":
+    "Drag to reposition, scroll or use the buttons to zoom",
   "header.savePosition": "Save position",
   "header.zoomIn": "Zoom in",
   "header.zoomOut": "Zoom out",
@@ -131,11 +132,11 @@ export const en: Messages = {
   "iconPicker.recent": "Recent",
   "iconPicker.results": "Results",
 
-  "iconUpload.change": "Change image",
   "iconUpload.choose": "Upload an image",
   "iconUpload.pasteHint": "or press Ctrl+V to paste an image or link",
 
-  "linkPreview.dates": "Edited {modified} · created {created}",
+  "linkPreview.created": "Created",
+  "linkPreview.modified": "Edited",
 
   "notice.chooseImage": "Choose an image file.",
   "notice.coversDisabled":
@@ -145,8 +146,33 @@ export const en: Messages = {
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
+  "perf.caches": "Caches and memory",
+  "perf.col.count": "Calls",
+  "perf.col.max": "Max",
+  "perf.col.mean": "Mean",
+  "perf.col.name": "Metric",
+  "perf.col.p95": "p95",
+  "perf.col.total": "Total",
+  "perf.copied": "Report copied.",
+  "perf.copy": "Copy JSON",
+  "perf.counters": "Counters",
+  "perf.disabled":
+    "The monitor is off, so nothing is being measured. Turn it on in Settings → Coverly → Developer.",
+  "perf.empty":
+    "Nothing measured yet. Turn the monitor on in Settings → Coverly → Developer and use the plugin.",
+  "perf.longTask": "{duration} at {at} s",
+  "perf.longTasks": "Long tasks (block the interface)",
+  "perf.noLongTasks": "No task above 50 ms.",
+  "perf.refresh": "Refresh",
+  "perf.reset": "Reset",
+  "perf.timings": "Timings",
+  "perf.title": "Coverly performance",
+  "saved.confirmTitle": "Delete this image?",
+  "saved.delete": "Delete image",
   "saved.title": "Saved in Coverly",
 
+  "saved.unused": "No note uses this image.",
+  "saved.usedBy": "Used in {count} note(s); it will be removed from them.",
   "settings.askIconColor.desc":
     "When you click an icon, show its color variants to choose from. When off, the last chosen color is used.",
   "settings.askIconColor.name": "Always ask for the icon color",
@@ -186,6 +212,9 @@ export const en: Messages = {
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",
   "settings.iconPosition.inline": "On the title line",
   "settings.iconPosition.name": "Icon position",
+  "settings.iconTrim.desc":
+    "Removes the transparent margins of images used as icons so the drawing fills the square. Files are not changed. Off by default.",
+  "settings.iconTrim.name": "Trim margins of image icons",
   "settings.language.auto": "Automatic",
   "settings.language.desc":
     "Plugin language. Automatic follows the Obsidian language and falls back to English when it is not Portuguese. Command names only change after you reload Obsidian.",
@@ -202,7 +231,11 @@ export const en: Messages = {
   "settings.noteBackgrounds.desc":
     "Beta. Let each note have its own background: a color, gradient or image, picked from the command palette or the button above the title. Off by default.",
   "settings.noteBackgrounds.name": "Note backgrounds (beta)",
+  "settings.perfMonitor.desc":
+    "Measures how long the plugin's heaviest parts take, plus long tasks, in memory only. Nothing is saved or sent. See the result with the “Show performance report” command. Off by default.",
+  "settings.perfMonitor.name": "Performance monitor",
   "settings.section.covers": "Covers",
+  "settings.section.developer": "Developer",
   "settings.section.general": "General",
   "settings.section.icons": "Icons",
   "settings.section.navigation": "Navigation",

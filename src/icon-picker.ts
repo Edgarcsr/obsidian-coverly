@@ -10,8 +10,10 @@ import type { EmojiEntry, EmojiGroup } from "./emojis";
 import { t } from "./i18n";
 import { renderIconUpload } from "./icon-upload";
 import type { IconUploadHandle } from "./icon-upload";
+import { imageUsage, releaseImage } from "./image-usage";
 import { normalize, searchLucide } from "./lucide-search";
 import { drawLucide, lucideNames, lucideValue, parseLucide } from "./page-icon";
+import { measure } from "./perf";
 import { renderSavedImages } from "./plugin-images";
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
@@ -143,9 +145,6 @@ export class IconPicker extends TabbedPopover<Tab> {
       case "upload": {
         this.upload = renderIconUpload(this.body, {
           app: this.options.app,
-          close: () => {
-            this.close();
-          },
           pick: async (value) => {
             await this.pick(value);
           },
@@ -157,6 +156,8 @@ export class IconPicker extends TabbedPopover<Tab> {
               pick: async (path) => {
                 await this.pick(path);
               },
+              release: (path) => releaseImage(this.options.app, path),
+              usage: (path) => imageUsage(this.options.app, path),
             });
             parent.createDiv({
               cls: "mdp-picker-section-title",
@@ -168,6 +169,7 @@ export class IconPicker extends TabbedPopover<Tab> {
               pick: async (path) => {
                 await this.pick(path);
               },
+              square: true,
             });
           },
           sourcePath: this.options.sourcePath,
@@ -188,7 +190,6 @@ export class IconPicker extends TabbedPopover<Tab> {
       grid.destroy();
     }
     this.grids = [];
-    this.upload?.dispose();
     this.upload = null;
     this.closeVariants?.();
     this.closeVariants = null;
@@ -284,8 +285,8 @@ export class IconPicker extends TabbedPopover<Tab> {
       const query = normalize(input.value);
       searching = Boolean(query);
       visible = searching
-        ? this.allEmojis.filter((entry) =>
-            normalize(entry.keywords).includes(query)
+        ? measure("picker.emojiFilter", () =>
+            this.allEmojis.filter((entry) => entry.keywords.includes(query))
           )
         : this.allEmojis;
       full.toggle(!searching);
@@ -397,7 +398,9 @@ export class IconPicker extends TabbedPopover<Tab> {
 
     const filter = (): void => {
       // Nome, tags e categorias, como no lucide.dev: "money" acha "banknote".
-      matches = searchLucide(all, input.value);
+      matches = measure("picker.lucideSearch", () =>
+        searchLucide(all, input.value)
+      );
       this.closeVariants?.();
       grid.empty();
       shown = 0;

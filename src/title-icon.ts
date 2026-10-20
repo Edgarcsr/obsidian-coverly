@@ -1,8 +1,10 @@
 import type { App } from "obsidian";
 
+import { isIconTrimEnabled, whenTrimmed } from "./icon-trim";
 import {
   drawLucide,
   iconColorCss,
+  iconFile,
   iconImageSource,
   parseLucide,
 } from "./page-icon";
@@ -81,7 +83,7 @@ export const paintTitleIcon = (
     }
     return;
   }
-  const key = `${twemoji}\n${value}`;
+  const key = `${twemoji}\n${isIconTrimEnabled()}\n${value}`;
   if (title.getAttribute(KEY_ATTR) === key) {
     return;
   }
@@ -100,6 +102,11 @@ export const paintTitleIcon = (
   const image = iconImageSource(app, value);
   if (image !== null) {
     setKind(title, "image", cssUrl(image));
+    whenTrimmed(image, iconFile(app, value), (url) => {
+      if (title.getAttribute(KEY_ATTR) === key) {
+        title.style.setProperty(IMAGE_VAR, cssUrl(url));
+      }
+    });
     return;
   }
 

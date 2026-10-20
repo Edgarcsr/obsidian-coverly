@@ -3,6 +3,7 @@ import type { App, TFile } from "obsidian";
 
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
+import { trimIconImage } from "./icon-trim";
 import { searchField } from "./popover";
 
 const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
@@ -24,6 +25,8 @@ export interface VaultImagesContext {
   /** Imagem atual da nota, para marcar a selecionada. */
   current: string | undefined;
   pick: (path: string) => Promise<void>;
+  /** Ladrilhos 1:1 (ícones) em vez dos retangulares das capas. */
+  square?: boolean;
 }
 
 /** Arquivo de imagem que dá para mostrar (e usar como capa ou ícone). */
@@ -48,7 +51,11 @@ export const renderVaultImages = (
   const search = body.createDiv({ cls: "mdp-picker-search" });
   const input = searchField(search, t("vault.placeholder"));
   // Os mesmos ladrilhos da galeria; o nome vai na dica.
-  const grid = body.createDiv({ cls: "mdp-picker-grid is-framed" });
+  const grid = body.createDiv({
+    cls: context.square
+      ? "mdp-picker-grid is-framed is-square"
+      : "mdp-picker-grid is-framed",
+  });
   const status = body.createDiv({ cls: "mdp-picker-hint is-empty" });
   const more = body.createEl("button", {
     cls: "mdp-picker-ghost",
@@ -66,13 +73,19 @@ export const renderVaultImages = (
           ? "mdp-picker-tile is-selected"
           : "mdp-picker-tile",
     });
-    card.createEl("img", {
+    const img = card.createEl("img", {
       attr: {
         alt: file.name,
         loading: "lazy",
         src: app.vault.getResourcePath(file),
       },
     });
+    if (context.square) {
+      trimIconImage(img, {
+        path: file.path,
+        read: () => app.vault.readBinary(file),
+      });
+    }
     setTooltip(card, file.path);
     card.addEventListener(
       "click",

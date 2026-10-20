@@ -1,10 +1,38 @@
-import LUCIDE_DATA from "./lucide-data.json";
-
 /**
  * Busca da aba Ícones como a do lucide.dev: além do nome, procura nas tags
  * ("money" acha "banknote") e nas categorias de cada ícone. Os dados vêm de
  * lucide-data.json, gerado por scripts/build-lucide.ts.
  */
+
+import { measureAsync } from "./perf";
+
+interface LucideData {
+  categories: string[];
+  icons: Record<string, [string, number[]]>;
+}
+
+let lucideData: LucideData | null = null;
+let lucideLoading: Promise<void> | null = null;
+
+const loadLucideDataOnce = async (): Promise<void> => {
+  const module = await import("./lucide-data.json");
+  lucideData = module.default as unknown as LucideData;
+};
+
+/** Carrega os dados só quando o seletor de ícones abre, não no início do plugin. */
+export const loadLucideData = (): Promise<void> => {
+  if (!lucideLoading) {
+    lucideLoading = measureAsync("picker.loadLucide", loadLucideDataOnce);
+  }
+  return lucideLoading;
+};
+
+const data = (): LucideData => {
+  if (!lucideData) {
+    throw new Error("lucide data not loaded");
+  }
+  return lucideData;
+};
 
 /** Nome das categorias do Lucide em português, para buscar também por elas. */
 const CATEGORY_LABELS: Record<string, string> = {
@@ -59,19 +87,15 @@ const SEPARATORS = /[\s-]+/u;
 export const normalize = (value: string): string =>
   value.normalize("NFD").replaceAll(DIACRITICS, "").toLowerCase().trim();
 
-const ICONS = LUCIDE_DATA.icons as unknown as Record<
-  string,
-  [string, number[]]
->;
-
 /** Texto em que a busca procura: tags e categorias (em inglês e português). */
 const haystackCache = new Map<string, string>();
 const haystack = (name: string): string => {
   let text = haystackCache.get(name);
   if (text === undefined) {
-    const [tags = "", categories = []] = ICONS[name] ?? [];
+    const source = data();
+    const [tags = "", categories = []] = source.icons[name] ?? [];
     const labels = categories.map((index) => {
-      const id = LUCIDE_DATA.categories[index] ?? "";
+      const id = source.categories[index] ?? "";
       return `${id} ${CATEGORY_LABELS[id] ?? ""}`;
     });
     text = normalize(`${tags} ${labels.join(" ")}`);

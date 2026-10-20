@@ -11,13 +11,18 @@ import { CoverPicker } from "./cover-picker";
 import {
   configureCoverThumbs,
   setThumbListener,
+  thumbStats,
   warmCoverThumbs,
 } from "./cover-thumbs";
 import { downloadAllCovers } from "./download-covers";
+import { loadEmojiData } from "./emojis";
 import type { PopupPosition } from "./floating-popup";
+import { headerCacheStats } from "./header";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
+import { setIconTrim } from "./icon-trim";
 import { LinkPreview } from "./link-preview";
+import { loadLucideData } from "./lucide-search";
 import { DEFAULT_COLOR, showColorPopup } from "./note-color";
 import {
   COVER_KEYS,
@@ -36,9 +41,17 @@ import {
   parseLucide,
   setColorPalette,
 } from "./page-icon";
+import {
+  measureAsync,
+  recordDuration,
+  registerGauge,
+  setPerfEnabled,
+} from "./perf";
+import { PerfModal } from "./perf-modal";
 import { PopoverHeaders } from "./popover-header";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
+import { formatSize } from "./storage";
 import { TocManager } from "./toc";
 import { closeTwemojiCache, loadTwemojiCache } from "./twemoji";
 import { HeaderManager } from "./view-header";
@@ -51,6 +64,12 @@ const MAX_RECENT_EMOJIS = 12;
 
 /** SVGs do Twemoji já baixados, na pasta do plugin (ver twemoji.ts). */
 const TWEMOJI_CACHE_FILE = "twemoji-cache.json";
+
+/** "chave 3 · outra 5": tamanhos de caches numa linha do relatório. */
+const pairs = (stats: Record<string, number>): string =>
+  Object.entries(stats)
+    .map(([name, value]) => `${name} ${value}`)
+    .join(" · ");
 
 /** Parte não documentada do `app` que abre a tela de configurações. */
 interface SettingManager {
@@ -88,7 +107,11 @@ export default class CoverlyPlugin extends Plugin {
   private picker: BackgroundPicker | CoverPicker | IconPicker | null = null;
 
   async onload(): Promise<void> {
+    const loadStart = performance.now();
     await this.loadSettings();
+    setPerfEnabled(this.settings.perfMonitor);
+    setIconTrim(this.settings.iconTrim);
+    this.registerPerfGauges();
     setLanguage(this.settings.language);
     setColorPalette(this.settings.colorPalette);
     this.applyCoverStyle();
@@ -96,14 +119,15 @@ export default class CoverlyPlugin extends Plugin {
     const pluginDir =
       this.manifest.dir ??
       `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
-    await loadTwemojiCache(
+    // Os caches são independentes: lê-los em paralelo encurta o carregamento.
+    const twemojiCache = loadTwemojiCache(
       this.app.vault.adapter,
       `${pluginDir}/${TWEMOJI_CACHE_FILE}`
     );
 
     // Antes do primeiro desenho, para as capas já baixadas abrirem do disco.
     await this.migrateCoverFolder();
-    await this.configureCoverCache();
+    await Promise.all([twemojiCache, this.configureCoverCache()]);
     // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
     setThumbListener(() => {
       this.noteIcons.schedule();
@@ -141,7 +165,7 @@ export default class CoverlyPlugin extends Plugin {
     });
     this.addCommand({
       checkCallback: this.onActiveNote((path) => {
-        this.openIconPicker(path);
+        void this.openIconPicker(path);
       }),
       id: "change-icon",
       name: t("command.changeIcon"),
@@ -204,12 +228,34 @@ export default class CoverlyPlugin extends Plugin {
       name: t("command.openSettings"),
     });
     this.addCommand({
+      callback: () => {
+        new PerfModal(this.app).open();
+      },
+      id: "show-performance-report",
+      name: t("command.showPerformanceReport"),
+    });
+    this.addCommand({
       callback: async () => {
         await downloadAllCovers(this.app);
       },
       id: "download-covers",
       name: t("command.downloadCovers"),
     });
+    recordDuration("plugin.onload", performance.now() - loadStart);
+  }
+
+  /** Valores lidos só ao abrir o relatório de desempenho (ver perf.ts). */
+  private registerPerfGauges(): void {
+    registerGauge("thumbs", () => pairs(thumbStats()));
+    registerGauge("imageCaches", () => pairs(headerCacheStats()));
+    registerGauge("explorerObservers", () => this.noteIcons.observerCount());
+    registerGauge("headerViews", () => this.headers.viewCount());
+    const { memory } = performance as Performance & {
+      memory?: { usedJSHeapSize: number };
+    };
+    if (memory) {
+      registerGauge("jsHeap", () => formatSize(memory.usedJSHeapSize));
+    }
   }
 
   /**
@@ -224,12 +270,14 @@ export default class CoverlyPlugin extends Plugin {
 
   /** Aplica as opções de cópia local das capas (ver cover-cache.ts) e das miniaturas. */
   async configureCoverCache(): Promise<void> {
-    await configureCoverCache({
+    // A pasta atual é definida antes do primeiro await; a leitura das imagens
+    // pode começar junto com a das miniaturas, que fica na subpasta.
+    const covers = configureCoverCache({
       app: this.app,
       enabled: this.settings.downloadCovers,
       folder: this.settings.coverFolder,
     });
-    await configureCoverThumbs(this.app);
+    await Promise.all([covers, configureCoverThumbs(this.app)]);
   }
 
   /**
@@ -451,9 +499,14 @@ export default class CoverlyPlugin extends Plugin {
   }
 
   /** Abre o seletor de ícone ancorado em `anchor`; sem âncora, abre centralizado. */
-  openIconPicker(sourcePath: string, anchor: HTMLElement | null = null): void {
+  async openIconPicker(
+    sourcePath: string,
+    anchor: HTMLElement | null = null
+  ): Promise<void> {
     this.picker?.close();
     const { icon } = this.noteData(sourcePath);
+    await Promise.all([loadEmojiData(), loadLucideData()]);
+    this.picker?.close();
     const picker = new IconPicker({
       anchor,
       app: this.app,
@@ -613,12 +666,14 @@ export default class CoverlyPlugin extends Plugin {
     if (!file || file.extension !== "md") {
       return;
     }
-    await this.app.fileManager.processFrontMatter(
-      file,
-      (fm: Record<string, unknown>) => {
-        migrateLegacyKeys(fm);
-        write(fm);
-      }
+    await measureAsync("note.save", () =>
+      this.app.fileManager.processFrontMatter(
+        file,
+        (fm: Record<string, unknown>) => {
+          migrateLegacyKeys(fm);
+          write(fm);
+        }
+      )
     );
   }
 

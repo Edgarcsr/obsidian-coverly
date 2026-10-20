@@ -1,6 +1,32 @@
-import EMOJI_DATA from "./emoji-data.json";
 import { getLocale, t } from "./i18n";
 import type { Locale, MessageKey } from "./i18n";
+import { normalize } from "./lucide-search";
+import { measureAsync } from "./perf";
+
+type EmojiData = string[][][];
+
+let emojiData: EmojiData | null = null;
+let emojiLoading: Promise<void> | null = null;
+
+const loadEmojiDataOnce = async (): Promise<void> => {
+  const module = await import("./emoji-data.json");
+  emojiData = module.default;
+};
+
+/** Carrega os dados só quando o seletor de ícones abre, não no início do plugin. */
+export const loadEmojiData = (): Promise<void> => {
+  if (!emojiLoading) {
+    emojiLoading = measureAsync("picker.loadEmoji", loadEmojiDataOnce);
+  }
+  return emojiLoading;
+};
+
+const data = (): EmojiData => {
+  if (!emojiData) {
+    throw new Error("emoji data not loaded");
+  }
+  return emojiData;
+};
 
 export interface EmojiEntry {
   emoji: string;
@@ -49,11 +75,13 @@ const cache = new Map<Locale, EmojiEntry[][]>();
 const entriesByGroup = (locale: Locale): EmojiEntry[][] => {
   let groups = cache.get(locale);
   if (!groups) {
+    const source = data();
     const column = COLUMNS[locale];
     groups = GROUPS.map((_, index) =>
-      (EMOJI_DATA[index] ?? []).map((row) => ({
+      (source[index] ?? []).map((row) => ({
         emoji: row[0] ?? "",
-        keywords: row[column.keywords] ?? "",
+        // Já normalizado: o filtro roda a cada tecla e não deve refazer isto.
+        keywords: normalize(row[column.keywords] ?? ""),
         name: capitalize(row[column.name] ?? ""),
       }))
     );

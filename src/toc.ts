@@ -3,6 +3,7 @@ import type { HeadingCache } from "obsidian";
 
 import { getLocale, t } from "./i18n";
 import type CoverlyPlugin from "./main";
+import { measure } from "./perf";
 
 /** Abaixo disso a nota não tem o que navegar e o sumário fica oculto. */
 const MIN_HEADINGS = 2;
@@ -31,11 +32,15 @@ interface TocState {
   /** Muda quando os títulos mudam; evita redesenhar à toa. */
   key: string;
   active: number;
+  scrollFrame: number | null;
   onScroll: () => void;
 }
 
 const disposeState = (view: MarkdownView, state: TocState): void => {
   view.contentEl.removeEventListener("scroll", state.onScroll, true);
+  if (state.scrollFrame !== null) {
+    window.cancelAnimationFrame(state.scrollFrame);
+  }
   view.contentEl.removeClass("mdp-has-toc");
   state.el.remove();
 };
@@ -126,8 +131,17 @@ const buildToc = (
     key,
     lines,
     onScroll: () => {
-      updateActive(view, state);
+      if (state.scrollFrame !== null) {
+        return;
+      }
+      // Uma atualização por frame: o scroll dispara dezenas de eventos e as
+      // leituras de layout de `activeIndex` não podem rodar em todos.
+      state.scrollFrame = window.requestAnimationFrame(() => {
+        state.scrollFrame = null;
+        updateActive(view, state);
+      });
     },
+    scrollFrame: null,
   };
   // O evento de rolagem não sobe pelo DOM; na fase de captura ele chega aqui.
   view.contentEl.addEventListener("scroll", state.onScroll, true);
@@ -171,6 +185,12 @@ export class TocManager {
   }
 
   private syncAll(): void {
+    measure("toc.sync", () => {
+      this.syncViews();
+    });
+  }
+
+  private syncViews(): void {
     const alive = new Set<MarkdownView>();
     if (this.plugin.settings.toc) {
       for (const leaf of this.plugin.app.workspace.getLeavesOfType(

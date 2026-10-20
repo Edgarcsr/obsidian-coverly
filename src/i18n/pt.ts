@@ -40,9 +40,9 @@ export const pt = {
   "command.removeBackground": "Remover fundo da nota (beta)",
   "command.removeCover": "Remover capa",
 
+  "command.showPerformanceReport": "Mostrar relatório de desempenho",
   "common.cancel": "Cancelar",
   "common.remove": "Remover",
-  "common.save": "Salvar",
 
   "cover.linkHint": "Funciona com qualquer imagem da web.",
   "cover.linkPlaceholder": "Cole o link da imagem…",
@@ -120,7 +120,8 @@ export const pt = {
   "header.font": "Fonte",
   "header.nameColor": "Cor do nome",
   "header.reposition": "Reposicionar",
-  "header.repositionHint": "Arraste para reposicionar, role ou use os botões para dar zoom",
+  "header.repositionHint":
+    "Arraste para reposicionar, role ou use os botões para dar zoom",
   "header.savePosition": "Salvar posição",
   "header.zoomIn": "Aumentar zoom",
   "header.zoomOut": "Diminuir zoom",
@@ -133,11 +134,11 @@ export const pt = {
   "iconPicker.recent": "Recentes",
   "iconPicker.results": "Resultados",
 
-  "iconUpload.change": "Trocar imagem",
   "iconUpload.choose": "Carregar uma imagem",
   "iconUpload.pasteHint": "ou Ctrl+V para colar uma imagem ou link",
 
-  "linkPreview.dates": "Editada {modified} · criada em {created}",
+  "linkPreview.created": "Criada",
+  "linkPreview.modified": "Editada",
 
   "notice.chooseImage": "Escolha um arquivo de imagem.",
   "notice.coversDisabled":
@@ -147,8 +148,33 @@ export const pt = {
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
+  "perf.caches": "Caches e memória",
+  "perf.col.count": "Vezes",
+  "perf.col.max": "Máx.",
+  "perf.col.mean": "Média",
+  "perf.col.name": "Medida",
+  "perf.col.p95": "p95",
+  "perf.col.total": "Total",
+  "perf.copied": "Relatório copiado.",
+  "perf.copy": "Copiar JSON",
+  "perf.counters": "Contadores",
+  "perf.disabled":
+    "O medidor está desligado: nada está sendo medido. Ligue em Configurações → Coverly → Desenvolvedor.",
+  "perf.empty":
+    "Nada medido ainda. Ligue o medidor em Configurações → Coverly → Desenvolvedor e use o plugin.",
+  "perf.longTask": "{duration} aos {at} s",
+  "perf.longTasks": "Tarefas longas (travam a interface)",
+  "perf.noLongTasks": "Nenhuma tarefa acima de 50 ms.",
+  "perf.refresh": "Atualizar",
+  "perf.reset": "Zerar",
+  "perf.timings": "Tempos",
+  "perf.title": "Desempenho do Coverly",
+  "saved.confirmTitle": "Excluir esta imagem?",
+  "saved.delete": "Excluir imagem",
   "saved.title": "Salvas no Coverly",
 
+  "saved.unused": "Nenhuma nota usa esta imagem.",
+  "saved.usedBy": "Usada em {count} nota(s); ela será removida delas.",
   "settings.askIconColor.desc":
     "Ao clicar num ícone, mostra as variantes de cor para escolher. Desligado, usa a última cor escolhida.",
   "settings.askIconColor.name": "Perguntar sempre a cor do ícone",
@@ -188,6 +214,9 @@ export const pt = {
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",
   "settings.iconPosition.inline": "Na linha do título",
   "settings.iconPosition.name": "Posição do ícone",
+  "settings.iconTrim.desc":
+    "Remove as margens transparentes das imagens usadas como ícone, para o desenho preencher o quadrado. Os arquivos não são alterados. Desligado por padrão.",
+  "settings.iconTrim.name": "Cortar margens dos ícones de imagem",
   "settings.language.auto": "Automático",
   "settings.language.desc":
     "Idioma do plugin. Automático segue o idioma do Obsidian; quando ele não é o português, usa o inglês. Os nomes dos comandos só mudam ao recarregar o Obsidian.",
@@ -204,7 +233,11 @@ export const pt = {
   "settings.noteBackgrounds.desc":
     "Beta. Deixa cada nota ter o próprio fundo: cor, gradiente ou imagem, escolhido na paleta de comandos ou no botão acima do título. Desligado por padrão.",
   "settings.noteBackgrounds.name": "Fundos por nota (beta)",
+  "settings.perfMonitor.desc":
+    "Mede o tempo dos trechos mais caros do plugin e as tarefas longas, só na memória. Nada é gravado nem enviado. Veja o resultado no comando “Mostrar relatório de desempenho”. Desligado por padrão.",
+  "settings.perfMonitor.name": "Medidor de desempenho",
   "settings.section.covers": "Capas",
+  "settings.section.developer": "Desenvolvedor",
   "settings.section.general": "Geral",
   "settings.section.icons": "Ícones",
   "settings.section.navigation": "Navegação",

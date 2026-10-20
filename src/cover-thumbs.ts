@@ -9,6 +9,7 @@ import {
   isCoverCacheEnabled,
 } from "./cover-cache";
 import { dataFromFrontmatter, isHexColor, isRemoteCover } from "./note-data";
+import { measureAsync } from "./perf";
 import { isPluginImagePath } from "./plugin-images";
 
 /**
@@ -67,8 +68,8 @@ interface ThumbState {
   urls: Map<string, string>;
   /** Base → trabalho na fila (ainda não começou), para juntar pedidos. */
   queued: Map<string, Job>;
-  /** Bases sendo processadas agora. */
-  active: Set<string>;
+  /** Base → trabalho em andamento, para juntar pedidos que chegam depois. */
+  active: Map<string, Job>;
   /** Chaves que falharam nesta sessão, para não tentar de novo a cada desenho. */
   failed: Set<string>;
   jobs: Job[];
@@ -77,7 +78,7 @@ interface ThumbState {
 }
 
 const state: ThumbState = {
-  active: new Set(),
+  active: new Map(),
   app: null,
   failed: new Set(),
   files: new Map(),
@@ -94,6 +95,24 @@ const stem = (name: string): string => name.replace(/\.[^.]+$/u, "");
 const isCurrent = (key: string): boolean =>
   VARIANTS.some((variant) => key.endsWith(variant.suffix));
 
+/**
+ * Apaga versões de outro tamanho em segundo plano, para a leitura da pasta não
+ * segurar o carregamento do plugin.
+ */
+const removeStale = async (app: App, paths: string[]): Promise<void> => {
+  for (let start = 0; start < paths.length; start += 16) {
+    const batch = paths.slice(start, start + 16);
+    // oxlint-disable-next-line no-await-in-loop
+    await Promise.all(
+      batch.map((path) =>
+        app.vault.adapter.remove(path).catch(() => {
+          // Arquivo já removido ou pasta somente leitura.
+        })
+      )
+    );
+  }
+};
+
 /** Lê a pasta e monta o índice das versões que já existem. */
 export const configureCoverThumbs = async (app: App): Promise<void> => {
   state.app = app;
@@ -105,15 +124,18 @@ export const configureCoverThumbs = async (app: App): Promise<void> => {
     return;
   }
   const { files } = await app.vault.adapter.list(state.folder);
+  const stale: string[] = [];
   for (const path of files) {
     const name = path.slice(path.lastIndexOf("/") + 1);
     if (isCurrent(stem(name))) {
       state.files.set(stem(name), name);
     } else {
       // Versão antiga (outro tamanho): some e é refeita quando precisar.
-      // oxlint-disable-next-line no-await-in-loop
-      await app.vault.adapter.remove(path);
+      stale.push(path);
     }
+  }
+  if (stale.length > 0) {
+    void removeStale(app, stale);
   }
 };
 
@@ -267,11 +289,11 @@ const pump = (): void => {
       return;
     }
     state.queued.delete(job.base);
-    state.active.add(job.base);
+    state.active.set(job.base, job);
     state.running += 1;
     void (async () => {
       try {
-        await run(job);
+        await measureAsync("thumbs.generate", () => run(job));
       } catch {
         // Sem rede ou arquivo ilegível: a capa só não ganha as versões.
         for (const variant of job.wanted) {
@@ -316,11 +338,11 @@ const variantUrl = (value: string, variant: Variant): string | null => {
     }
     return url;
   }
-  if (state.failed.has(key) || state.active.has(base)) {
+  if (state.failed.has(key)) {
     return null;
   }
-  // Pedidos da mesma capa antes do trabalho começar viram um só.
-  const pending = state.queued.get(base);
+  // Pedidos da mesma capa — na fila ou já em andamento — viram um só.
+  const pending = state.queued.get(base) ?? state.active.get(base);
   if (pending) {
     pending.wanted.add(variant);
     return null;
@@ -330,6 +352,17 @@ const variantUrl = (value: string, variant: Variant): string | null => {
   state.jobs.push(job);
   pump();
   return null;
+};
+
+/**
+ * Caminho da miniatura da capa no disco, se ela já existe. Não põe nada na
+ * fila: serve para ler os bytes (ver cover-placeholder.ts).
+ */
+export const coverThumbPath = (value: string): string | null => {
+  const { app } = state;
+  const base = app ? baseKey(app, value) : null;
+  const name = base ? state.files.get(`${base}${THUMB.suffix}`) : undefined;
+  return name ? `${state.folder}/${name}` : null;
 };
 
 /** Miniatura borrada da capa (ver o topo do arquivo). */
@@ -346,10 +379,11 @@ export const coverDisplayUrl = (value: string): string | null =>
     : variantUrl(value, DISPLAY);
 
 /**
- * Prepara em segundo plano as versões das capas que não precisam de rede nova:
- * imagens do vault e capas da internet que já foram baixadas. As demais são
- * geradas quando aparecem (na nota ou no explorador). Assim abrir uma nota
- * costuma encontrar tudo pronto.
+ * Prepara em segundo plano as miniaturas das capas que não precisam de rede
+ * nova: imagens do vault e capas da internet que já foram baixadas. As demais
+ * são geradas quando aparecem (na nota ou no explorador). A versão de exibição
+ * (até 2560px) só é gerada quando uma nota ou prévia a pede: fazer todas as
+ * capas do vault de uma vez custava dezenas de segundos de CPU e disco.
  */
 export const warmCoverThumbs = (app: App): void => {
   for (const file of app.vault.getMarkdownFiles()) {
@@ -361,7 +395,15 @@ export const warmCoverThumbs = (app: App): void => {
     }
     if (!isRemoteCover(cover) || cachedCoverPath(cover)) {
       coverThumbUrl(cover);
-      coverDisplayUrl(cover);
     }
   }
 };
+
+/** Tamanhos dos caches e da fila, para o relatório de desempenho. */
+export const thumbStats = (): Record<string, number> => ({
+  active: state.active.size,
+  failed: state.failed.size,
+  files: state.files.size,
+  queued: state.jobs.length,
+  urls: state.urls.size,
+});
