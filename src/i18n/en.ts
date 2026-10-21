@@ -270,6 +270,7 @@ export const en: Messages = {
 
   "tab.colors": "Colors",
   "tab.emoji": "Emoji",
+  "tab.folders": "Folders",
   "tab.gallery": "Gallery",
   "tab.icons": "Icons",
   "tab.link": "Link",

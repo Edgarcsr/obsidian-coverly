@@ -8,6 +8,7 @@ import {
   iconImageSource,
   parseLucide,
 } from "./page-icon";
+import { parseSymbol, symbolUrl } from "./symbols";
 import { cacheTwemoji, twemojiUrl } from "./twemoji";
 
 /**
@@ -89,6 +90,14 @@ export const paintTitleIcon = (
   }
   clearTitleIcon(title);
   title.setAttribute(KEY_ATTR, key);
+
+  if (parseSymbol(value) !== null) {
+    const url = symbolUrl(value);
+    if (url) {
+      setKind(title, "image", cssUrl(url));
+    }
+    return;
+  }
 
   const lucide = parseLucide(value);
   if (lucide !== null) {

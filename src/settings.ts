@@ -52,7 +52,7 @@ export interface CoverlySettings {
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
   askIconColor: boolean;
   /** Última aba aberta no seletor de ícone, para abrir nela da próxima vez. */
-  iconTab: "emoji" | "icons" | "upload";
+  iconTab: "emoji" | "icons" | "folders" | "upload";
   /** Emojis usados por último, do mais recente para o mais antigo. */
   recentEmojis: string[];
   /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */

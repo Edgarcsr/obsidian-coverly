@@ -17,14 +17,17 @@ import { measure } from "./perf";
 import { renderSavedImages } from "./plugin-images";
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
+import { symbolValue } from "./symbols";
+import { renderSymbolGrid } from "./symbols-tab";
 import { drawEmoji } from "./twemoji";
 import { renderVaultImages } from "./vault-images";
 
-export type Tab = "emoji" | "icons" | "upload";
+export type Tab = "emoji" | "icons" | "folders" | "upload";
 
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "emoji", label: t("tab.emoji") },
   { id: "icons", label: t("tab.icons") },
+  { id: "folders", label: t("tab.folders") },
   { id: "upload", label: t("tab.upload") },
 ];
 
@@ -84,7 +87,7 @@ export interface IconPickerOptions {
   onRemove: () => Promise<void>;
 }
 
-/** Seletor de ícone da página: emoji, ícone Lucide ou imagem, como no Notion. */
+/** Seletor de ícone da página: emoji, ícone Lucide, de pasta ou imagem, como no Notion. */
 export class IconPicker extends TabbedPopover<Tab> {
   private readonly options: IconPickerOptions;
   private readonly colorState: ColorState;
@@ -140,6 +143,10 @@ export class IconPicker extends TabbedPopover<Tab> {
       }
       case "icons": {
         this.renderIcons();
+        break;
+      }
+      case "folders": {
+        this.renderFolders();
         break;
       }
       case "upload": {
@@ -420,6 +427,27 @@ export class IconPicker extends TabbedPopover<Tab> {
 
     input.addEventListener("input", filter);
     filter();
+    input.focus();
+  }
+
+  /** Aba Pastas: os ícones já vêm coloridos, então não há botão de cor. */
+  private renderFolders(): void {
+    let grid: ReturnType<typeof renderSymbolGrid> | null = null;
+    const { input } = this.searchRow(
+      t("iconPicker.filterIcons"),
+      asyncListener(async () => {
+        const entry = randomItem(grid?.visible() ?? []);
+        if (entry) {
+          await this.pick(symbolValue(entry.id));
+        }
+      })
+    );
+    grid = renderSymbolGrid(this.body, this.options.current, async (value) => {
+      await this.pick(value);
+    });
+    input.addEventListener("input", () => {
+      grid?.filter(input.value);
+    });
     input.focus();
   }
 

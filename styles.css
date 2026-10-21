@@ -1003,6 +1003,17 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   color: inherit;
 }
 
+/* Aba Pastas: nove colunas, uma por cor, com os estilos em fileiras */
+.mdp-picker .mdp-icon-grid.is-symbols {
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+.mdp-picker .mdp-icon-grid.is-symbols img {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
 /* Bolinha de cor: no botão ao lado da busca e em cada opção da paleta */
 .mdp-color-dot {
   display: block;

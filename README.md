@@ -24,7 +24,7 @@
 - **Vault images**: pick covers, icons and backgrounds from images already in your vault.
 - **Note font**: switch a single note between the theme font, a serif and a monospace font, from the command palette or the button above the title. With **Custom fonts per note** on (off by default), you can also type the name of any font installed on your computer.
 - **Colored names** (off by default, **Settings → Coverly**): pick a color for a note and its name is painted with it in the file explorer.
-- **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, or a custom image.
+- **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, a colored folder icon, or a custom image.
 - **Icons everywhere**: the note icon also shows in the tab title and the file explorer.
 - **Heading outline**: a slim outline on the right edge of the note that expands on hover and jumps to a heading on click.
 - **English and Portuguese** interface, following Obsidian's language by default.
@@ -80,3 +80,7 @@ release with `main.js`, `manifest.json` and `styles.css`.
 ## License
 
 [MIT](LICENSE)
+
+## Credits
+
+The folder icons in the **Folders** tab come from [react-symbols](https://react-symbols.pheralb.dev) by Pablo Hernández, based on the [Symbols](https://github.com/miguelsolorio/vscode-symbols) icon theme by Miguel Solorio. Both are MIT licensed: see [LICENSES](LICENSES).

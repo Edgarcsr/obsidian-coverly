@@ -272,6 +272,7 @@ export const pt = {
 
   "tab.colors": "Cores",
   "tab.emoji": "Emoji",
+  "tab.folders": "Pastas",
   "tab.gallery": "Galeria",
   "tab.icons": "Ícones",
   "tab.link": "Link",

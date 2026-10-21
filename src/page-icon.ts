@@ -5,6 +5,7 @@ import type { MessageKey } from "./i18n";
 import { trimIconImage } from "./icon-trim";
 import type { IconFile } from "./icon-trim";
 import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
+import { parseSymbol, symbolUrl } from "./symbols";
 import { drawEmoji } from "./twemoji";
 
 /**
@@ -183,13 +184,13 @@ export const iconFile = (app: App, value: string): IconFile | null => {
   return null;
 };
 
-/** O ícone é uma imagem (link ou arquivo do vault), não emoji nem Lucide. */
+/** O ícone é uma imagem (link ou arquivo do vault), não emoji, Lucide nem de pasta. */
 export const isImageIcon = (app: App, value: string): boolean =>
   iconImageSource(app, value) !== null;
 
 /**
- * Desenha o ícone da página, emoji, Lucide ou imagem, dentro de `el`. Com
- * `twemoji`, o emoji sai no estilo do X em vez do emoji do sistema.
+ * Desenha o ícone da página, emoji, Lucide, de pasta ou imagem, dentro de
+ * `el`. Com `twemoji`, o emoji sai no estilo do X em vez do emoji do sistema.
  */
 export const drawPageIcon = (
   app: App,
@@ -197,6 +198,17 @@ export const drawPageIcon = (
   value: string,
   twemoji: boolean
 ): void => {
+  // O de pasta é um SVG pronto, desenhado como imagem, mas sem cortar margens:
+  // o desenho já tem a margem certa.
+  if (parseSymbol(value) !== null) {
+    el.removeClass("is-lucide", "mdp-tinted");
+    el.addClass("is-image");
+    const url = symbolUrl(value);
+    if (url) {
+      el.createEl("img", { attr: { alt: "", src: url } });
+    }
+    return;
+  }
   const lucide = parseLucide(value);
   const image = lucide === null ? iconImageSource(app, value) : null;
   el.toggleClass("is-lucide", lucide !== null);

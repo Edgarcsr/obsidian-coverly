@@ -52,6 +52,7 @@ import { PopoverHeaders } from "./popover-header";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
 import { formatSize } from "./storage";
+import { parseSymbol } from "./symbols";
 import { TocManager } from "./toc";
 import { closeTwemojiCache, loadTwemojiCache } from "./twemoji";
 import { HeaderManager } from "./view-header";
@@ -486,9 +487,13 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
-  /** Põe o emoji no topo da seção Recentes. Ícones Lucide e imagens não entram. */
+  /** Põe o emoji no topo da seção Recentes. Ícones Lucide, de pasta e imagens não entram. */
   private async rememberEmoji(value: string): Promise<void> {
-    if (parseLucide(value) !== null || isImageIcon(this.app, value)) {
+    if (
+      parseLucide(value) !== null ||
+      parseSymbol(value) !== null ||
+      isImageIcon(this.app, value)
+    ) {
       return;
     }
     this.settings.recentEmojis = [
