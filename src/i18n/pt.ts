@@ -140,6 +140,9 @@ export const pt = {
   "linkPreview.created": "Criada",
   "linkPreview.modified": "Editada",
 
+  "menu.changeIcon": "Alterar ícone",
+  "menu.removeIcon": "Remover ícone",
+
   "notice.chooseImage": "Escolha um arquivo de imagem.",
   "notice.coversDisabled":
     'Ative "Baixar capas" nas configurações do Coverly primeiro.',

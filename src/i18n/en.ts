@@ -138,6 +138,9 @@ export const en: Messages = {
   "linkPreview.created": "Created",
   "linkPreview.modified": "Edited",
 
+  "menu.changeIcon": "Change icon",
+  "menu.removeIcon": "Remove icon",
+
   "notice.chooseImage": "Choose an image file.",
   "notice.coversDisabled":
     'Turn on "Download covers" in the Coverly settings first.',

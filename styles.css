@@ -1285,6 +1285,18 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   opacity: 0.7;
 }
 
+/*
+ * Nas pastas o recuo é da seta, que continua lá: o ícone fica sempre no
+ * fluxo, entre a seta e o nome, com o mesmo alinhamento do das notas.
+ */
+.nav-folder-title .mdp-inline-icon {
+  align-self: flex-start;
+  margin-block-start: calc(
+    (var(--nav-item-size) * var(--line-height-tight) - var(--mdp-inline-size)) /
+      2
+  );
+}
+
 /* Opção "no começo do nome": o ícone fica no fluxo e empurra o texto. */
 .mdp-tree-icon-inline .nav-file-title .mdp-inline-icon {
   margin-inline-start: 2.5px;
@@ -1375,7 +1387,8 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   color: var(--mdp-icon-color);
 }
 
-.nav-file-title.is-being-dragged .mdp-inline-icon.mdp-tinted {
+.nav-file-title.is-being-dragged .mdp-inline-icon.mdp-tinted,
+.nav-folder-title.is-being-dragged .mdp-inline-icon.mdp-tinted {
   color: inherit;
 }
 

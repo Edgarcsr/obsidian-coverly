@@ -16,10 +16,13 @@ import {
 } from "./cover-thumbs";
 import { downloadAllCovers } from "./download-covers";
 import { loadEmojiData } from "./emojis";
+import { registerFileMenu } from "./file-menu";
 import type { PopupPosition } from "./floating-popup";
+import { folderIcon, registerFolderIconSync } from "./folder-icons";
 import { headerCacheStats } from "./header";
 import { setLanguage, t } from "./i18n";
 import { IconPicker } from "./icon-picker";
+import type { Tab as IconTab } from "./icon-picker";
 import { setIconTrim } from "./icon-trim";
 import { LinkPreview } from "./link-preview";
 import { loadLucideData } from "./lucide-search";
@@ -79,6 +82,19 @@ interface SettingManager {
 }
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
+
+/** Dono do ícone que o seletor vai mudar: uma nota ou uma pasta. */
+interface IconTarget {
+  anchor: HTMLElement | null;
+  current: string | undefined;
+  /** Nota ou pasta dona do ícone. */
+  path: string;
+  /** Grava o ícone escolhido; `null` remove. */
+  save: (value: string | null) => Promise<void>;
+  tab: IconTab;
+  /** Trocar de aba vira a aba em que o seletor das notas abre. */
+  rememberTab: boolean;
+}
 
 const COVER_VARS = [
   "--mdp-cover-height",
@@ -154,6 +170,8 @@ export default class CoverlyPlugin extends Plugin {
       });
     });
     this.registerHeaderSync();
+    registerFolderIconSync(this);
+    registerFileMenu(this);
     this.linkPreview.register();
     this.popoverHeaders.register();
 
@@ -360,6 +378,8 @@ export default class CoverlyPlugin extends Plugin {
       this.settings.treeBackgrounds = legacy.treeCovers ? "notes" : "off";
       Reflect.deleteProperty(legacy, "treeCovers");
     }
+    // Cópia própria: o objeto padrão não pode receber os ícones.
+    this.settings.folderIcons = { ...this.settings.folderIcons };
     // Uma paleta que não existe mais (ou valor estranho) volta para a padrão.
     if (!isColorPalette(this.settings.colorPalette)) {
       this.settings.colorPalette = DEFAULT_SETTINGS.colorPalette;
@@ -503,22 +523,55 @@ export default class CoverlyPlugin extends Plugin {
     await this.saveSettings();
   }
 
-  /** Abre o seletor de ícone ancorado em `anchor`; sem âncora, abre centralizado. */
+  /** Abre o seletor de ícone da nota ancorado em `anchor`; sem âncora, abre centralizado. */
   async openIconPicker(
     sourcePath: string,
     anchor: HTMLElement | null = null
   ): Promise<void> {
+    await this.showIconPicker({
+      anchor,
+      current: this.noteData(sourcePath).icon,
+      path: sourcePath,
+      rememberTab: true,
+      save: async (value) => {
+        await this.setIcon(sourcePath, value);
+      },
+      tab: this.settings.iconTab,
+    });
+  }
+
+  /**
+   * Abre o seletor de ícone da pasta. Começa sempre na aba Pastas, e trocar
+   * de aba aqui não muda a aba em que o seletor das notas abre.
+   */
+  async openFolderIconPicker(
+    folderPath: string,
+    anchor: HTMLElement | null = null
+  ): Promise<void> {
+    await this.showIconPicker({
+      anchor,
+      current: this.folderIcon(folderPath),
+      path: folderPath,
+      rememberTab: false,
+      save: async (value) => {
+        await this.setFolderIcon(folderPath, value);
+      },
+      tab: "folders",
+    });
+  }
+
+  private async showIconPicker(target: IconTarget): Promise<void> {
     this.picker?.close();
-    const { icon } = this.noteData(sourcePath);
     await Promise.all([loadEmojiData(), loadLucideData()]);
     this.picker?.close();
+    const { current } = target;
     const picker = new IconPicker({
-      anchor,
+      anchor: target.anchor,
       app: this.app,
       // Um ícone colorido abre o seletor na cor dele; senão, na última usada.
       askColor: this.settings.askIconColor,
-      color: parseLucide(icon ?? "")?.color ?? this.settings.iconColor,
-      current: icon,
+      color: parseLucide(current ?? "")?.color ?? this.settings.iconColor,
+      current,
       onAskColorChange: async (askColor) => {
         this.settings.askIconColor = askColor;
         await this.saveSettings();
@@ -528,19 +581,21 @@ export default class CoverlyPlugin extends Plugin {
         await this.saveSettings();
       },
       onPick: async (value) => {
-        await this.setIcon(sourcePath, value);
+        await target.save(value);
         await this.rememberEmoji(value);
       },
       onRemove: async () => {
-        await this.setIcon(sourcePath, null);
+        await target.save(null);
       },
       onTabChange: (tab) => {
-        this.settings.iconTab = tab;
-        void this.saveSettings();
+        if (target.rememberTab) {
+          this.settings.iconTab = tab;
+          void this.saveSettings();
+        }
       },
       recentEmojis: this.settings.recentEmojis,
-      sourcePath,
-      tab: this.settings.iconTab,
+      sourcePath: target.path,
+      tab: target.tab,
       twemoji: this.settings.twemoji,
     });
     this.showPicker(picker);
@@ -660,6 +715,27 @@ export default class CoverlyPlugin extends Plugin {
         fm[FM.icon] = emoji;
       }
     });
+  }
+
+  /** Ícone gravado no frontmatter da nota, se houver. */
+  noteIcon(sourcePath: string): string | undefined {
+    return this.noteData(sourcePath).icon;
+  }
+
+  /** Ícone da pasta, se ela tiver um. */
+  folderIcon(folderPath: string): string | undefined {
+    return folderIcon(this.settings.folderIcons, folderPath);
+  }
+
+  /** Grava o ícone da pasta nas configurações. `null` remove. */
+  async setFolderIcon(folderPath: string, value: string | null): Promise<void> {
+    if (value === null) {
+      Reflect.deleteProperty(this.settings.folderIcons, folderPath);
+    } else {
+      this.settings.folderIcons[folderPath] = value;
+    }
+    await this.saveSettings();
+    this.noteIcons.schedule();
   }
 
   private async updateNote(

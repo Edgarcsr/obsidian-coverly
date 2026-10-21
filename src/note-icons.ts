@@ -20,6 +20,10 @@ const ICON_CLASS = "mdp-inline-icon";
 const NAME_CLASS = "mdp-name-colored";
 const TREE_COVER_CLASS = "mdp-tree-cover";
 const TREE_COVER_VAR = "--mdp-tree-cover";
+/** Linhas do explorador que levam ícone: notas e pastas. */
+const ROW_SELECTOR = ".nav-file-title[data-path], .nav-folder-title[data-path]";
+const ROW_CONTENT_SELECTOR =
+  ":scope > .nav-file-title-content, :scope > .nav-folder-title-content";
 /** Espaçamento mínimo entre as passadas completas do explorador. */
 const SWEEP_DELAY_MS = 180;
 
@@ -49,7 +53,8 @@ const clearName = (el: HTMLElement): void => {
 /**
  * Ícone da nota, em miniatura, onde o nome dela aparece fora do cabeçalho:
  * no título da barra superior da aba (ver title-icon.ts) e no explorador de
- * arquivos, como no Notion.
+ * arquivos, como no Notion. No explorador, as pastas também levam o delas
+ * (ver folder-icons.ts).
  *
  * O Obsidian redesenha esses lugares por conta própria (ao rolar a árvore,
  * abrir pastas, trocar de nota), então cada contêiner é observado e o
@@ -133,9 +138,7 @@ export class NoteIconDecorator {
       const root = leaf.view.containerEl;
       alive.add(root);
       this.observe(root, true);
-      for (const title of root.querySelectorAll<HTMLElement>(
-        ".nav-file-title[data-path]"
-      )) {
+      for (const title of root.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
         this.decorateTitle(title);
       }
     }
@@ -230,26 +233,22 @@ export class NoteIconDecorator {
     if (node.hasClass(ICON_CLASS)) {
       return;
     }
-    if (node.matches(".nav-file-title[data-path]")) {
+    if (node.matches(ROW_SELECTOR)) {
       this.decorateTitle(node);
       return;
     }
-    const parent = node.closest<HTMLElement>(".nav-file-title[data-path]");
+    const parent = node.closest<HTMLElement>(ROW_SELECTOR);
     if (parent) {
       this.decorateTitle(parent);
       return;
     }
-    for (const title of node.querySelectorAll<HTMLElement>(
-      ".nav-file-title[data-path]"
-    )) {
+    for (const title of node.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
       this.decorateTitle(title);
     }
   }
 
   private decorateTitle(title: HTMLElement): void {
-    const content = title.querySelector<HTMLElement>(
-      ":scope > .nav-file-title-content"
-    );
+    const content = title.querySelector<HTMLElement>(ROW_CONTENT_SELECTOR);
     if (!content) {
       return;
     }
@@ -295,9 +294,9 @@ export class NoteIconDecorator {
     return data;
   }
 
-  /** Ícone gravado no frontmatter da nota, se houver. */
+  /** Ícone gravado no frontmatter da nota ou, numa pasta, nas configurações. */
   private iconFor(path: string): string | undefined {
-    return this.dataFor(path)?.icon;
+    return this.dataFor(path)?.icon ?? this.plugin.folderIcon(path);
   }
 
   /** Pinta o nome da nota no explorador com a cor dela, se a opção estiver ligada. */

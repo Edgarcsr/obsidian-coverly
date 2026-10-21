@@ -26,10 +26,11 @@
 - **Colored names** (off by default, **Settings → Coverly**): pick a color for a note and its name is painted with it in the file explorer.
 - **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, a colored folder icon, or a custom image.
 - **Icons everywhere**: the note icon also shows in the tab title and the file explorer.
+- **Folder icons**: right-click a folder in the file explorer and select **Change icon** to give it an icon, shown before its name. Notes have the same **Change icon** and **Remove icon** items.
 - **Heading outline**: a slim outline on the right edge of the note that expands on hover and jumps to a heading on click.
 - **English and Portuguese** interface, following Obsidian's language by default.
 
-Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`, `coverly-background`, `coverly-font`, `coverly-accent`, `coverly-color`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown.
+Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`, `coverly-background`, `coverly-font`, `coverly-accent`, `coverly-color`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown. Folders have no frontmatter, so folder icons are stored in the plugin's `data.json`, by folder path, and follow the folder when it is renamed or moved.
 
 ## Network use
 
