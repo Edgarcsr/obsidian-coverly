@@ -1462,7 +1462,8 @@ body .mdp-picker .mdp-search-field input:focus-visible {
     (var(--nav-item-size) * var(--line-height-tight) - var(--mdp-inline-size)) /
       2
   );
-  margin-inline-start: calc(-1 * var(--mdp-inline-size) - 3.5px);
+  /* −(largura + 6) + 6 = −largura: o nome não anda quando o ícone entra. */
+  margin-inline-start: calc(-1 * var(--mdp-inline-size) - 6px);
   margin-inline-end: 6px;
 }
 

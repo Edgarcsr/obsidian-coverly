@@ -88,6 +88,15 @@ export class NoteIconDecorator {
     });
   }
 
+  /** Decora agora, sem esperar o próximo frame (ver o onLayoutReady em main.ts). */
+  flush(): void {
+    if (this.frame !== null) {
+      window.cancelAnimationFrame(this.frame);
+      this.frame = null;
+    }
+    this.decorateAll();
+  }
+
   destroy(): void {
     if (this.frame !== null) {
       window.cancelAnimationFrame(this.frame);
@@ -197,7 +206,13 @@ export class NoteIconDecorator {
         this.schedule();
       }
     });
-    observer.observe(el, { childList: true, subtree: true });
+    // O caminho também: nas pastas, o Obsidian insere a linha vazia e só
+    // depois põe o nome e o `data-path`.
+    observer.observe(el, {
+      attributeFilter: ["data-path"],
+      childList: true,
+      subtree: true,
+    });
     this.observers.set(el, observer);
   }
 
@@ -211,14 +226,29 @@ export class NoteIconDecorator {
     }, SWEEP_DELAY_MS);
   }
 
-  /** Decora só as linhas que acabaram de entrar no DOM. */
+  /** Decora só as linhas que acabaram de entrar no DOM ou de ganhar o caminho. */
   private decorateAdded(records: MutationRecord[]): void {
-    if (records.every((record) => record.addedNodes.length === 0)) {
+    if (
+      records.every(
+        (record) =>
+          record.type !== "attributes" && record.addedNodes.length === 0
+      )
+    ) {
       return;
     }
     measure("explorer.decorateAdded", () => {
       this.withPass(() => {
         for (const record of records) {
+          const { target } = record;
+          if (record.type === "attributes") {
+            if (
+              target.instanceOf(HTMLElement) &&
+              target.matches(ROW_SELECTOR)
+            ) {
+              this.decorateTitle(target);
+            }
+            continue;
+          }
           for (const node of record.addedNodes) {
             if (node.instanceOf(HTMLElement)) {
               this.decorateAddedNode(node);

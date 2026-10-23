@@ -1,6 +1,11 @@
 import type { App } from "obsidian";
 
-import { isTintablePack, packIconUrl, parsePackIcon } from "./icon-packs";
+import {
+  isPackIconPending,
+  isTintablePack,
+  packIconUrl,
+  parsePackIcon,
+} from "./icon-packs";
 import { isIconTrimEnabled, whenTrimmed } from "./icon-trim";
 import {
   DEFAULT_ICON_COLOR,
@@ -96,7 +101,11 @@ export const paintTitleIcon = (
   if (pack !== null) {
     const url = packIconUrl(value);
     if (url === null) {
-      // Pacote ainda carregando: sem chave, a próxima passada tenta de novo.
+      // Pacote ainda carregando: reserva o espaço do ícone para o texto não
+      // andar quando ele chegar. Sem chave, a próxima passada tenta de novo.
+      if (isPackIconPending(value)) {
+        setKind(title, "image");
+      }
       title.removeAttribute(KEY_ATTR);
     } else if (isTintablePack(pack.pack)) {
       setKind(

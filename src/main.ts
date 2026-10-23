@@ -25,7 +25,7 @@ import { packInfo } from "./icon-pack-catalog";
 import {
   configureIconPacks,
   installedPacks,
-  refreshInstalled,
+  preloadIconPacks,
   parsePackIcon,
 } from "./icon-packs";
 import { IconPicker, LUCIDE_PACK } from "./icon-picker";
@@ -150,15 +150,21 @@ export default class CoverlyPlugin extends Plugin {
       `${pluginDir}/${TWEMOJI_CACHE_FILE}`
     );
 
-    // Antes do primeiro desenho, para as capas já baixadas abrirem do disco.
-    await this.migrateCoverFolder();
-    await Promise.all([twemojiCache, this.configureCoverCache()]);
-    // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
     // Pacote de ícones lido do disco: os ícones dele podem aparecer agora.
-    void refreshInstalled(this.app);
     configureIconPacks(this.app, () => {
       this.refreshHeaders();
     });
+
+    // Antes do primeiro desenho, para as capas já baixadas abrirem do disco.
+    // Os pacotes de ícones vêm junto (a pasta deles é definida logo no começo
+    // de configureCoverCache), para os ícones já saírem na primeira pintura.
+    await this.migrateCoverFolder();
+    await Promise.all([
+      twemojiCache,
+      this.configureCoverCache(),
+      preloadIconPacks(this.app),
+    ]);
+    // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
     setThumbListener(() => {
       this.noteIcons.schedule();
     });
@@ -364,7 +370,15 @@ export default class CoverlyPlugin extends Plugin {
       this.toc.schedule();
     };
 
-    workspace.onLayoutReady(schedule);
+    // Quando o layout fica pronto, o Obsidian já desenhou os títulos e o
+    // explorador, mas a tela ainda não foi pintada. Desenhar agora, e não no
+    // próximo frame, põe os ícones na mesma pintura: o título não aparece
+    // sem o ícone para depois andar para o lado quando ele chega.
+    workspace.onLayoutReady(() => {
+      this.headers.flush();
+      this.noteIcons.flush();
+      this.toc.schedule();
+    });
     this.registerEvent(workspace.on("layout-change", schedule));
     this.registerEvent(workspace.on("active-leaf-change", schedule));
     this.registerEvent(

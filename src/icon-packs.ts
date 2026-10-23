@@ -234,6 +234,9 @@ const installedSizes = new Map<string, number>();
 export const installedSize = (id: string): number | undefined =>
   installedSizes.get(id);
 
+/** Já leu do disco quais pacotes estão instalados; antes disso, não se sabe. */
+let installedKnown = false;
+
 /** Lê do disco quais pacotes estão instalados e o tamanho de cada um. */
 export const refreshInstalled = async (vaultApp: App): Promise<void> => {
   const ids = await installedPacks(vaultApp);
@@ -242,6 +245,33 @@ export const refreshInstalled = async (vaultApp: App): Promise<void> => {
   for (const [index, id] of ids.entries()) {
     installedSizes.set(id, sizes[index] ?? 0);
   }
+  installedKnown = true;
+};
+
+/**
+ * O ícone é de um pacote que está (ou deve estar) instalado e ainda não foi
+ * lido do disco. Quem desenha reserva o espaço dele nesse meio-tempo, para o
+ * texto não andar quando o ícone chegar. Pacote ausente, ou sem esse ícone,
+ * não conta: não vai aparecer nada.
+ */
+export const isPackIconPending = (value: string): boolean => {
+  const icon = parsePackIcon(value);
+  if (!icon || loaded.has(icon.pack) || !packInfo(icon.pack)) {
+    return false;
+  }
+  return !installedKnown || installedSizes.has(icon.pack);
+};
+
+/**
+ * Lê os pacotes instalados no início do plugin, antes da primeira pintura:
+ * assim os ícones deles já saem desenhados, em vez de surgirem um instante
+ * depois. São poucos milissegundos por pacote.
+ */
+export const preloadIconPacks = async (vaultApp: App): Promise<void> => {
+  await refreshInstalled(vaultApp);
+  await Promise.all(
+    [...installedSizes.keys()].map(async (id) => await loadPack(id))
+  );
 };
 
 /** Baixa o pacote e o grava no vault. */
