@@ -3,6 +3,7 @@ import type { TFile } from "obsidian";
 
 import { buildHeader } from "./header";
 import { getLocale } from "./i18n";
+import { iconPacksVersion } from "./icon-packs";
 import type CoverlyPlugin from "./main";
 import { clearAccent, paintAccent } from "./note-accent";
 import { clearBackground, paintBackground } from "./note-background";
@@ -444,7 +445,7 @@ export class HeaderManager {
     // Só o que a capa mostra (e os textos dos botões dela) decide se ela é refeita.
     const coverKey = `${file.path}\n${getLocale()}\n${JSON.stringify([data.cover, data.position, data.positionX, data.zoom, data.credit, data.creditUrl])}`;
     // O estilo do emoji entra na chave para redesenhar quando a opção muda.
-    const key = `${coverKey}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconTrim}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
+    const key = `${coverKey}\n${iconPacksVersion()}\n${this.plugin.settings.twemoji}\n${this.plugin.settings.iconTrim}\n${this.plugin.settings.iconPosition}\n${this.plugin.settings.nameColors}\n${this.plugin.settings.noteAccents}\n${this.plugin.settings.noteBackgrounds}\n${JSON.stringify(data)}`;
     // A animação de entrada só roda ao abrir a nota, não a cada mudança na capa.
     const entering = state.path !== file.path;
     state.path = file.path;

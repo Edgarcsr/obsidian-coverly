@@ -23,6 +23,8 @@ const SHOW_DELAY = 450;
 const GAP = 6;
 /** Espaço mínimo entre o cartão e as bordas da janela. */
 const MARGIN = 8;
+/** Quanto esperar a prévia nativa abrir antes de desistir de alinhá-la. */
+const ALIGN_WAIT = 3000;
 /** Só o começo da nota entra na prévia; o resto ficaria escondido de qualquer jeito. */
 const MAX_PREVIEW_CHARS = 1500;
 
@@ -117,15 +119,57 @@ const renderDates = (card: HTMLElement, file: TFile): void => {
 };
 
 /** A prévia nativa do Obsidian (plugin "Pré-visualização de página") já está aberta. */
-const nativePreviewOpen = (): boolean =>
-  document.querySelector(".popover.hover-popover") !== null;
+const findNativePopover = (): HTMLElement | null =>
+  document.querySelector<HTMLElement>(".popover.hover-popover");
 
-/** Coloca o cartão abaixo do link; sem espaço embaixo, acima. */
-const position = (card: HTMLElement, target: HTMLElement): void => {
+const nativePreviewOpen = (): boolean => findNativePopover() !== null;
+
+/** Onde o mouse estava ao entrar no link. */
+interface Point {
+  x: number;
+  y: number;
+}
+
+/** Quanto o ponto está longe do retângulo (zero, se estiver dentro dele). */
+const distanceTo = (rect: DOMRect, point: Point): number =>
+  Math.hypot(
+    Math.max(rect.left - point.x, 0, point.x - rect.right),
+    Math.max(rect.top - point.y, 0, point.y - rect.bottom)
+  );
+
+/**
+ * Retângulo do link onde o mouse está. Um link que quebra em duas linhas tem
+ * um retângulo por linha, e o que envolve todos começa na borda da outra
+ * linha, longe do mouse: a prévia saía no lugar errado.
+ */
+const rectAt = (target: Element, point: Point | null): DOMRect => {
+  const rects = [...target.getClientRects()];
+  const [first] = rects;
+  if (!(point && first) || rects.length < 2) {
+    return target.getBoundingClientRect();
+  }
+  let best = first;
+  for (const rect of rects) {
+    if (distanceTo(rect, point) < distanceTo(best, point)) {
+      best = rect;
+    }
+  }
+  return best;
+};
+
+/**
+ * Coloca o cartão abaixo do link; sem espaço embaixo, acima. Na horizontal,
+ * começa na linha do link onde o mouse está.
+ */
+const position = (
+  card: HTMLElement,
+  target: HTMLElement,
+  point: Point | null
+): void => {
   const anchor = target.getBoundingClientRect();
   const { offsetWidth: width, offsetHeight: height } = card;
   const maxLeft = window.innerWidth - width - MARGIN;
-  const left = Math.max(MARGIN, Math.min(anchor.left, maxLeft));
+  const left = Math.max(MARGIN, Math.min(rectAt(target, point).left, maxLeft));
   const below = anchor.bottom + GAP;
   const top =
     below + height <= window.innerHeight - MARGIN
@@ -149,6 +193,10 @@ export class LinkPreview {
   private card: HTMLElement | null = null;
   private target: HTMLElement | null = null;
   private timer: number | null = null;
+  /** Onde o mouse entrou no link que está com o cartão. */
+  private point: Point | null = null;
+  /** Ouvintes que alinham a prévia nativa de um link quebrado em duas linhas. */
+  private alignment: MutationObserver[] = [];
   /** Dono do markdown desenhado no cartão; descarregá-lo limpa o que ele registrou. */
   private content: Component | null = null;
 
@@ -192,6 +240,66 @@ export class LinkPreview {
 
   destroy(): void {
     this.hide();
+    this.stopAligning();
+  }
+
+  private stopAligning(): void {
+    for (const observer of this.alignment) {
+      observer.disconnect();
+    }
+    this.alignment = [];
+  }
+
+  /**
+   * A prévia nativa do Obsidian (com Ctrl, ou sempre na leitura) se alinha pelo
+   * retângulo que envolve o link. Num link quebrado em duas linhas isso a joga
+   * na borda da outra linha, longe do mouse. Depois que ela abre, a coluna dela
+   * passa para a linha onde o mouse está; a altura continua a do Obsidian.
+   */
+  private alignNativePopover(info: HoverLinkInfo): void {
+    const { targetEl } = info;
+    this.stopAligning();
+    if (targetEl.getClientRects().length < 2) {
+      return;
+    }
+    const point = { x: info.event.clientX, y: info.event.clientY };
+    const align = (popover: HTMLElement): void => {
+      const maxLeft = window.innerWidth - popover.offsetWidth - MARGIN;
+      const left = `${Math.max(MARGIN, Math.min(rectAt(targetEl, point).left, maxLeft))}px`;
+      // Só escreve se mudou, para o ouvinte do estilo não chamar a si mesmo.
+      if (popover.style.left !== left) {
+        popover.style.left = left;
+      }
+    };
+    const watch = (popover: HTMLElement): void => {
+      align(popover);
+      const styleObserver = new MutationObserver(() => {
+        align(popover);
+      });
+      styleObserver.observe(popover, {
+        attributeFilter: ["style"],
+        attributes: true,
+      });
+      this.alignment.push(styleObserver);
+    };
+    const open = findNativePopover();
+    if (open) {
+      watch(open);
+      return;
+    }
+    // A prévia só aparece depois de um instante: espera ela entrar no DOM.
+    const created = new MutationObserver(() => {
+      const popover = findNativePopover();
+      if (popover) {
+        created.disconnect();
+        watch(popover);
+      }
+    });
+    created.observe(document.body, { childList: true, subtree: true });
+    this.alignment.push(created);
+    window.setTimeout(() => {
+      created.disconnect();
+    }, ALIGN_WAIT);
   }
 
   private onExplorerPointerover(event: PointerEvent): void {
@@ -231,6 +339,7 @@ export class LinkPreview {
   }
 
   private onHover(info: HoverLinkInfo): void {
+    this.alignNativePopover(info);
     if (info.targetEl === this.target) {
       return;
     }
@@ -259,6 +368,7 @@ export class LinkPreview {
 
     const target = info.targetEl;
     this.target = target;
+    this.point = { x: info.event.clientX, y: info.event.clientY };
     // `mouseleave` não borbulha, então cada link ganha o seu ouvinte, tirado no hide.
     target.addEventListener("mouseleave", this.onLeave);
     this.timer = window.setTimeout(() => {
@@ -325,7 +435,7 @@ export class LinkPreview {
     const body = card.createDiv({
       cls: "mdp-link-card-body markdown-rendered",
     });
-    position(card, target);
+    position(card, target, this.point);
 
     const text = await app.vault.cachedRead(file);
     // O mouse pode ter saído enquanto a nota era lida.
@@ -336,7 +446,7 @@ export class LinkPreview {
     const markdown = text.slice(start, start + MAX_PREVIEW_CHARS).trim();
     if (markdown === "") {
       body.remove();
-      position(card, target);
+      position(card, target, this.point);
       return;
     }
     const content = new Component();
@@ -344,7 +454,7 @@ export class LinkPreview {
     this.content = content;
     await MarkdownRenderer.render(app, markdown, body, file.path, content);
     if (this.card === card) {
-      position(card, target);
+      position(card, target, this.point);
     }
   }
 
@@ -381,7 +491,7 @@ export class LinkPreview {
       const dimensions = `${image.naturalWidth} × ${image.naturalHeight}`;
       size.setText(`${dimensions} · ${formatSize(file.stat.size)}`);
     });
-    position(card, target);
+    position(card, target, this.point);
   }
 
   private hide(): void {

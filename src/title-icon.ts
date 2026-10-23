@@ -1,7 +1,14 @@
 import type { App } from "obsidian";
 
+import {
+  isPackIconPending,
+  isTintablePack,
+  packIconUrl,
+  parsePackIcon,
+} from "./icon-packs";
 import { isIconTrimEnabled, whenTrimmed } from "./icon-trim";
 import {
+  DEFAULT_ICON_COLOR,
   drawLucide,
   iconColorCss,
   iconFile,
@@ -90,6 +97,29 @@ export const paintTitleIcon = (
   clearTitleIcon(title);
   title.setAttribute(KEY_ATTR, key);
 
+  const pack = parsePackIcon(value);
+  if (pack !== null) {
+    const url = packIconUrl(value);
+    if (url === null) {
+      // Pacote ainda carregando: reserva o espaço do ícone para o texto não
+      // andar quando ele chegar. Sem chave, a próxima passada tenta de novo.
+      if (isPackIconPending(value)) {
+        setKind(title, "image");
+      }
+      title.removeAttribute(KEY_ATTR);
+    } else if (isTintablePack(pack.pack)) {
+      setKind(
+        title,
+        "mask",
+        cssUrl(url),
+        iconColorCss(pack.color ?? DEFAULT_ICON_COLOR)
+      );
+    } else {
+      setKind(title, "image", cssUrl(url));
+    }
+    return;
+  }
+
   const lucide = parseLucide(value);
   if (lucide !== null) {
     const url = lucideDataUrl(lucide.name);
@@ -102,11 +132,28 @@ export const paintTitleIcon = (
   const image = iconImageSource(app, value);
   if (image !== null) {
     setKind(title, "image", cssUrl(image));
-    whenTrimmed(image, iconFile(app, value), (url) => {
-      if (title.getAttribute(KEY_ATTR) === key) {
-        title.style.setProperty(IMAGE_VAR, cssUrl(url));
+    const pending = whenTrimmed(
+      image,
+      iconFile(app, value),
+      (url) => {
+        if (title.getAttribute(KEY_ATTR) === key) {
+          title.style.setProperty(IMAGE_VAR, cssUrl(url));
+        }
+      },
+      () => {
+        // Sem o que cortar: volta a original, que ficou de fora até aqui.
+        if (
+          title.getAttribute(KEY_ATTR) === key &&
+          !title.style.getPropertyValue(IMAGE_VAR)
+        ) {
+          title.style.setProperty(IMAGE_VAR, cssUrl(image));
+        }
       }
-    });
+    );
+    if (pending) {
+      // Espaço guardado, sem a original, até a versão cortada ficar pronta.
+      title.style.removeProperty(IMAGE_VAR);
+    }
     return;
   }
 

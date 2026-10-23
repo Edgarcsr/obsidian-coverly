@@ -16,12 +16,24 @@ import {
 } from "./cover-thumbs";
 import { downloadAllCovers } from "./download-covers";
 import { loadEmojiData } from "./emojis";
+import { registerFileMenu } from "./file-menu";
 import type { PopupPosition } from "./floating-popup";
+import { folderIcon, registerFolderIconSync } from "./folder-icons";
 import { headerCacheStats } from "./header";
 import { setLanguage, t } from "./i18n";
-import { IconPicker } from "./icon-picker";
+import { packInfo } from "./icon-pack-catalog";
+import {
+  configureIconPacks,
+  installedPacks,
+  preloadIconPacks,
+  parsePackIcon,
+} from "./icon-packs";
+import { IconPicker, LUCIDE_PACK } from "./icon-picker";
+import type { PickerPack, Tab as IconTab } from "./icon-picker";
 import { setIconTrim } from "./icon-trim";
+import { registerLinkIcons, refreshLinkIcons } from "./link-icons";
 import { LinkPreview } from "./link-preview";
+import { setLucideExtras } from "./lucide-extra";
 import { loadLucideData } from "./lucide-search";
 import { DEFAULT_COLOR, showColorPopup } from "./note-color";
 import {
@@ -79,6 +91,19 @@ interface SettingManager {
 
 type FrontmatterWriter = (fm: Record<string, unknown>) => void;
 
+/** Dono do ícone que o seletor vai mudar: uma nota ou uma pasta. */
+interface IconTarget {
+  anchor: HTMLElement | null;
+  current: string | undefined;
+  /** Nota ou pasta dona do ícone. */
+  path: string;
+  /** Grava o ícone escolhido; `null` remove. */
+  save: (value: string | null) => Promise<void>;
+  tab: IconTab;
+  /** Trocar de aba vira a aba em que o seletor das notas abre. */
+  rememberTab: boolean;
+}
+
 const COVER_VARS = [
   "--mdp-cover-height",
   "--mdp-cover-radius",
@@ -114,6 +139,7 @@ export default class CoverlyPlugin extends Plugin {
     this.registerPerfGauges();
     setLanguage(this.settings.language);
     setColorPalette(this.settings.colorPalette);
+    setLucideExtras(this.settings.lucideExtras);
     this.applyCoverStyle();
     // Antes do primeiro desenho, para os emojis já baixados aparecerem na hora.
     const pluginDir =
@@ -125,9 +151,20 @@ export default class CoverlyPlugin extends Plugin {
       `${pluginDir}/${TWEMOJI_CACHE_FILE}`
     );
 
+    // Pacote de ícones lido do disco: os ícones dele podem aparecer agora.
+    configureIconPacks(this.app, () => {
+      this.refreshHeaders();
+    });
+
     // Antes do primeiro desenho, para as capas já baixadas abrirem do disco.
+    // Os pacotes de ícones vêm junto (a pasta deles é definida logo no começo
+    // de configureCoverCache), para os ícones já saírem na primeira pintura.
     await this.migrateCoverFolder();
-    await Promise.all([twemojiCache, this.configureCoverCache()]);
+    await Promise.all([
+      twemojiCache,
+      this.configureCoverCache(),
+      preloadIconPacks(this.app),
+    ]);
     // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
     setThumbListener(() => {
       this.noteIcons.schedule();
@@ -153,6 +190,9 @@ export default class CoverlyPlugin extends Plugin {
       });
     });
     this.registerHeaderSync();
+    registerFolderIconSync(this);
+    registerFileMenu(this);
+    registerLinkIcons(this);
     this.linkPreview.register();
     this.popoverHeaders.register();
 
@@ -332,7 +372,15 @@ export default class CoverlyPlugin extends Plugin {
       this.toc.schedule();
     };
 
-    workspace.onLayoutReady(schedule);
+    // Quando o layout fica pronto, o Obsidian já desenhou os títulos e o
+    // explorador, mas a tela ainda não foi pintada. Desenhar agora, e não no
+    // próximo frame, põe os ícones na mesma pintura: o título não aparece
+    // sem o ícone para depois andar para o lado quando ele chega.
+    workspace.onLayoutReady(() => {
+      this.headers.flush();
+      this.noteIcons.flush();
+      this.toc.schedule();
+    });
     this.registerEvent(workspace.on("layout-change", schedule));
     this.registerEvent(workspace.on("active-leaf-change", schedule));
     this.registerEvent(
@@ -359,6 +407,13 @@ export default class CoverlyPlugin extends Plugin {
       this.settings.treeBackgrounds = legacy.treeCovers ? "notes" : "off";
       Reflect.deleteProperty(legacy, "treeCovers");
     }
+    // Cópia própria: o objeto padrão não pode receber os ícones.
+    this.settings.folderIcons = { ...this.settings.folderIcons };
+    this.settings.hiddenIconPacks = [...this.settings.hiddenIconPacks];
+    // A aba Pastas virou o pacote Symbols, dentro da aba Ícones.
+    if (!["emoji", "icons", "upload"].includes(this.settings.iconTab)) {
+      this.settings.iconTab = "icons";
+    }
     // Uma paleta que não existe mais (ou valor estranho) volta para a padrão.
     if (!isColorPalette(this.settings.colorPalette)) {
       this.settings.colorPalette = DEFAULT_SETTINGS.colorPalette;
@@ -374,6 +429,7 @@ export default class CoverlyPlugin extends Plugin {
     this.headers.schedule();
     this.noteIcons.schedule();
     this.toc.schedule();
+    refreshLinkIcons(this);
   }
 
   /** Passa altura, cantos, degradê e sombra da capa para o CSS, que os lê como variáveis. */
@@ -486,9 +542,13 @@ export default class CoverlyPlugin extends Plugin {
     });
   }
 
-  /** Põe o emoji no topo da seção Recentes. Ícones Lucide e imagens não entram. */
+  /** Põe o emoji no topo da seção Recentes. Ícones Lucide, de pasta e imagens não entram. */
   private async rememberEmoji(value: string): Promise<void> {
-    if (parseLucide(value) !== null || isImageIcon(this.app, value)) {
+    if (
+      parseLucide(value) !== null ||
+      parsePackIcon(value) !== null ||
+      isImageIcon(this.app, value)
+    ) {
       return;
     }
     this.settings.recentEmojis = [
@@ -498,22 +558,80 @@ export default class CoverlyPlugin extends Plugin {
     await this.saveSettings();
   }
 
-  /** Abre o seletor de ícone ancorado em `anchor`; sem âncora, abre centralizado. */
+  /** Abre o seletor de ícone da nota ancorado em `anchor`; sem âncora, abre centralizado. */
   async openIconPicker(
     sourcePath: string,
     anchor: HTMLElement | null = null
   ): Promise<void> {
-    this.picker?.close();
-    const { icon } = this.noteData(sourcePath);
-    await Promise.all([loadEmojiData(), loadLucideData()]);
-    this.picker?.close();
-    const picker = new IconPicker({
+    await this.showIconPicker({
       anchor,
+      current: this.noteData(sourcePath).icon,
+      path: sourcePath,
+      rememberTab: true,
+      save: async (value) => {
+        await this.setIcon(sourcePath, value);
+      },
+      tab: this.settings.iconTab,
+    });
+  }
+
+  /**
+   * Abre o seletor de ícone da pasta. Começa sempre na aba Ícones, e trocar
+   * de aba aqui não muda a aba em que o seletor das notas abre.
+   */
+  async openFolderIconPicker(
+    folderPath: string,
+    anchor: HTMLElement | null = null
+  ): Promise<void> {
+    await this.showIconPicker({
+      anchor,
+      current: this.folderIcon(folderPath),
+      path: folderPath,
+      rememberTab: false,
+      save: async (value) => {
+        await this.setFolderIcon(folderPath, value);
+      },
+      tab: "icons",
+    });
+  }
+
+  /**
+   * Sub-abas da aba Ícones: o Lucide e os pacotes instalados, menos os
+   * ocultos. Se tudo estiver oculto, fica o Lucide.
+   */
+  private async pickerPacks(): Promise<PickerPack[]> {
+    const installed = await installedPacks(this.app);
+    const packs: PickerPack[] = [
+      { id: LUCIDE_PACK, name: "Lucide", tintable: true },
+      ...installed.flatMap((id) => {
+        const info = packInfo(id);
+        return info ? [{ id, name: info.name, tintable: info.tintable }] : [];
+      }),
+    ];
+    const visible = packs.filter(
+      (pack) => !this.settings.hiddenIconPacks.includes(pack.id)
+    );
+    return visible.length > 0 ? visible : packs.slice(0, 1);
+  }
+
+  private async showIconPicker(target: IconTarget): Promise<void> {
+    this.picker?.close();
+    const [packs] = await Promise.all([
+      this.pickerPacks(),
+      loadEmojiData(),
+      loadLucideData(),
+    ]);
+    this.picker?.close();
+    const { current } = target;
+    const currentColor =
+      parseLucide(current ?? "")?.color ?? parsePackIcon(current ?? "")?.color;
+    const picker = new IconPicker({
+      anchor: target.anchor,
       app: this.app,
       // Um ícone colorido abre o seletor na cor dele; senão, na última usada.
       askColor: this.settings.askIconColor,
-      color: parseLucide(icon ?? "")?.color ?? this.settings.iconColor,
-      current: icon,
+      color: currentColor ?? this.settings.iconColor,
+      current,
       onAskColorChange: async (askColor) => {
         this.settings.askIconColor = askColor;
         await this.saveSettings();
@@ -522,20 +640,28 @@ export default class CoverlyPlugin extends Plugin {
         this.settings.iconColor = color;
         await this.saveSettings();
       },
+      onPackChange: (pack) => {
+        this.settings.iconPack = pack;
+        void this.saveSettings();
+      },
       onPick: async (value) => {
-        await this.setIcon(sourcePath, value);
+        await target.save(value);
         await this.rememberEmoji(value);
       },
       onRemove: async () => {
-        await this.setIcon(sourcePath, null);
+        await target.save(null);
       },
       onTabChange: (tab) => {
-        this.settings.iconTab = tab;
-        void this.saveSettings();
+        if (target.rememberTab) {
+          this.settings.iconTab = tab;
+          void this.saveSettings();
+        }
       },
+      pack: this.settings.iconPack,
+      packs,
       recentEmojis: this.settings.recentEmojis,
-      sourcePath,
-      tab: this.settings.iconTab,
+      sourcePath: target.path,
+      tab: target.tab,
       twemoji: this.settings.twemoji,
     });
     this.showPicker(picker);
@@ -655,6 +781,27 @@ export default class CoverlyPlugin extends Plugin {
         fm[FM.icon] = emoji;
       }
     });
+  }
+
+  /** Ícone gravado no frontmatter da nota, se houver. */
+  noteIcon(sourcePath: string): string | undefined {
+    return this.noteData(sourcePath).icon;
+  }
+
+  /** Ícone da pasta, se ela tiver um. */
+  folderIcon(folderPath: string): string | undefined {
+    return folderIcon(this.settings.folderIcons, folderPath);
+  }
+
+  /** Grava o ícone da pasta nas configurações. `null` remove. */
+  async setFolderIcon(folderPath: string, value: string | null): Promise<void> {
+    if (value === null) {
+      Reflect.deleteProperty(this.settings.folderIcons, folderPath);
+    } else {
+      this.settings.folderIcons[folderPath] = value;
+    }
+    await this.saveSettings();
+    this.noteIcons.schedule();
   }
 
   private async updateNote(

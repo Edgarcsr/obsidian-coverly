@@ -1003,6 +1003,237 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   color: inherit;
 }
 
+/* Ícones coloridos de pacote (como o Symbols): imagem no tamanho do Lucide */
+.mdp-picker .mdp-icon-option img {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+/*
+ * Ícone de pacote de uma cor só: o SVG vira máscara, pintada com a cor do
+ * texto, como o traço do Lucide. O tamanho vem das regras de `.svg-icon`.
+ */
+.mdp-pack-icon {
+  display: block;
+  background-color: currentColor;
+  mask: var(--mdp-pack-icon) center / contain no-repeat;
+}
+
+/* Faixa de exemplo embaixo da descrição do pacote, nas configurações */
+.mdp-pack-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px;
+  margin-top: var(--size-4-2);
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+
+.mdp-pack-preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.mdp-pack-preview-icon .svg-icon,
+.mdp-pack-preview-icon .mdp-pack-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.mdp-pack-preview-icon .svg-icon {
+  stroke-width: 2;
+}
+
+.mdp-pack-preview-icon img {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/*
+ * Prévias das configurações (ver settings-previews.ts): mostram o conteúdo do
+ * próprio vault, com as cores do tema e sem degradês decorativos.
+ */
+/* A prévia vai no topo da linha, centralizada; o texto e o controle ficam embaixo */
+.mdp-preview-row {
+  flex-wrap: wrap;
+}
+
+.mdp-preview {
+  display: flex;
+  flex: 0 0 100%;
+  order: -1;
+  justify-content: center;
+  margin-bottom: var(--size-4-3);
+}
+
+.mdp-preview > .mdp-mock {
+  width: 100%;
+  max-width: 320px;
+}
+
+.mdp-mock {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 92px;
+  padding: 12px;
+  overflow: hidden;
+  color: var(--text-normal);
+  text-align: start;
+  pointer-events: none;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+}
+
+/* Cabeçalho: a capa da nota, a foto dela ou um bloco neutro */
+.mdp-mock-cover {
+  position: relative;
+  flex-shrink: 0;
+  height: 44px;
+  overflow: hidden;
+  background: var(--background-modifier-hover);
+  border-radius: var(--radius-s);
+}
+
+.mdp-mock-cover-image {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.mdp-mock-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.mdp-mock-icon.is-large {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  margin: -14px 0 0 8px;
+  font-size: 20px;
+}
+
+.mdp-mock-icon .svg-icon,
+.mdp-mock-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mdp-mock-icon .svg-icon {
+  stroke-width: 2.5;
+}
+
+.mdp-mock-heading {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding-inline: 8px;
+}
+
+.mdp-mock-title {
+  overflow: hidden;
+  padding-inline: 8px;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mdp-mock-heading .mdp-mock-title {
+  padding-inline: 0;
+}
+
+/* Explorador: as classes e o CSS do próprio explorador, só com recuo fixo */
+.mdp-mock-tree {
+  padding: 0;
+}
+
+.mdp-mock-tree .nav-file-title {
+  padding-inline-start: 28px;
+  font-size: var(--font-ui-smaller);
+}
+
+.mdp-mock-tree .nav-file-title.mdp-mock-tint {
+  background: var(--background-modifier-hover);
+}
+
+/* Prévia ao vivo da capa: a capa de verdade, em escala menor */
+.mdp-mock.is-cover-preview .mdp-cover {
+  height: calc(var(--mdp-cover-height, 240px) * 0.3);
+  border-radius: calc(var(--mdp-cover-radius, 0px) * 0.4);
+  transition: none;
+}
+
+/* Sub-abas dos pacotes, numa linha própria embaixo da busca */
+.mdp-picker-search.is-row:has(.mdp-pack-tabs) {
+  flex-wrap: wrap;
+}
+
+/* Como as abas do topo, menores: texto apagado e sublinhado na ativa */
+.mdp-pack-tabs {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mdp-picker .mdp-pack-tab {
+  position: relative;
+  height: auto;
+  padding: 4px 8px 7px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.mdp-picker .mdp-pack-tab:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.mdp-picker .mdp-pack-tab.is-active {
+  color: var(--text-normal);
+}
+
+.mdp-picker .mdp-pack-tab.is-active::after {
+  position: absolute;
+  right: 8px;
+  bottom: -1px;
+  left: 8px;
+  height: 2px;
+  content: "";
+  background: var(--text-normal);
+  border-radius: 1px;
+}
+
 /* Bolinha de cor: no botão ao lado da busca e em cada opção da paleta */
 .mdp-color-dot {
   display: block;
@@ -1231,7 +1462,8 @@ body .mdp-picker .mdp-search-field input:focus-visible {
     (var(--nav-item-size) * var(--line-height-tight) - var(--mdp-inline-size)) /
       2
   );
-  margin-inline-start: calc(-1 * var(--mdp-inline-size) - 3.5px);
+  /* −(largura + 6) + 6 = −largura: o nome não anda quando o ícone entra. */
+  margin-inline-start: calc(-1 * var(--mdp-inline-size) - 6px);
   margin-inline-end: 6px;
 }
 
@@ -1272,6 +1504,18 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 .nav-file-title.mdp-tree-cover:hover::before,
 .nav-file-title.mdp-tree-cover.is-active::before {
   opacity: 0.7;
+}
+
+/*
+ * Nas pastas o recuo é da seta, que continua lá: o ícone fica sempre no
+ * fluxo, entre a seta e o nome, com o mesmo alinhamento do das notas.
+ */
+.nav-folder-title .mdp-inline-icon {
+  align-self: flex-start;
+  margin-block-start: calc(
+    (var(--nav-item-size) * var(--line-height-tight) - var(--mdp-inline-size)) /
+      2
+  );
 }
 
 /* Opção "no começo do nome": o ícone fica no fluxo e empurra o texto. */
@@ -1316,7 +1560,8 @@ body .mdp-picker .mdp-search-field input:focus-visible {
  * Título inline da nota (posição "na linha do título"): mesmo mecanismo do
  * título da barra superior, mas com o tamanho acompanhando a fonte do título.
  */
-.inline-title[data-mdp-icon]::before {
+.inline-title[data-mdp-icon]::before,
+.view-header-breadcrumb[data-mdp-icon]::before {
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -1326,27 +1571,37 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   background: var(--mdp-title-icon-image) center / contain no-repeat;
 }
 
-.inline-title[data-mdp-icon="text"]::before {
+.inline-title[data-mdp-icon="text"]::before,
+.view-header-breadcrumb[data-mdp-icon="text"]::before {
   line-height: 1;
   text-align: center;
   content: attr(data-mdp-icon-text);
   background: none;
 }
 
-.inline-title[data-mdp-icon="mask"]::before {
+.inline-title[data-mdp-icon="mask"]::before,
+.view-header-breadcrumb[data-mdp-icon="mask"]::before {
   background: var(--mdp-title-icon-color);
   mask: var(--mdp-title-icon-image) center / contain no-repeat;
 }
 
-.inline-title[data-mdp-icon="image"]::before {
+.inline-title[data-mdp-icon="image"]::before,
+.view-header-breadcrumb[data-mdp-icon="image"]::before {
   border-radius: 0.1em;
 }
 
 .mdp-inline-icon .mdp-twemoji,
-.mdp-inline-icon img {
+.mdp-inline-icon img,
+.mdp-link-icon .mdp-twemoji,
+.mdp-link-icon img {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Imagem de ícone esperando o corte das margens: o espaço fica, a imagem não */
+.mdp-trimming {
+  visibility: hidden;
 }
 
 .mdp-inline-icon.is-image img {
@@ -1364,7 +1619,8 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   color: var(--mdp-icon-color);
 }
 
-.nav-file-title.is-being-dragged .mdp-inline-icon.mdp-tinted {
+.nav-file-title.is-being-dragged .mdp-inline-icon.mdp-tinted,
+.nav-folder-title.is-being-dragged .mdp-inline-icon.mdp-tinted {
   color: inherit;
 }
 
@@ -2141,4 +2397,28 @@ body {
 .mdp-confirm .mdp-confirm-delete:hover {
   color: var(--text-on-accent);
   background: var(--background-modifier-error-hover);
+}
+
+/* Ícone da nota ao lado do link para ela, como as menções do Notion */
+.mdp-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline-end: 0.28em;
+  font-size: 0.95em;
+  line-height: 1;
+  vertical-align: -0.16em;
+}
+
+.mdp-link-icon .svg-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.5;
+}
+
+.mdp-link-icon img {
+  object-fit: contain;
+  border-radius: 3px;
 }

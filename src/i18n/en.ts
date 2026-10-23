@@ -138,11 +138,15 @@ export const en: Messages = {
   "linkPreview.created": "Created",
   "linkPreview.modified": "Edited",
 
+  "menu.changeIcon": "Change icon",
+  "menu.removeIcon": "Remove icon",
+
   "notice.chooseImage": "Choose an image file.",
   "notice.coversDisabled":
     'Turn on "Download covers" in the Coverly settings first.',
   "notice.coversDownloaded": "Covers saved locally: {saved} of {total}.",
   "notice.coversDownloading": "Downloading {total} covers…",
+  "notice.iconPackFailed": "Could not download the {name} icons.",
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
@@ -192,6 +196,7 @@ export const en: Messages = {
   "settings.coverFolder.name": "Cover folder",
   "settings.coverHeight.desc": "Default cover height in pixels.",
   "settings.coverHeight.name": "Cover height",
+  "settings.coverPreview.name": "Preview",
   "settings.coverRadius.desc":
     "Corner radius of the cover in pixels. Zero keeps the corners square.",
   "settings.coverRadius.name": "Rounded corners",
@@ -207,6 +212,24 @@ export const en: Messages = {
   "settings.hideFileTooltip.desc":
     "In the file explorer, hide Obsidian's tooltip with the dates of notes and images; the preview card already shows them.",
   "settings.hideFileTooltip.name": "Hide Obsidian's tooltip in the explorer",
+  "settings.iconPacks.available":
+    "About {size}. Downloaded once from jsDelivr (cdn.jsdelivr.net) into the Coverly folder of the vault; works offline after that.",
+  "settings.iconPacks.builtIn": "Built in",
+  "settings.iconPacks.desc.phosphor":
+    "Flexible icons in a single color, regular weight.",
+  "settings.iconPacks.desc.symbols":
+    "Colored file and folder icons, as in the VS Code theme.",
+  "settings.iconPacks.desc.tabler":
+    "Over 6,000 stroke icons in a single color.",
+  "settings.iconPacks.downloading": "Downloading…",
+  "settings.iconPacks.install": "Install",
+  "settings.iconPacks.lucide":
+    "Comes with Obsidian, always available. The default in the Icons tab.",
+  "settings.iconPacks.notInstalled": "Not installed",
+  "settings.iconPacks.remove": "Remove",
+  "settings.iconPacks.visible": "Show in the icon picker",
+  "settings.iconPacks.visibleDesc":
+    "Adds a tab for this pack under Icons when you pick an icon.",
   "settings.iconPosition.above": "Over the cover",
   "settings.iconPosition.desc":
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",
@@ -219,9 +242,15 @@ export const en: Messages = {
   "settings.language.desc":
     "Plugin language. Automatic follows the Obsidian language and falls back to English when it is not Portuguese. Command names only change after you reload Obsidian.",
   "settings.language.name": "Language",
+  "settings.linkIcons.desc":
+    "Shows the icon of the linked note before each [[link]], in Live Preview and in reading view, like mentions in Notion.",
+  "settings.linkIcons.name": "Icons in links",
   "settings.linkPreview.desc":
     "When the mouse rests on a link to another note, shows a card with its icon, folders, title and first lines. Hold Ctrl to open Obsidian's native preview instead.",
   "settings.linkPreview.name": "Link preview",
+  "settings.lucideExtras.desc":
+    "Adds {count} icons that Obsidian doesn't include to the Lucide tab: newer Lucide icons and the community icons from Lucide Lab. Turn off to use only the Lucide icons that come with Obsidian. Notes that already use one of them show no icon while this is off.",
+  "settings.lucideExtras.name": "Extra Lucide icons",
   "settings.nameColors.desc":
     "Color each note name in the file explorer with the color you pick for it (command or button above the title). Off by default.",
   "settings.nameColors.name": "Colored names in the explorer",
@@ -234,9 +263,11 @@ export const en: Messages = {
   "settings.perfMonitor.desc":
     "Measures how long the plugin's heaviest parts take, plus long tasks, in memory only. Nothing is saved or sent. See the result with the “Show performance report” command. Off by default.",
   "settings.perfMonitor.name": "Performance monitor",
+  "settings.preview.note": "Example note",
   "settings.section.covers": "Covers",
   "settings.section.developer": "Developer",
   "settings.section.general": "General",
+  "settings.section.iconPacks": "Icon packs",
   "settings.section.icons": "Icons",
   "settings.section.navigation": "Navigation",
   "settings.section.perNote": "Per-note options (off by default)",

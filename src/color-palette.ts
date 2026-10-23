@@ -3,7 +3,6 @@ import { setTooltip } from "obsidian";
 import { asyncListener } from "./async-listener";
 import { t } from "./i18n";
 import {
-  drawLucide,
   iconColorCss,
   allowsCustomColor,
   iconColors,
@@ -80,8 +79,11 @@ const placeFixed = (
 /**
  * Bolinha da cor atual ao lado da busca. Abre a paleta com as cores do
  * Tailwind, uma opção para escolher qualquer cor e o "Perguntar sempre".
+ * Devolve o botão, para quem chama escondê-lo nos pacotes já coloridos.
  */
-export const renderColorButton = (options: ColorPaletteOptions): void => {
+export const renderColorButton = (
+  options: ColorPaletteOptions
+): HTMLElement => {
   const { row, grid, state } = options;
   const button = row.createEl("button", { cls: "mdp-picker-square" });
   setTooltip(button, t("color.tooltip"));
@@ -183,6 +185,7 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
       placeFixed(palette, button, "end");
     }
   });
+  return button;
 };
 
 /**
@@ -192,7 +195,8 @@ export const renderColorButton = (options: ColorPaletteOptions): void => {
 export const showColorVariants = (
   body: HTMLElement,
   target: HTMLElement,
-  name: string,
+  /** Desenha o ícone no botão de uma variante; a cor vem do `color` dele. */
+  draw: (el: HTMLElement) => void,
   state: ColorState,
   onPick: (color: string) => Promise<void>
 ): (() => void) => {
@@ -209,7 +213,7 @@ export const showColorVariants = (
         id === state.color ? "mdp-icon-option is-selected" : "mdp-icon-option",
     });
     variant.style.color = iconColorCss(id);
-    drawLucide(variant, name);
+    draw(variant);
     variant.addEventListener(
       "click",
       asyncListener(async () => {

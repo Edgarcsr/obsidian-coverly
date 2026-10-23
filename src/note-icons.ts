@@ -2,6 +2,7 @@ import { MarkdownView } from "obsidian";
 import type { TFile } from "obsidian";
 
 import { coverThumbUrl } from "./cover-thumbs";
+import { iconPacksVersion } from "./icon-packs";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter, isHexColor } from "./note-data";
 import type { CoverData } from "./note-data";
@@ -20,6 +21,10 @@ const ICON_CLASS = "mdp-inline-icon";
 const NAME_CLASS = "mdp-name-colored";
 const TREE_COVER_CLASS = "mdp-tree-cover";
 const TREE_COVER_VAR = "--mdp-tree-cover";
+/** Linhas do explorador que levam ícone: notas e pastas. */
+const ROW_SELECTOR = ".nav-file-title[data-path], .nav-folder-title[data-path]";
+const ROW_CONTENT_SELECTOR =
+  ":scope > .nav-file-title-content, :scope > .nav-folder-title-content";
 /** Espaçamento mínimo entre as passadas completas do explorador. */
 const SWEEP_DELAY_MS = 180;
 
@@ -49,7 +54,8 @@ const clearName = (el: HTMLElement): void => {
 /**
  * Ícone da nota, em miniatura, onde o nome dela aparece fora do cabeçalho:
  * no título da barra superior da aba (ver title-icon.ts) e no explorador de
- * arquivos, como no Notion.
+ * arquivos, como no Notion. No explorador, as pastas também levam o delas
+ * (ver folder-icons.ts).
  *
  * O Obsidian redesenha esses lugares por conta própria (ao rolar a árvore,
  * abrir pastas, trocar de nota), então cada contêiner é observado e o
@@ -80,6 +86,15 @@ export class NoteIconDecorator {
       this.frame = null;
       this.decorateAll();
     });
+  }
+
+  /** Decora agora, sem esperar o próximo frame (ver o onLayoutReady em main.ts). */
+  flush(): void {
+    if (this.frame !== null) {
+      window.cancelAnimationFrame(this.frame);
+      this.frame = null;
+    }
+    this.decorateAll();
   }
 
   destroy(): void {
@@ -133,9 +148,7 @@ export class NoteIconDecorator {
       const root = leaf.view.containerEl;
       alive.add(root);
       this.observe(root, true);
-      for (const title of root.querySelectorAll<HTMLElement>(
-        ".nav-file-title[data-path]"
-      )) {
+      for (const title of root.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
         this.decorateTitle(title);
       }
     }
@@ -160,6 +173,7 @@ export class NoteIconDecorator {
         this.iconFor(view.file?.path ?? ""),
         this.plugin.settings.twemoji
       );
+      this.paintBreadcrumbs(container, view.file);
     }
     for (const title of this.titles) {
       if (!title.isConnected) {
@@ -173,6 +187,34 @@ export class NoteIconDecorator {
         observer.disconnect();
         this.observers.delete(el);
       }
+    }
+  }
+
+  /**
+   * Ícones das pastas no caminho que o Obsidian mostra acima do título da aba
+   * (Pasta / Subpasta). Pasta sem ícone fica como estava.
+   */
+  private paintBreadcrumbs(container: HTMLElement, file: TFile | null): void {
+    const crumbs = [
+      ...container.querySelectorAll<HTMLElement>(
+        ":scope > .view-header-title-parent .view-header-breadcrumb"
+      ),
+    ];
+    const folder = file?.parent;
+    const segments = folder && !folder.isRoot() ? folder.path.split("/") : [];
+    // O caminho vai de cima para baixo; alinhar pelo fim faz um caminho
+    // encurtado pelo Obsidian ainda bater com as pastas certas.
+    const offset = segments.length - crumbs.length;
+    for (const [index, crumb] of crumbs.entries()) {
+      const depth = index + offset;
+      const path = depth < 0 ? "" : segments.slice(0, depth + 1).join("/");
+      this.titles.add(crumb);
+      paintTitleIcon(
+        this.plugin.app,
+        crumb,
+        path ? this.plugin.folderIcon(path) : undefined,
+        this.plugin.settings.twemoji
+      );
     }
   }
 
@@ -193,7 +235,13 @@ export class NoteIconDecorator {
         this.schedule();
       }
     });
-    observer.observe(el, { childList: true, subtree: true });
+    // O caminho também: nas pastas, o Obsidian insere a linha vazia e só
+    // depois põe o nome e o `data-path`.
+    observer.observe(el, {
+      attributeFilter: ["data-path"],
+      childList: true,
+      subtree: true,
+    });
     this.observers.set(el, observer);
   }
 
@@ -207,14 +255,29 @@ export class NoteIconDecorator {
     }, SWEEP_DELAY_MS);
   }
 
-  /** Decora só as linhas que acabaram de entrar no DOM. */
+  /** Decora só as linhas que acabaram de entrar no DOM ou de ganhar o caminho. */
   private decorateAdded(records: MutationRecord[]): void {
-    if (records.every((record) => record.addedNodes.length === 0)) {
+    if (
+      records.every(
+        (record) =>
+          record.type !== "attributes" && record.addedNodes.length === 0
+      )
+    ) {
       return;
     }
     measure("explorer.decorateAdded", () => {
       this.withPass(() => {
         for (const record of records) {
+          const { target } = record;
+          if (record.type === "attributes") {
+            if (
+              target.instanceOf(HTMLElement) &&
+              target.matches(ROW_SELECTOR)
+            ) {
+              this.decorateTitle(target);
+            }
+            continue;
+          }
           for (const node of record.addedNodes) {
             if (node.instanceOf(HTMLElement)) {
               this.decorateAddedNode(node);
@@ -230,26 +293,22 @@ export class NoteIconDecorator {
     if (node.hasClass(ICON_CLASS)) {
       return;
     }
-    if (node.matches(".nav-file-title[data-path]")) {
+    if (node.matches(ROW_SELECTOR)) {
       this.decorateTitle(node);
       return;
     }
-    const parent = node.closest<HTMLElement>(".nav-file-title[data-path]");
+    const parent = node.closest<HTMLElement>(ROW_SELECTOR);
     if (parent) {
       this.decorateTitle(parent);
       return;
     }
-    for (const title of node.querySelectorAll<HTMLElement>(
-      ".nav-file-title[data-path]"
-    )) {
+    for (const title of node.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
       this.decorateTitle(title);
     }
   }
 
   private decorateTitle(title: HTMLElement): void {
-    const content = title.querySelector<HTMLElement>(
-      ":scope > .nav-file-title-content"
-    );
+    const content = title.querySelector<HTMLElement>(ROW_CONTENT_SELECTOR);
     if (!content) {
       return;
     }
@@ -295,9 +354,9 @@ export class NoteIconDecorator {
     return data;
   }
 
-  /** Ícone gravado no frontmatter da nota, se houver. */
+  /** Ícone gravado no frontmatter da nota ou, numa pasta, nas configurações. */
   private iconFor(path: string): string | undefined {
-    return this.dataFor(path)?.icon;
+    return this.dataFor(path)?.icon ?? this.plugin.folderIcon(path);
   }
 
   /** Pinta o nome da nota no explorador com a cor dela, se a opção estiver ligada. */
@@ -367,7 +426,7 @@ export class NoteIconDecorator {
     // O estilo do emoji e o corte das margens entram na chave para redesenhar
     // quando a opção muda.
     const { iconTrim, twemoji } = this.plugin.settings;
-    const key = `${twemoji}\n${iconTrim}\n${value}`;
+    const key = `${twemoji}\n${iconTrim}\n${iconPacksVersion()}\n${value}`;
     const placed =
       existing?.dataset.key === key && existing.nextElementSibling === before;
     if (placed) {

@@ -24,12 +24,15 @@
 - **Vault images**: pick covers, icons and backgrounds from images already in your vault.
 - **Note font**: switch a single note between the theme font, a serif and a monospace font, from the command palette or the button above the title. With **Custom fonts per note** on (off by default), you can also type the name of any font installed on your computer.
 - **Colored names** (off by default, **Settings → Coverly**): pick a color for a note and its name is painted with it in the file explorer.
-- **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, or a custom image.
+- **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, an icon from an installed icon pack, or a custom image.
+- **Icon packs**: Lucide is built in. In **Settings → Coverly → Icon packs** you can install [Symbols](https://github.com/miguelsolorio/vscode-symbols) (colored file and folder icons), [Tabler](https://tabler.io/icons) and [Phosphor](https://phosphoricons.com), all MIT licensed. Each installed pack gets its own tab under **Icons** in the icon picker, and any pack, Lucide included, can be hidden from there.
 - **Icons everywhere**: the note icon also shows in the tab title and the file explorer.
+- **Icons in links**: a `[[link]]` shows the icon of the note it points to, like a mention in Notion, in Live Preview and in reading view. Embeds, code and properties are left alone. Turn it off with **Icons in links** in the settings.
+- **Folder icons**: right-click a folder in the file explorer and select **Change icon** to give it an icon, shown before its name. Notes have the same **Change icon** and **Remove icon** items.
 - **Heading outline**: a slim outline on the right edge of the note that expands on hover and jumps to a heading on click.
 - **English and Portuguese** interface, following Obsidian's language by default.
 
-Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`, `coverly-background`, `coverly-font`, `coverly-accent`, `coverly-color`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown.
+Covers and icons are stored in the note's frontmatter (`coverly-cover`, `coverly-position`, `coverly-credit`, `coverly-credit-url`, `coverly-icon`, `coverly-background`, `coverly-font`, `coverly-accent`, `coverly-color`; notes using the older `cover`/`icon` names are still read and are migrated the next time you change them), so your notes stay plain Markdown. Folders have no frontmatter, so folder icons are stored in the plugin's `data.json`, by folder path, and follow the folder when it is renamed or moved.
 
 ## Network use
 
@@ -37,6 +40,7 @@ Coverly works offline. It only reaches the network for these features:
 
 - **Unsplash** (`api.unsplash.com`, `images.unsplash.com`): searching photos and loading the ones you pick, only after you add your own Unsplash access key in the settings. Picking a photo also sends Unsplash a download notice, as their API guidelines require.
 - **Twemoji** (`cdn.jsdelivr.net`): downloading emoji images the first time they appear. They are cached in the plugin folder. Turn off **X-style emojis** in the settings to use system emojis instead.
+- **Icon packs** (`cdn.jsdelivr.net`, `data.jsdelivr.com`): only when you select **Install** on a pack. The whole pack is downloaded once and saved in `icon-packs/` inside the Coverly folder; after that it works offline. Like the rest of that folder, Obsidian Sync skips it when the folder name starts with a dot, so install the pack on each device.
 - **Gallery artworks** (`images.metmuseum.org`, `commons.wikimedia.org`, which redirects to `upload.wikimedia.org`): loading the public domain images shown in the cover gallery.
 - **Images from links**: if a cover or icon comes from a web address, Obsidian loads that image from its host each time the note is shown, unless **Download covers** is on.
 - **Download covers** (off by default, **Settings → Coverly**): saves a copy of each cover that comes from the web (Unsplash, gallery artworks, links) in a vault folder (`.coverly` by default; an existing `.cover` folder is renamed on update), so it opens from disk instead of the network. Covers are downloaded from their original host the first time they are shown, or all at once with **Download all covers used in the vault** from the command palette. The note still stores the original address, so it keeps working in other vaults. Obsidian Sync skips folders whose name starts with a dot, so each device keeps its own copies unless you choose a different folder.

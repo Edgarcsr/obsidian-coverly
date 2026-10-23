@@ -140,11 +140,15 @@ export const pt = {
   "linkPreview.created": "Criada",
   "linkPreview.modified": "Editada",
 
+  "menu.changeIcon": "Alterar ícone",
+  "menu.removeIcon": "Remover ícone",
+
   "notice.chooseImage": "Escolha um arquivo de imagem.",
   "notice.coversDisabled":
     'Ative "Baixar capas" nas configurações do Coverly primeiro.',
   "notice.coversDownloaded": "Capas salvas no vault: {saved} de {total}.",
   "notice.coversDownloading": "Baixando {total} capas…",
+  "notice.iconPackFailed": "Não foi possível baixar os ícones do {name}.",
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
@@ -194,6 +198,7 @@ export const pt = {
   "settings.coverFolder.name": "Pasta das capas",
   "settings.coverHeight.desc": "Altura padrão da capa em pixels.",
   "settings.coverHeight.name": "Altura da capa",
+  "settings.coverPreview.name": "Prévia",
   "settings.coverRadius.desc":
     "Raio dos cantos da capa em pixels. Zero deixa os cantos retos.",
   "settings.coverRadius.name": "Cantos arredondados",
@@ -209,6 +214,24 @@ export const pt = {
   "settings.hideFileTooltip.desc":
     "No explorador de arquivos, esconde a dica do Obsidian com as datas das notas e imagens; o cartão de prévia já mostra as datas.",
   "settings.hideFileTooltip.name": "Esconder a dica do Obsidian no explorador",
+  "settings.iconPacks.available":
+    "Cerca de {size}. Baixado uma vez do jsDelivr (cdn.jsdelivr.net) para a pasta do Coverly no vault; depois funciona offline.",
+  "settings.iconPacks.builtIn": "Incluído",
+  "settings.iconPacks.desc.phosphor":
+    "Ícones flexíveis de uma cor só, no peso regular.",
+  "settings.iconPacks.desc.symbols":
+    "Ícones coloridos de arquivos e pastas, como no tema do VS Code.",
+  "settings.iconPacks.desc.tabler":
+    "Mais de 6.000 ícones de traço, de uma cor só.",
+  "settings.iconPacks.downloading": "Baixando…",
+  "settings.iconPacks.install": "Instalar",
+  "settings.iconPacks.lucide":
+    "Vem com o Obsidian, sempre disponível. É o padrão da aba Ícones.",
+  "settings.iconPacks.notInstalled": "Não instalado",
+  "settings.iconPacks.remove": "Remover",
+  "settings.iconPacks.visible": "Mostrar no seletor de ícones",
+  "settings.iconPacks.visibleDesc":
+    "Adiciona uma aba deste pacote em Ícones ao escolher um ícone.",
   "settings.iconPosition.above": "Sobre a capa",
   "settings.iconPosition.desc":
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",
@@ -221,9 +244,15 @@ export const pt = {
   "settings.language.desc":
     "Idioma do plugin. Automático segue o idioma do Obsidian; quando ele não é o português, usa o inglês. Os nomes dos comandos só mudam ao recarregar o Obsidian.",
   "settings.language.name": "Idioma",
+  "settings.linkIcons.desc":
+    "Mostra o ícone da nota ao lado de cada [[link]] para ela, no Live Preview e na leitura, como as menções do Notion.",
+  "settings.linkIcons.name": "Ícones nos links",
   "settings.linkPreview.desc":
     "Ao parar o mouse sobre um link para outra nota, mostra um cartão com o ícone, as pastas, o título e o começo dela. Com Ctrl pressionado, abre a prévia nativa do Obsidian.",
   "settings.linkPreview.name": "Prévia dos links",
+  "settings.lucideExtras.desc":
+    "Acrescenta à aba Lucide {count} ícones que o Obsidian não traz: os mais novos do Lucide e os da comunidade, do Lucide Lab. Desligue para usar só os ícones Lucide que vêm com o Obsidian. As notas que já usam um deles ficam sem ícone enquanto estiver desligado.",
+  "settings.lucideExtras.name": "Ícones Lucide extras",
   "settings.nameColors.desc":
     "Pinta o nome de cada nota no explorador de arquivos com a cor escolhida para ela (comando ou botão acima do título). Desligado por padrão.",
   "settings.nameColors.name": "Nomes coloridos no explorador",
@@ -236,9 +265,11 @@ export const pt = {
   "settings.perfMonitor.desc":
     "Mede o tempo dos trechos mais caros do plugin e as tarefas longas, só na memória. Nada é gravado nem enviado. Veja o resultado no comando “Mostrar relatório de desempenho”. Desligado por padrão.",
   "settings.perfMonitor.name": "Medidor de desempenho",
+  "settings.preview.note": "Nota de exemplo",
   "settings.section.covers": "Capas",
   "settings.section.developer": "Desenvolvedor",
   "settings.section.general": "Geral",
+  "settings.section.iconPacks": "Pacotes de ícones",
   "settings.section.icons": "Ícones",
   "settings.section.navigation": "Navegação",
   "settings.section.perNote": "Opções por nota (desligadas por padrão)",

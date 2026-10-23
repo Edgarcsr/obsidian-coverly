@@ -1,15 +1,31 @@
-import type { App, Setting, SettingDefinitionItem } from "obsidian";
+import type {
+  App,
+  Setting,
+  SettingDefinitionItem,
+  SettingDefinitionRender,
+} from "obsidian";
 import { PluginSettingTab } from "obsidian";
 
 import { asyncListener } from "./async-listener";
 import { DEFAULT_COVER_FOLDER } from "./cover-cache";
+import type { FolderIcons } from "./folder-icons";
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
+import { iconPackItems } from "./icon-packs-settings";
 import { setIconTrim } from "./icon-trim";
+import { extraLucideCount, setLucideExtras } from "./lucide-extra";
 import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
 import type { ColorPalette } from "./page-icon";
 import { setPerfEnabled } from "./perf";
+import {
+  drawIconPosition,
+  drawTreeBackgrounds,
+  drawTreeIconPosition,
+  renderChoice,
+  renderCoverPreview,
+} from "./settings-previews";
+import type { Choice } from "./settings-previews";
 import { clearCoverCache, coverlyUsage, describeUsage } from "./storage";
 
 export type IconPosition = "above" | "inline";
@@ -51,8 +67,14 @@ export interface CoverlySettings {
   iconColor: string;
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
   askIconColor: boolean;
+  /** Ícone de cada pasta, pelo caminho (ver folder-icons.ts). */
+  folderIcons: FolderIcons;
   /** Última aba aberta no seletor de ícone, para abrir nela da próxima vez. */
   iconTab: "emoji" | "icons" | "upload";
+  /** Último pacote aberto na aba Ícones ("lucide" ou o id de um instalado). */
+  iconPack: string;
+  /** Pacotes que não aparecem como sub-abas no seletor (o Lucide também pode). */
+  hiddenIconPacks: string[];
   /** Emojis usados por último, do mais recente para o mais antigo. */
   recentEmojis: string[];
   /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */
@@ -67,6 +89,10 @@ export interface CoverlySettings {
   toc: boolean;
   /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
   linkPreview: boolean;
+  /** Mostra o ícone da nota ao lado de cada [[link]] para ela (ver link-icons.ts). */
+  linkIcons: boolean;
+  /** Acrescenta ao Lucide os ícones que o Obsidian não traz (ver lucide-extra.ts). */
+  lucideExtras: boolean;
   /** Esconde a dica do Obsidian (datas) nas notas do explorador, já que o cartão as mostra. */
   hideFileTooltip: boolean;
   /** Mede o tempo dos trechos mais caros (só na memória, sem enviar nada). */
@@ -86,13 +112,18 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverShade: 35,
   customFonts: false,
   downloadCovers: false,
+  folderIcons: {},
+  hiddenIconPacks: [],
   hideFileTooltip: true,
   iconColor: "default",
+  iconPack: "lucide",
   iconPosition: "above",
   iconTab: "emoji",
   iconTrim: false,
   language: "auto",
+  linkIcons: true,
   linkPreview: true,
+  lucideExtras: false,
   nameColors: false,
   noteAccents: false,
   noteBackgrounds: false,
@@ -122,7 +153,9 @@ type ControlKey =
   | "treeBackgrounds"
   | "twemoji"
   | "toc"
+  | "linkIcons"
   | "linkPreview"
+  | "lucideExtras"
   | "hideFileTooltip"
   | "askIconColor"
   | "nameColors"
@@ -130,6 +163,12 @@ type ControlKey =
   | "noteBackgrounds"
   | "perfMonitor"
   | "iconTrim";
+
+/** As opções que o `applyChange` trata; as outras têm o próprio caso em `setControlValue`. */
+type ChangeKey = Exclude<
+  ControlKey,
+  "iconTrim" | "linkIcons" | "lucideExtras" | "perfMonitor"
+>;
 
 export class CoverlySettingTab extends PluginSettingTab {
   private readonly plugin: CoverlyPlugin;
@@ -148,6 +187,9 @@ export class CoverlySettingTab extends PluginSettingTab {
       desc: t(`settings.${key}.desc`),
       name: t(`settings.${key}.name`),
     });
+
+    // O Lucide primeiro; a opção dos ícones extras logo abaixo dele.
+    const [lucideRow, ...packRows] = iconPackItems(this.plugin);
 
     return [
       {
@@ -172,6 +214,12 @@ export class CoverlySettingTab extends PluginSettingTab {
         heading: t("settings.section.covers"),
         items: [
           {
+            name: t("settings.coverPreview.name"),
+            render: (setting) => {
+              renderCoverPreview(setting, this.plugin);
+            },
+          },
+          {
             ...named("unsplashKey"),
             control: { key: "unsplashKey", type: "secret" },
           },
@@ -186,19 +234,28 @@ export class CoverlySettingTab extends PluginSettingTab {
             ...named("coverAnimation"),
             control: { key: "coverAnimation", type: "toggle" },
           },
-          {
-            ...named("treeBackgrounds"),
-            control: {
-              key: "treeBackgrounds",
-              options: {
-                both: t("settings.treeBackgrounds.both"),
-                images: t("settings.treeBackgrounds.images"),
-                notes: t("settings.treeBackgrounds.notes"),
-                off: t("settings.treeBackgrounds.off"),
-              },
-              type: "dropdown",
+          this.choice("treeBackgrounds", [
+            {
+              draw: drawTreeBackgrounds(this.plugin, "both"),
+              label: t("settings.treeBackgrounds.both"),
+              value: "both",
             },
-          },
+            {
+              draw: drawTreeBackgrounds(this.plugin, "images"),
+              label: t("settings.treeBackgrounds.images"),
+              value: "images",
+            },
+            {
+              draw: drawTreeBackgrounds(this.plugin, "notes"),
+              label: t("settings.treeBackgrounds.notes"),
+              value: "notes",
+            },
+            {
+              draw: drawTreeBackgrounds(this.plugin, "off"),
+              label: t("settings.treeBackgrounds.off"),
+              value: "off",
+            },
+          ]),
           {
             ...named("downloadCovers"),
             control: { key: "downloadCovers", type: "toggle" },
@@ -223,28 +280,30 @@ export class CoverlySettingTab extends PluginSettingTab {
       {
         heading: t("settings.section.icons"),
         items: [
-          {
-            ...named("iconPosition"),
-            control: {
-              key: "iconPosition",
-              options: {
-                above: t("settings.iconPosition.above"),
-                inline: t("settings.iconPosition.inline"),
-              },
-              type: "dropdown",
+          this.choice("iconPosition", [
+            {
+              draw: drawIconPosition(this.plugin, "above"),
+              label: t("settings.iconPosition.above"),
+              value: "above",
             },
-          },
-          {
-            ...named("treeIconPosition"),
-            control: {
-              key: "treeIconPosition",
-              options: {
-                indent: t("settings.treeIconPosition.indent"),
-                inline: t("settings.treeIconPosition.inline"),
-              },
-              type: "dropdown",
+            {
+              draw: drawIconPosition(this.plugin, "inline"),
+              label: t("settings.iconPosition.inline"),
+              value: "inline",
             },
-          },
+          ]),
+          this.choice("treeIconPosition", [
+            {
+              draw: drawTreeIconPosition(this.plugin, "indent"),
+              label: t("settings.treeIconPosition.indent"),
+              value: "indent",
+            },
+            {
+              draw: drawTreeIconPosition(this.plugin, "inline"),
+              label: t("settings.treeIconPosition.inline"),
+              value: "inline",
+            },
+          ]),
           {
             ...named("colorPalette"),
             control: {
@@ -262,9 +321,28 @@ export class CoverlySettingTab extends PluginSettingTab {
           },
           { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
           {
+            ...named("linkIcons"),
+            control: { key: "linkIcons", type: "toggle" },
+          },
+          {
             ...named("iconTrim"),
             control: { key: "iconTrim", type: "toggle" },
           },
+        ],
+        type: "group",
+      },
+      {
+        heading: t("settings.section.iconPacks"),
+        items: [
+          ...(lucideRow ? [lucideRow] : []),
+          {
+            control: { key: "lucideExtras", type: "toggle" },
+            desc: t("settings.lucideExtras.desc", {
+              count: extraLucideCount(),
+            }),
+            name: t("settings.lucideExtras.name"),
+          },
+          ...packRows,
         ],
         type: "group",
       },
@@ -318,6 +396,24 @@ export class CoverlySettingTab extends PluginSettingTab {
     ];
   }
 
+  /** Opção de um grupo fixo, com uma prévia do resultado da escolha. */
+  private choice(key: ControlKey, choices: Choice[]): SettingDefinitionRender {
+    return {
+      desc: t(`settings.${key}.desc`),
+      name: t(`settings.${key}.name`),
+      render: (setting) => {
+        renderChoice(
+          setting,
+          choices,
+          String(this.getControlValue(key)),
+          async (value) => {
+            await this.setControlValue(key, value);
+          }
+        );
+      },
+    };
+  }
+
   /** Espaço usado pela pasta do Coverly e o botão de limpar o que se refaz. */
   private renderStorage(setting: Setting): void {
     const { app } = this.plugin;
@@ -357,16 +453,23 @@ export class CoverlySettingTab extends PluginSettingTab {
       await this.plugin.saveSettings();
       return;
     }
-    await this.applyChange(
-      key as Exclude<ControlKey, "iconTrim" | "perfMonitor">,
-      value
-    );
+    if (key === "linkIcons") {
+      this.plugin.settings.linkIcons = value as boolean;
+      this.plugin.refreshHeaders();
+      await this.plugin.saveSettings();
+      return;
+    }
+    if (key === "lucideExtras") {
+      this.plugin.settings.lucideExtras = value as boolean;
+      setLucideExtras(this.plugin.settings.lucideExtras);
+      this.plugin.refreshHeaders();
+      await this.plugin.saveSettings();
+      return;
+    }
+    await this.applyChange(key as ChangeKey, value);
   }
 
-  private async applyChange(
-    key: Exclude<ControlKey, "iconTrim" | "perfMonitor">,
-    value: unknown
-  ): Promise<void> {
+  private async applyChange(key: ChangeKey, value: unknown): Promise<void> {
     const { plugin } = this;
     const { settings } = plugin;
 
