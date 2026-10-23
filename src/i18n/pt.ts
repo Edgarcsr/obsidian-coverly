@@ -247,6 +247,9 @@ export const pt = {
   "settings.linkPreview.desc":
     "Ao parar o mouse sobre um link para outra nota, mostra um cartão com o ícone, as pastas, o título e o começo dela. Com Ctrl pressionado, abre a prévia nativa do Obsidian.",
   "settings.linkPreview.name": "Prévia dos links",
+  "settings.lucideExtras.desc":
+    "Acrescenta à aba Lucide {count} ícones que o Obsidian não traz: os mais novos do Lucide e os da comunidade, do Lucide Lab. Desligue para usar só os ícones Lucide que vêm com o Obsidian. As notas que já usam um deles ficam sem ícone enquanto estiver desligado.",
+  "settings.lucideExtras.name": "Ícones Lucide extras",
   "settings.nameColors.desc":
     "Pinta o nome de cada nota no explorador de arquivos com a cor escolhida para ela (comando ou botão acima do título). Desligado por padrão.",
   "settings.nameColors.name": "Nomes coloridos no explorador",

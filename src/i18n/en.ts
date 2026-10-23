@@ -245,6 +245,9 @@ export const en: Messages = {
   "settings.linkPreview.desc":
     "When the mouse rests on a link to another note, shows a card with its icon, folders, title and first lines. Hold Ctrl to open Obsidian's native preview instead.",
   "settings.linkPreview.name": "Link preview",
+  "settings.lucideExtras.desc":
+    "Adds {count} icons that Obsidian doesn't include to the Lucide tab: newer Lucide icons and the community icons from Lucide Lab. Turn off to use only the Lucide icons that come with Obsidian. Notes that already use one of them show no icon while this is off.",
+  "settings.lucideExtras.name": "Extra Lucide icons",
   "settings.nameColors.desc":
     "Color each note name in the file explorer with the color you pick for it (command or button above the title). Off by default.",
   "settings.nameColors.name": "Colored names in the explorer",

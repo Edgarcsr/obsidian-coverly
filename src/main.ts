@@ -32,6 +32,7 @@ import { IconPicker, LUCIDE_PACK } from "./icon-picker";
 import type { PickerPack, Tab as IconTab } from "./icon-picker";
 import { setIconTrim } from "./icon-trim";
 import { LinkPreview } from "./link-preview";
+import { setLucideExtras } from "./lucide-extra";
 import { loadLucideData } from "./lucide-search";
 import { DEFAULT_COLOR, showColorPopup } from "./note-color";
 import {
@@ -137,6 +138,7 @@ export default class CoverlyPlugin extends Plugin {
     this.registerPerfGauges();
     setLanguage(this.settings.language);
     setColorPalette(this.settings.colorPalette);
+    setLucideExtras(this.settings.lucideExtras);
     this.applyCoverStyle();
     // Antes do primeiro desenho, para os emojis já baixados aparecerem na hora.
     const pluginDir =

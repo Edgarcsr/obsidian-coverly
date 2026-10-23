@@ -5,6 +5,7 @@ import type { MessageKey } from "./i18n";
 import { isTintablePack, packIconUrl, parsePackIcon } from "./icon-packs";
 import { trimIconImage } from "./icon-trim";
 import type { IconFile } from "./icon-trim";
+import { drawExtraLucide, extraLucideNames } from "./lucide-extra";
 import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
 import { drawEmoji } from "./twemoji";
 
@@ -149,16 +150,23 @@ export const parseLucide = (value: string): LucideIcon | null => {
   return { color, name };
 };
 
-/** Nomes de todos os ícones Lucide do Obsidian, sem o prefixo, em ordem alfabética. */
+/**
+ * Nomes de todos os ícones Lucide, sem o prefixo, em ordem alfabética: os do
+ * Obsidian e os que ele não traz (ver lucide-extra.ts).
+ */
 export const lucideNames = (ids: readonly string[]): string[] =>
-  ids
-    .filter((id) => id.startsWith(OBSIDIAN_LUCIDE_PREFIX))
-    .map((id) => id.slice(OBSIDIAN_LUCIDE_PREFIX.length))
-    .toSorted();
+  [
+    ...ids
+      .filter((id) => id.startsWith(OBSIDIAN_LUCIDE_PREFIX))
+      .map((id) => id.slice(OBSIDIAN_LUCIDE_PREFIX.length)),
+    ...extraLucideNames(),
+  ].toSorted();
 
 /** Desenha um ícone Lucide pelo nome sem prefixo. */
 export const drawLucide = (el: HTMLElement, name: string): void => {
-  setIcon(el, `${OBSIDIAN_LUCIDE_PREFIX}${name}`);
+  if (!drawExtraLucide(el, name)) {
+    setIcon(el, `${OBSIDIAN_LUCIDE_PREFIX}${name}`);
+  }
 };
 
 /** Endereço da imagem do ícone, ou `null` se o ícone não for uma imagem. */

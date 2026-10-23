@@ -13,6 +13,7 @@ import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
 import { iconPackItems } from "./icon-packs-settings";
 import { setIconTrim } from "./icon-trim";
+import { extraLucideCount, setLucideExtras } from "./lucide-extra";
 import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
 import type { ColorPalette } from "./page-icon";
@@ -88,6 +89,8 @@ export interface CoverlySettings {
   toc: boolean;
   /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
   linkPreview: boolean;
+  /** Acrescenta ao Lucide os ícones que o Obsidian não traz (ver lucide-extra.ts). */
+  lucideExtras: boolean;
   /** Esconde a dica do Obsidian (datas) nas notas do explorador, já que o cartão as mostra. */
   hideFileTooltip: boolean;
   /** Mede o tempo dos trechos mais caros (só na memória, sem enviar nada). */
@@ -117,6 +120,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   iconTrim: false,
   language: "auto",
   linkPreview: true,
+  lucideExtras: false,
   nameColors: false,
   noteAccents: false,
   noteBackgrounds: false,
@@ -147,6 +151,7 @@ type ControlKey =
   | "twemoji"
   | "toc"
   | "linkPreview"
+  | "lucideExtras"
   | "hideFileTooltip"
   | "askIconColor"
   | "nameColors"
@@ -158,7 +163,7 @@ type ControlKey =
 /** As opções que o `applyChange` trata; as outras têm o próprio caso em `setControlValue`. */
 type ChangeKey = Exclude<
   ControlKey,
-  "iconTrim" | "perfMonitor"
+  "iconTrim" | "lucideExtras" | "perfMonitor"
 >;
 
 export class CoverlySettingTab extends PluginSettingTab {
@@ -178,6 +183,9 @@ export class CoverlySettingTab extends PluginSettingTab {
       desc: t(`settings.${key}.desc`),
       name: t(`settings.${key}.name`),
     });
+
+    // O Lucide primeiro; a opção dos ícones extras logo abaixo dele.
+    const [lucideRow, ...packRows] = iconPackItems(this.plugin);
 
     return [
       {
@@ -317,7 +325,17 @@ export class CoverlySettingTab extends PluginSettingTab {
       },
       {
         heading: t("settings.section.iconPacks"),
-        items: iconPackItems(this.plugin),
+        items: [
+          ...(lucideRow ? [lucideRow] : []),
+          {
+            control: { key: "lucideExtras", type: "toggle" },
+            desc: t("settings.lucideExtras.desc", {
+              count: extraLucideCount(),
+            }),
+            name: t("settings.lucideExtras.name"),
+          },
+          ...packRows,
+        ],
         type: "group",
       },
       {
@@ -424,6 +442,13 @@ export class CoverlySettingTab extends PluginSettingTab {
     if (key === "perfMonitor") {
       this.plugin.settings.perfMonitor = value as boolean;
       setPerfEnabled(this.plugin.settings.perfMonitor);
+      await this.plugin.saveSettings();
+      return;
+    }
+    if (key === "lucideExtras") {
+      this.plugin.settings.lucideExtras = value as boolean;
+      setLucideExtras(this.plugin.settings.lucideExtras);
+      this.plugin.refreshHeaders();
       await this.plugin.saveSettings();
       return;
     }
