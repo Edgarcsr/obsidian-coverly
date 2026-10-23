@@ -15,22 +15,28 @@
 //   shapeBase, shapeContrast: brightness of the shape is base + contrast * facing-the-light (defaults 0.7 and 0.5).
 //                Raise base and lower contrast so thin strokes stay solid on the side away from the light.
 //   rotate: degrees, for style "shape"
+const BYTE = 256;
+const hexToRgb = (hex) => {
+  const value = Number.parseInt(hex.slice(1), 16);
+  return [Math.floor(value / BYTE ** 2) % BYTE, Math.floor(value / BYTE) % BYTE, value % BYTE];
+};
+
 (() => {
   const config = {
-    palette: ["#1a0500", "#8a1c00", "#ff6a00", "#ffd199"],
+    cell: 3,
     cx: 1040,
     cy: 360,
-    radius: 250,
-    cell: 3,
     light: [-0.55, -0.45],
-    seed: 7,
-    style: "sphere",
-    shapePath: "",
-    shapeSize: [24, 24],
+    palette: ["#1a0500", "#8a1c00", "#ff6a00", "#ffd199"],
+    radius: 250,
     rotate: 0,
-    shapeStroke: 0,
+    seed: 7,
     shapeBase: 0.7,
     shapeContrast: 0.5,
+    shapePath: "",
+    shapeSize: [24, 24],
+    shapeStroke: 0,
+    style: "sphere",
     ...window.BANNER_ART,
   };
 
@@ -38,7 +44,7 @@
     return;
   }
 
-  const canvas = document.getElementById("art");
+  const canvas = document.querySelector("#art");
   const ctx = canvas.getContext("2d");
   const { width, height } = canvas;
 
@@ -51,14 +57,10 @@
   const BAYER_SIZE = 4;
   const BAYER_LEVELS = 16;
 
-  const hexToRgb = (hex) => {
-    const value = Number.parseInt(hex.slice(1), 16);
-    return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
-  };
   const stops = config.palette.map(hexToRgb);
 
   const seeded = (x, y) => {
-    const n = Math.sin(x * 127.1 + y * 311.7 + config.seed * 74.7) * 43758.5453;
+    const n = Math.sin(x * 127.1 + y * 311.7 + config.seed * 74.7) * 43_758.5453;
     return n - Math.floor(n);
   };
 
@@ -95,7 +97,10 @@
       octx.lineJoin = "round";
       octx.stroke(new Path2D(config.shapePath));
     } else {
-      octx.fill(new Path2D(config.shapePath), "evenodd");
+      const shape = new Path2D(config.shapePath);
+      // Canvas fill(), not Array#fill.
+      // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type
+      octx.fill(shape, "evenodd");
     }
     mask = octx.getImageData(0, 0, width, height).data;
   }
@@ -134,7 +139,7 @@
       } else if (distance <= 1) {
         const dz = Math.sqrt(1 - distance * distance);
         intensity = Math.max(0, dx * lx + dy * ly + dz * lz);
-        intensity = intensity ** 1.4;
+        intensity **= 1.4;
       } else {
         intensity = Math.max(0, 0.22 - (distance - 1) * 0.5) * (0.4 + seeded(px, py));
       }
@@ -148,7 +153,7 @@
       }
 
       const [r, g, b] = colorAt(intensity);
-      ctx.fillStyle = `rgb(${r | 0},${g | 0},${b | 0})`;
+      ctx.fillStyle = `rgb(${Math.trunc(r)},${Math.trunc(g)},${Math.trunc(b)})`;
       ctx.fillRect(px, py, cell - 1, cell - 1);
     }
   }
