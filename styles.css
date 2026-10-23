@@ -1597,6 +1597,11 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   height: 100%;
 }
 
+/* Imagem de ícone esperando o corte das margens: o espaço fica, a imagem não */
+.mdp-trimming {
+  visibility: hidden;
+}
+
 .mdp-inline-icon.is-image img {
   object-fit: contain;
   border-radius: 3px;

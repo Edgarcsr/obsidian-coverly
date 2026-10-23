@@ -132,11 +132,28 @@ export const paintTitleIcon = (
   const image = iconImageSource(app, value);
   if (image !== null) {
     setKind(title, "image", cssUrl(image));
-    whenTrimmed(image, iconFile(app, value), (url) => {
-      if (title.getAttribute(KEY_ATTR) === key) {
-        title.style.setProperty(IMAGE_VAR, cssUrl(url));
+    const pending = whenTrimmed(
+      image,
+      iconFile(app, value),
+      (url) => {
+        if (title.getAttribute(KEY_ATTR) === key) {
+          title.style.setProperty(IMAGE_VAR, cssUrl(url));
+        }
+      },
+      () => {
+        // Sem o que cortar: volta a original, que ficou de fora até aqui.
+        if (
+          title.getAttribute(KEY_ATTR) === key &&
+          !title.style.getPropertyValue(IMAGE_VAR)
+        ) {
+          title.style.setProperty(IMAGE_VAR, cssUrl(image));
+        }
       }
-    });
+    );
+    if (pending) {
+      // Espaço guardado, sem a original, até a versão cortada ficar pronta.
+      title.style.removeProperty(IMAGE_VAR);
+    }
     return;
   }
 
