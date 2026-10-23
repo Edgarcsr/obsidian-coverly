@@ -1,4 +1,9 @@
-import type { App, Setting, SettingDefinitionItem } from "obsidian";
+import type {
+  App,
+  Setting,
+  SettingDefinitionItem,
+  SettingDefinitionRender,
+} from "obsidian";
 import { PluginSettingTab } from "obsidian";
 
 import { asyncListener } from "./async-listener";
@@ -12,6 +17,14 @@ import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
 import type { ColorPalette } from "./page-icon";
 import { setPerfEnabled } from "./perf";
+import {
+  drawIconPosition,
+  drawTreeBackgrounds,
+  drawTreeIconPosition,
+  renderChoice,
+  renderCoverPreview,
+} from "./settings-previews";
+import type { Choice } from "./settings-previews";
 import { clearCoverCache, coverlyUsage, describeUsage } from "./storage";
 
 export type IconPosition = "above" | "inline";
@@ -142,6 +155,12 @@ type ControlKey =
   | "perfMonitor"
   | "iconTrim";
 
+/** As opções que o `applyChange` trata; as outras têm o próprio caso em `setControlValue`. */
+type ChangeKey = Exclude<
+  ControlKey,
+  "iconTrim" | "perfMonitor"
+>;
+
 export class CoverlySettingTab extends PluginSettingTab {
   private readonly plugin: CoverlyPlugin;
 
@@ -183,6 +202,12 @@ export class CoverlySettingTab extends PluginSettingTab {
         heading: t("settings.section.covers"),
         items: [
           {
+            name: t("settings.coverPreview.name"),
+            render: (setting) => {
+              renderCoverPreview(setting, this.plugin);
+            },
+          },
+          {
             ...named("unsplashKey"),
             control: { key: "unsplashKey", type: "secret" },
           },
@@ -197,19 +222,28 @@ export class CoverlySettingTab extends PluginSettingTab {
             ...named("coverAnimation"),
             control: { key: "coverAnimation", type: "toggle" },
           },
-          {
-            ...named("treeBackgrounds"),
-            control: {
-              key: "treeBackgrounds",
-              options: {
-                both: t("settings.treeBackgrounds.both"),
-                images: t("settings.treeBackgrounds.images"),
-                notes: t("settings.treeBackgrounds.notes"),
-                off: t("settings.treeBackgrounds.off"),
-              },
-              type: "dropdown",
+          this.choice("treeBackgrounds", [
+            {
+              draw: drawTreeBackgrounds(this.plugin, "both"),
+              label: t("settings.treeBackgrounds.both"),
+              value: "both",
             },
-          },
+            {
+              draw: drawTreeBackgrounds(this.plugin, "images"),
+              label: t("settings.treeBackgrounds.images"),
+              value: "images",
+            },
+            {
+              draw: drawTreeBackgrounds(this.plugin, "notes"),
+              label: t("settings.treeBackgrounds.notes"),
+              value: "notes",
+            },
+            {
+              draw: drawTreeBackgrounds(this.plugin, "off"),
+              label: t("settings.treeBackgrounds.off"),
+              value: "off",
+            },
+          ]),
           {
             ...named("downloadCovers"),
             control: { key: "downloadCovers", type: "toggle" },
@@ -234,28 +268,30 @@ export class CoverlySettingTab extends PluginSettingTab {
       {
         heading: t("settings.section.icons"),
         items: [
-          {
-            ...named("iconPosition"),
-            control: {
-              key: "iconPosition",
-              options: {
-                above: t("settings.iconPosition.above"),
-                inline: t("settings.iconPosition.inline"),
-              },
-              type: "dropdown",
+          this.choice("iconPosition", [
+            {
+              draw: drawIconPosition(this.plugin, "above"),
+              label: t("settings.iconPosition.above"),
+              value: "above",
             },
-          },
-          {
-            ...named("treeIconPosition"),
-            control: {
-              key: "treeIconPosition",
-              options: {
-                indent: t("settings.treeIconPosition.indent"),
-                inline: t("settings.treeIconPosition.inline"),
-              },
-              type: "dropdown",
+            {
+              draw: drawIconPosition(this.plugin, "inline"),
+              label: t("settings.iconPosition.inline"),
+              value: "inline",
             },
-          },
+          ]),
+          this.choice("treeIconPosition", [
+            {
+              draw: drawTreeIconPosition(this.plugin, "indent"),
+              label: t("settings.treeIconPosition.indent"),
+              value: "indent",
+            },
+            {
+              draw: drawTreeIconPosition(this.plugin, "inline"),
+              label: t("settings.treeIconPosition.inline"),
+              value: "inline",
+            },
+          ]),
           {
             ...named("colorPalette"),
             control: {
@@ -281,9 +317,7 @@ export class CoverlySettingTab extends PluginSettingTab {
       },
       {
         heading: t("settings.section.iconPacks"),
-        items: iconPackItems(this.plugin, () => {
-          this.update();
-        }),
+        items: iconPackItems(this.plugin),
         type: "group",
       },
       {
@@ -336,6 +370,24 @@ export class CoverlySettingTab extends PluginSettingTab {
     ];
   }
 
+  /** Opção de um grupo fixo, com uma prévia do resultado da escolha. */
+  private choice(key: ControlKey, choices: Choice[]): SettingDefinitionRender {
+    return {
+      desc: t(`settings.${key}.desc`),
+      name: t(`settings.${key}.name`),
+      render: (setting) => {
+        renderChoice(
+          setting,
+          choices,
+          String(this.getControlValue(key)),
+          async (value) => {
+            await this.setControlValue(key, value);
+          }
+        );
+      },
+    };
+  }
+
   /** Espaço usado pela pasta do Coverly e o botão de limpar o que se refaz. */
   private renderStorage(setting: Setting): void {
     const { app } = this.plugin;
@@ -375,16 +427,10 @@ export class CoverlySettingTab extends PluginSettingTab {
       await this.plugin.saveSettings();
       return;
     }
-    await this.applyChange(
-      key as Exclude<ControlKey, "iconTrim" | "perfMonitor">,
-      value
-    );
+    await this.applyChange(key as ChangeKey, value);
   }
 
-  private async applyChange(
-    key: Exclude<ControlKey, "iconTrim" | "perfMonitor">,
-    value: unknown
-  ): Promise<void> {
+  private async applyChange(key: ChangeKey, value: unknown): Promise<void> {
     const { plugin } = this;
     const { settings } = plugin;
 

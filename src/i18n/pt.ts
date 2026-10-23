@@ -198,6 +198,7 @@ export const pt = {
   "settings.coverFolder.name": "Pasta das capas",
   "settings.coverHeight.desc": "Altura padrão da capa em pixels.",
   "settings.coverHeight.name": "Altura da capa",
+  "settings.coverPreview.name": "Prévia",
   "settings.coverRadius.desc":
     "Raio dos cantos da capa em pixels. Zero deixa os cantos retos.",
   "settings.coverRadius.name": "Cantos arredondados",
@@ -224,9 +225,6 @@ export const pt = {
     "Mais de 6.000 ícones de traço, de uma cor só.",
   "settings.iconPacks.downloading": "Baixando…",
   "settings.iconPacks.install": "Instalar",
-  "settings.iconPacks.installed":
-    "{size} guardados no vault. Remover só apaga esta cópia.",
-  "settings.iconPacks.installedName": "Instalado",
   "settings.iconPacks.lucide":
     "Vem com o Obsidian, sempre disponível. É o padrão da aba Ícones.",
   "settings.iconPacks.notInstalled": "Não instalado",
@@ -234,7 +232,6 @@ export const pt = {
   "settings.iconPacks.visible": "Mostrar no seletor de ícones",
   "settings.iconPacks.visibleDesc":
     "Adiciona uma aba deste pacote em Ícones ao escolher um ícone.",
-  "settings.iconPacks.website": "Site",
   "settings.iconPosition.above": "Sobre a capa",
   "settings.iconPosition.desc":
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",
@@ -262,6 +259,7 @@ export const pt = {
   "settings.perfMonitor.desc":
     "Mede o tempo dos trechos mais caros do plugin e as tarefas longas, só na memória. Nada é gravado nem enviado. Veja o resultado no comando “Mostrar relatório de desempenho”. Desligado por padrão.",
   "settings.perfMonitor.name": "Medidor de desempenho",
+  "settings.preview.note": "Nota de exemplo",
   "settings.section.covers": "Capas",
   "settings.section.developer": "Desenvolvedor",
   "settings.section.general": "Geral",

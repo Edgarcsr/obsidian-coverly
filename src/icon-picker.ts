@@ -497,7 +497,7 @@ export class IconPicker extends TabbedPopover<Tab> {
       for (const [id, tab] of packTabs) {
         tab.toggleClass("is-active", id === pack.id);
       }
-      title.setText(pack.name);
+      title.setText(packs.length > 1 ? pack.name : t("tab.icons"));
       grid.toggleClass("is-lucide", pack.tintable);
       colorButton.toggle(pack.tintable);
       source = null;

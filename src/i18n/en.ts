@@ -196,6 +196,7 @@ export const en: Messages = {
   "settings.coverFolder.name": "Cover folder",
   "settings.coverHeight.desc": "Default cover height in pixels.",
   "settings.coverHeight.name": "Cover height",
+  "settings.coverPreview.name": "Preview",
   "settings.coverRadius.desc":
     "Corner radius of the cover in pixels. Zero keeps the corners square.",
   "settings.coverRadius.name": "Rounded corners",
@@ -222,9 +223,6 @@ export const en: Messages = {
     "Over 6,000 stroke icons in a single color.",
   "settings.iconPacks.downloading": "Downloading…",
   "settings.iconPacks.install": "Install",
-  "settings.iconPacks.installed":
-    "{size} saved in the vault. Removing it only deletes this copy.",
-  "settings.iconPacks.installedName": "Installed",
   "settings.iconPacks.lucide":
     "Comes with Obsidian, always available. The default in the Icons tab.",
   "settings.iconPacks.notInstalled": "Not installed",
@@ -232,7 +230,6 @@ export const en: Messages = {
   "settings.iconPacks.visible": "Show in the icon picker",
   "settings.iconPacks.visibleDesc":
     "Adds a tab for this pack under Icons when you pick an icon.",
-  "settings.iconPacks.website": "Website",
   "settings.iconPosition.above": "Over the cover",
   "settings.iconPosition.desc":
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",
@@ -260,6 +257,7 @@ export const en: Messages = {
   "settings.perfMonitor.desc":
     "Measures how long the plugin's heaviest parts take, plus long tasks, in memory only. Nothing is saved or sent. See the result with the “Show performance report” command. Off by default.",
   "settings.perfMonitor.name": "Performance monitor",
+  "settings.preview.note": "Example note",
   "settings.section.covers": "Covers",
   "settings.section.developer": "Developer",
   "settings.section.general": "General",
