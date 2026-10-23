@@ -1591,7 +1591,9 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 }
 
 .mdp-inline-icon .mdp-twemoji,
-.mdp-inline-icon img {
+.mdp-inline-icon img,
+.mdp-link-icon .mdp-twemoji,
+.mdp-link-icon img {
   display: block;
   width: 100%;
   height: 100%;
@@ -2395,4 +2397,28 @@ body {
 .mdp-confirm .mdp-confirm-delete:hover {
   color: var(--text-on-accent);
   background: var(--background-modifier-error-hover);
+}
+
+/* Ícone da nota ao lado do link para ela, como as menções do Notion */
+.mdp-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline-end: 0.28em;
+  font-size: 0.95em;
+  line-height: 1;
+  vertical-align: -0.16em;
+}
+
+.mdp-link-icon .svg-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.5;
+}
+
+.mdp-link-icon img {
+  object-fit: contain;
+  border-radius: 3px;
 }

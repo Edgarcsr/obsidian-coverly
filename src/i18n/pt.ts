@@ -244,6 +244,9 @@ export const pt = {
   "settings.language.desc":
     "Idioma do plugin. Automático segue o idioma do Obsidian; quando ele não é o português, usa o inglês. Os nomes dos comandos só mudam ao recarregar o Obsidian.",
   "settings.language.name": "Idioma",
+  "settings.linkIcons.desc":
+    "Mostra o ícone da nota ao lado de cada [[link]] para ela, no Live Preview e na leitura, como as menções do Notion.",
+  "settings.linkIcons.name": "Ícones nos links",
   "settings.linkPreview.desc":
     "Ao parar o mouse sobre um link para outra nota, mostra um cartão com o ícone, as pastas, o título e o começo dela. Com Ctrl pressionado, abre a prévia nativa do Obsidian.",
   "settings.linkPreview.name": "Prévia dos links",

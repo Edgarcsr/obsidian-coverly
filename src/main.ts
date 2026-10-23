@@ -31,6 +31,7 @@ import {
 import { IconPicker, LUCIDE_PACK } from "./icon-picker";
 import type { PickerPack, Tab as IconTab } from "./icon-picker";
 import { setIconTrim } from "./icon-trim";
+import { registerLinkIcons, refreshLinkIcons } from "./link-icons";
 import { LinkPreview } from "./link-preview";
 import { setLucideExtras } from "./lucide-extra";
 import { loadLucideData } from "./lucide-search";
@@ -191,6 +192,7 @@ export default class CoverlyPlugin extends Plugin {
     this.registerHeaderSync();
     registerFolderIconSync(this);
     registerFileMenu(this);
+    registerLinkIcons(this);
     this.linkPreview.register();
     this.popoverHeaders.register();
 
@@ -427,6 +429,7 @@ export default class CoverlyPlugin extends Plugin {
     this.headers.schedule();
     this.noteIcons.schedule();
     this.toc.schedule();
+    refreshLinkIcons(this);
   }
 
   /** Passa altura, cantos, degradê e sombra da capa para o CSS, que os lê como variáveis. */

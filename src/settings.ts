@@ -89,6 +89,8 @@ export interface CoverlySettings {
   toc: boolean;
   /** Mostra um cartão de prévia ao passar o mouse sobre um link interno. */
   linkPreview: boolean;
+  /** Mostra o ícone da nota ao lado de cada [[link]] para ela (ver link-icons.ts). */
+  linkIcons: boolean;
   /** Acrescenta ao Lucide os ícones que o Obsidian não traz (ver lucide-extra.ts). */
   lucideExtras: boolean;
   /** Esconde a dica do Obsidian (datas) nas notas do explorador, já que o cartão as mostra. */
@@ -119,6 +121,7 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   iconTab: "emoji",
   iconTrim: false,
   language: "auto",
+  linkIcons: true,
   linkPreview: true,
   lucideExtras: false,
   nameColors: false,
@@ -150,6 +153,7 @@ type ControlKey =
   | "treeBackgrounds"
   | "twemoji"
   | "toc"
+  | "linkIcons"
   | "linkPreview"
   | "lucideExtras"
   | "hideFileTooltip"
@@ -163,7 +167,7 @@ type ControlKey =
 /** As opções que o `applyChange` trata; as outras têm o próprio caso em `setControlValue`. */
 type ChangeKey = Exclude<
   ControlKey,
-  "iconTrim" | "lucideExtras" | "perfMonitor"
+  "iconTrim" | "linkIcons" | "lucideExtras" | "perfMonitor"
 >;
 
 export class CoverlySettingTab extends PluginSettingTab {
@@ -317,6 +321,10 @@ export class CoverlySettingTab extends PluginSettingTab {
           },
           { ...named("twemoji"), control: { key: "twemoji", type: "toggle" } },
           {
+            ...named("linkIcons"),
+            control: { key: "linkIcons", type: "toggle" },
+          },
+          {
             ...named("iconTrim"),
             control: { key: "iconTrim", type: "toggle" },
           },
@@ -442,6 +450,12 @@ export class CoverlySettingTab extends PluginSettingTab {
     if (key === "perfMonitor") {
       this.plugin.settings.perfMonitor = value as boolean;
       setPerfEnabled(this.plugin.settings.perfMonitor);
+      await this.plugin.saveSettings();
+      return;
+    }
+    if (key === "linkIcons") {
+      this.plugin.settings.linkIcons = value as boolean;
+      this.plugin.refreshHeaders();
       await this.plugin.saveSettings();
       return;
     }

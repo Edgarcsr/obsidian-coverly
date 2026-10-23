@@ -242,6 +242,9 @@ export const en: Messages = {
   "settings.language.desc":
     "Plugin language. Automatic follows the Obsidian language and falls back to English when it is not Portuguese. Command names only change after you reload Obsidian.",
   "settings.language.name": "Language",
+  "settings.linkIcons.desc":
+    "Shows the icon of the linked note before each [[link]], in Live Preview and in reading view, like mentions in Notion.",
+  "settings.linkIcons.name": "Icons in links",
   "settings.linkPreview.desc":
     "When the mouse rests on a link to another note, shows a card with its icon, folders, title and first lines. Hold Ctrl to open Obsidian's native preview instead.",
   "settings.linkPreview.name": "Link preview",

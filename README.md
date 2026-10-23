@@ -27,6 +27,7 @@
 - **Page icons**: any Unicode emoji (optionally drawn with Twemoji), any Lucide icon in a color of your choice, an icon from an installed icon pack, or a custom image.
 - **Icon packs**: Lucide is built in. In **Settings → Coverly → Icon packs** you can install [Symbols](https://github.com/miguelsolorio/vscode-symbols) (colored file and folder icons), [Tabler](https://tabler.io/icons) and [Phosphor](https://phosphoricons.com), all MIT licensed. Each installed pack gets its own tab under **Icons** in the icon picker, and any pack, Lucide included, can be hidden from there.
 - **Icons everywhere**: the note icon also shows in the tab title and the file explorer.
+- **Icons in links**: a `[[link]]` shows the icon of the note it points to, like a mention in Notion, in Live Preview and in reading view. Embeds, code and properties are left alone. Turn it off with **Icons in links** in the settings.
 - **Folder icons**: right-click a folder in the file explorer and select **Change icon** to give it an icon, shown before its name. Notes have the same **Change icon** and **Remove icon** items.
 - **Heading outline**: a slim outline on the right edge of the note that expands on hover and jumps to a heading on click.
 - **English and Portuguese** interface, following Obsidian's language by default.
