@@ -1560,7 +1560,8 @@ body .mdp-picker .mdp-search-field input:focus-visible {
  * Título inline da nota (posição "na linha do título"): mesmo mecanismo do
  * título da barra superior, mas com o tamanho acompanhando a fonte do título.
  */
-.inline-title[data-mdp-icon]::before {
+.inline-title[data-mdp-icon]::before,
+.view-header-breadcrumb[data-mdp-icon]::before {
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -1570,19 +1571,22 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   background: var(--mdp-title-icon-image) center / contain no-repeat;
 }
 
-.inline-title[data-mdp-icon="text"]::before {
+.inline-title[data-mdp-icon="text"]::before,
+.view-header-breadcrumb[data-mdp-icon="text"]::before {
   line-height: 1;
   text-align: center;
   content: attr(data-mdp-icon-text);
   background: none;
 }
 
-.inline-title[data-mdp-icon="mask"]::before {
+.inline-title[data-mdp-icon="mask"]::before,
+.view-header-breadcrumb[data-mdp-icon="mask"]::before {
   background: var(--mdp-title-icon-color);
   mask: var(--mdp-title-icon-image) center / contain no-repeat;
 }
 
-.inline-title[data-mdp-icon="image"]::before {
+.inline-title[data-mdp-icon="image"]::before,
+.view-header-breadcrumb[data-mdp-icon="image"]::before {
   border-radius: 0.1em;
 }
 

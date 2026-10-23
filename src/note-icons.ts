@@ -173,6 +173,7 @@ export class NoteIconDecorator {
         this.iconFor(view.file?.path ?? ""),
         this.plugin.settings.twemoji
       );
+      this.paintBreadcrumbs(container, view.file);
     }
     for (const title of this.titles) {
       if (!title.isConnected) {
@@ -186,6 +187,34 @@ export class NoteIconDecorator {
         observer.disconnect();
         this.observers.delete(el);
       }
+    }
+  }
+
+  /**
+   * Ícones das pastas no caminho que o Obsidian mostra acima do título da aba
+   * (Pasta / Subpasta). Pasta sem ícone fica como estava.
+   */
+  private paintBreadcrumbs(container: HTMLElement, file: TFile | null): void {
+    const crumbs = [
+      ...container.querySelectorAll<HTMLElement>(
+        ":scope > .view-header-title-parent .view-header-breadcrumb"
+      ),
+    ];
+    const folder = file?.parent;
+    const segments = folder && !folder.isRoot() ? folder.path.split("/") : [];
+    // O caminho vai de cima para baixo; alinhar pelo fim faz um caminho
+    // encurtado pelo Obsidian ainda bater com as pastas certas.
+    const offset = segments.length - crumbs.length;
+    for (const [index, crumb] of crumbs.entries()) {
+      const depth = index + offset;
+      const path = depth < 0 ? "" : segments.slice(0, depth + 1).join("/");
+      this.titles.add(crumb);
+      paintTitleIcon(
+        this.plugin.app,
+        crumb,
+        path ? this.plugin.folderIcon(path) : undefined,
+        this.plugin.settings.twemoji
+      );
     }
   }
 
