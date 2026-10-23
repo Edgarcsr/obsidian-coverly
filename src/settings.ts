@@ -6,6 +6,7 @@ import { DEFAULT_COVER_FOLDER } from "./cover-cache";
 import type { FolderIcons } from "./folder-icons";
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
+import { iconPackItems } from "./icon-packs-settings";
 import { setIconTrim } from "./icon-trim";
 import type CoverlyPlugin from "./main";
 import { setColorPalette } from "./page-icon";
@@ -55,7 +56,11 @@ export interface CoverlySettings {
   /** Ícone de cada pasta, pelo caminho (ver folder-icons.ts). */
   folderIcons: FolderIcons;
   /** Última aba aberta no seletor de ícone, para abrir nela da próxima vez. */
-  iconTab: "emoji" | "icons" | "folders" | "upload";
+  iconTab: "emoji" | "icons" | "upload";
+  /** Último pacote aberto na aba Ícones ("lucide" ou o id de um instalado). */
+  iconPack: string;
+  /** Pacotes que não aparecem como sub-abas no seletor (o Lucide também pode). */
+  hiddenIconPacks: string[];
   /** Emojis usados por último, do mais recente para o mais antigo. */
   recentEmojis: string[];
   /** Desenha os emojis no estilo do X (Twemoji, baixado do jsDelivr). */
@@ -90,8 +95,10 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   customFonts: false,
   downloadCovers: false,
   folderIcons: {},
+  hiddenIconPacks: [],
   hideFileTooltip: true,
   iconColor: "default",
+  iconPack: "lucide",
   iconPosition: "above",
   iconTab: "emoji",
   iconTrim: false,
@@ -270,6 +277,13 @@ export class CoverlySettingTab extends PluginSettingTab {
             control: { key: "iconTrim", type: "toggle" },
           },
         ],
+        type: "group",
+      },
+      {
+        heading: t("settings.section.iconPacks"),
+        items: iconPackItems(this.plugin, () => {
+          this.update();
+        }),
         type: "group",
       },
       {

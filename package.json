@@ -15,7 +15,6 @@
     "fix": "ultracite fix"
   },
   "devDependencies": {
-    "@react-symbols/icons": "1.4.1",
     "@twemoji/svg": "15.0.0",
     "@types/node": "^22.15.17",
     "emojibase-data": "17.0.0",
@@ -24,8 +23,6 @@
     "obsidian": "1.14.4",
     "oxfmt": "^0.71.0",
     "oxlint": "^1.86.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
     "typescript": "^5.8.3",
     "ultracite": "8.0.0"
   }

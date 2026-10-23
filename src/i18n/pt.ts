@@ -148,6 +148,7 @@ export const pt = {
     'Ative "Baixar capas" nas configurações do Coverly primeiro.',
   "notice.coversDownloaded": "Capas salvas no vault: {saved} de {total}.",
   "notice.coversDownloading": "Baixando {total} capas…",
+  "notice.iconPackFailed": "Não foi possível baixar os ícones do {name}.",
   "notice.saveFailed": "Não foi possível salvar a imagem.",
   "notice.saveFailedReason": "Não foi possível salvar a imagem: {reason}",
 
@@ -212,6 +213,28 @@ export const pt = {
   "settings.hideFileTooltip.desc":
     "No explorador de arquivos, esconde a dica do Obsidian com as datas das notas e imagens; o cartão de prévia já mostra as datas.",
   "settings.hideFileTooltip.name": "Esconder a dica do Obsidian no explorador",
+  "settings.iconPacks.available":
+    "Cerca de {size}. Baixado uma vez do jsDelivr (cdn.jsdelivr.net) para a pasta do Coverly no vault; depois funciona offline.",
+  "settings.iconPacks.builtIn": "Incluído",
+  "settings.iconPacks.desc.phosphor":
+    "Ícones flexíveis de uma cor só, no peso regular.",
+  "settings.iconPacks.desc.symbols":
+    "Ícones coloridos de arquivos e pastas, como no tema do VS Code.",
+  "settings.iconPacks.desc.tabler":
+    "Mais de 6.000 ícones de traço, de uma cor só.",
+  "settings.iconPacks.downloading": "Baixando…",
+  "settings.iconPacks.install": "Instalar",
+  "settings.iconPacks.installed":
+    "{size} guardados no vault. Remover só apaga esta cópia.",
+  "settings.iconPacks.installedName": "Instalado",
+  "settings.iconPacks.lucide":
+    "Vem com o Obsidian, sempre disponível. É o padrão da aba Ícones.",
+  "settings.iconPacks.notInstalled": "Não instalado",
+  "settings.iconPacks.remove": "Remover",
+  "settings.iconPacks.visible": "Mostrar no seletor de ícones",
+  "settings.iconPacks.visibleDesc":
+    "Adiciona uma aba deste pacote em Ícones ao escolher um ícone.",
+  "settings.iconPacks.website": "Site",
   "settings.iconPosition.above": "Sobre a capa",
   "settings.iconPosition.desc":
     "Onde fica o ícone da página: grande, sobre a borda da capa, ou pequeno, antes do texto do título. Na linha do título, aparece só se o título da nota estiver visível.",
@@ -242,6 +265,7 @@ export const pt = {
   "settings.section.covers": "Capas",
   "settings.section.developer": "Desenvolvedor",
   "settings.section.general": "Geral",
+  "settings.section.iconPacks": "Pacotes de ícones",
   "settings.section.icons": "Ícones",
   "settings.section.navigation": "Navegação",
   "settings.section.perNote": "Opções por nota (desligadas por padrão)",
@@ -275,7 +299,6 @@ export const pt = {
 
   "tab.colors": "Cores",
   "tab.emoji": "Emoji",
-  "tab.folders": "Pastas",
   "tab.gallery": "Galeria",
   "tab.icons": "Ícones",
   "tab.link": "Link",

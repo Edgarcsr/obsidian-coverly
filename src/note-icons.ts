@@ -2,6 +2,7 @@ import { MarkdownView } from "obsidian";
 import type { TFile } from "obsidian";
 
 import { coverThumbUrl } from "./cover-thumbs";
+import { iconPacksVersion } from "./icon-packs";
 import type CoverlyPlugin from "./main";
 import { dataFromFrontmatter, isHexColor } from "./note-data";
 import type { CoverData } from "./note-data";
@@ -366,7 +367,7 @@ export class NoteIconDecorator {
     // O estilo do emoji e o corte das margens entram na chave para redesenhar
     // quando a opção muda.
     const { iconTrim, twemoji } = this.plugin.settings;
-    const key = `${twemoji}\n${iconTrim}\n${value}`;
+    const key = `${twemoji}\n${iconTrim}\n${iconPacksVersion()}\n${value}`;
     const placed =
       existing?.dataset.key === key && existing.nextElementSibling === before;
     if (placed) {

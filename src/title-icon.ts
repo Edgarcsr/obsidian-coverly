@@ -1,14 +1,15 @@
 import type { App } from "obsidian";
 
+import { isTintablePack, packIconUrl, parsePackIcon } from "./icon-packs";
 import { isIconTrimEnabled, whenTrimmed } from "./icon-trim";
 import {
+  DEFAULT_ICON_COLOR,
   drawLucide,
   iconColorCss,
   iconFile,
   iconImageSource,
   parseLucide,
 } from "./page-icon";
-import { parseSymbol, symbolUrl } from "./symbols";
 import { cacheTwemoji, twemojiUrl } from "./twemoji";
 
 /**
@@ -91,9 +92,20 @@ export const paintTitleIcon = (
   clearTitleIcon(title);
   title.setAttribute(KEY_ATTR, key);
 
-  if (parseSymbol(value) !== null) {
-    const url = symbolUrl(value);
-    if (url) {
+  const pack = parsePackIcon(value);
+  if (pack !== null) {
+    const url = packIconUrl(value);
+    if (url === null) {
+      // Pacote ainda carregando: sem chave, a próxima passada tenta de novo.
+      title.removeAttribute(KEY_ATTR);
+    } else if (isTintablePack(pack.pack)) {
+      setKind(
+        title,
+        "mask",
+        cssUrl(url),
+        iconColorCss(pack.color ?? DEFAULT_ICON_COLOR)
+      );
+    } else {
       setKind(title, "image", cssUrl(url));
     }
     return;

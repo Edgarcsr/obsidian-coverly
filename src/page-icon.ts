@@ -2,16 +2,18 @@ import { setIcon } from "obsidian";
 import type { App } from "obsidian";
 
 import type { MessageKey } from "./i18n";
+import { isTintablePack, packIconUrl, parsePackIcon } from "./icon-packs";
 import { trimIconImage } from "./icon-trim";
 import type { IconFile } from "./icon-trim";
 import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
-import { parseSymbol, symbolUrl } from "./symbols";
 import { drawEmoji } from "./twemoji";
 
 /**
  * O ícone da página fica no frontmatter como texto: um emoji ("📚"), um
  * ícone Lucide prefixado, com a cor opcional no fim ("lucide:book-open" ou
- * "lucide:book-open:blue", ou em hexadecimal, "lucide:book-open:#1e90ff"), ou uma imagem, pelo link ou pelo caminho no vault.
+ * "lucide:book-open:blue", ou em hexadecimal, "lucide:book-open:#1e90ff"), um
+ * ícone de um pacote instalado ("pack:tabler:home", ver icon-packs.ts) ou uma
+ * imagem, pelo link ou pelo caminho no vault.
  * O Obsidian já traz os Lucide com o id "lucide-<nome>".
  */
 const LUCIDE_PREFIX = "lucide:";
@@ -184,12 +186,33 @@ export const iconFile = (app: App, value: string): IconFile | null => {
   return null;
 };
 
-/** O ícone é uma imagem (link ou arquivo do vault), não emoji, Lucide nem de pasta. */
+/**
+ * Desenha um ícone de pacote: os de uma cor só como máscara pintada com a cor
+ * do texto (a classe `svg-icon` dá o mesmo tamanho do Lucide), os coloridos
+ * como imagem. Com o pacote ainda carregando, não desenha nada.
+ */
+export const drawPackIcon = (el: HTMLElement, value: string): void => {
+  const pack = parsePackIcon(value);
+  const url = packIconUrl(value);
+  if (pack === null || url === null) {
+    return;
+  }
+  if (isTintablePack(pack.pack)) {
+    el.createSpan({ cls: "svg-icon mdp-pack-icon" }).style.setProperty(
+      "--mdp-pack-icon",
+      `url("${url}")`
+    );
+  } else {
+    el.createEl("img", { attr: { alt: "", src: url } });
+  }
+};
+
+/** O ícone é uma imagem (link ou arquivo do vault), não emoji, Lucide nem de pacote. */
 export const isImageIcon = (app: App, value: string): boolean =>
   iconImageSource(app, value) !== null;
 
 /**
- * Desenha o ícone da página, emoji, Lucide, de pasta ou imagem, dentro de
+ * Desenha o ícone da página, emoji, Lucide, de pacote ou imagem, dentro de
  * `el`. Com `twemoji`, o emoji sai no estilo do X em vez do emoji do sistema.
  */
 export const drawPageIcon = (
@@ -198,15 +221,21 @@ export const drawPageIcon = (
   value: string,
   twemoji: boolean
 ): void => {
-  // O de pasta é um SVG pronto, desenhado como imagem, mas sem cortar margens:
-  // o desenho já tem a margem certa.
-  if (parseSymbol(value) !== null) {
-    el.removeClass("is-lucide", "mdp-tinted");
-    el.addClass("is-image");
-    const url = symbolUrl(value);
-    if (url) {
-      el.createEl("img", { attr: { alt: "", src: url } });
+  // De um pacote: os de uma cor só seguem o caminho do Lucide (classe, cor e
+  // tamanho); os coloridos, o da imagem, mas sem cortar margens.
+  const pack = parsePackIcon(value);
+  if (pack !== null) {
+    const tinted = isTintablePack(pack.pack);
+    el.toggleClass("is-lucide", tinted);
+    el.toggleClass("mdp-tinted", tinted);
+    el.toggleClass("is-image", !tinted);
+    if (tinted) {
+      el.style.setProperty(
+        "--mdp-icon-color",
+        iconColorCss(pack.color ?? DEFAULT_ICON_COLOR)
+      );
     }
+    drawPackIcon(el, value);
     return;
   }
   const lucide = parseLucide(value);

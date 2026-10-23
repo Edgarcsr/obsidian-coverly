@@ -146,6 +146,7 @@ export const en: Messages = {
     'Turn on "Download covers" in the Coverly settings first.',
   "notice.coversDownloaded": "Covers saved locally: {saved} of {total}.",
   "notice.coversDownloading": "Downloading {total} covers…",
+  "notice.iconPackFailed": "Could not download the {name} icons.",
   "notice.saveFailed": "Could not save the image.",
   "notice.saveFailedReason": "Could not save the image: {reason}",
 
@@ -210,6 +211,28 @@ export const en: Messages = {
   "settings.hideFileTooltip.desc":
     "In the file explorer, hide Obsidian's tooltip with the dates of notes and images; the preview card already shows them.",
   "settings.hideFileTooltip.name": "Hide Obsidian's tooltip in the explorer",
+  "settings.iconPacks.available":
+    "About {size}. Downloaded once from jsDelivr (cdn.jsdelivr.net) into the Coverly folder of the vault; works offline after that.",
+  "settings.iconPacks.builtIn": "Built in",
+  "settings.iconPacks.desc.phosphor":
+    "Flexible icons in a single color, regular weight.",
+  "settings.iconPacks.desc.symbols":
+    "Colored file and folder icons, as in the VS Code theme.",
+  "settings.iconPacks.desc.tabler":
+    "Over 6,000 stroke icons in a single color.",
+  "settings.iconPacks.downloading": "Downloading…",
+  "settings.iconPacks.install": "Install",
+  "settings.iconPacks.installed":
+    "{size} saved in the vault. Removing it only deletes this copy.",
+  "settings.iconPacks.installedName": "Installed",
+  "settings.iconPacks.lucide":
+    "Comes with Obsidian, always available. The default in the Icons tab.",
+  "settings.iconPacks.notInstalled": "Not installed",
+  "settings.iconPacks.remove": "Remove",
+  "settings.iconPacks.visible": "Show in the icon picker",
+  "settings.iconPacks.visibleDesc":
+    "Adds a tab for this pack under Icons when you pick an icon.",
+  "settings.iconPacks.website": "Website",
   "settings.iconPosition.above": "Over the cover",
   "settings.iconPosition.desc":
     "Where the page icon goes: large, over the cover's bottom edge, or small, before the title text. On the title line, it only shows when the note's inline title is visible.",
@@ -240,6 +263,7 @@ export const en: Messages = {
   "settings.section.covers": "Covers",
   "settings.section.developer": "Developer",
   "settings.section.general": "General",
+  "settings.section.iconPacks": "Icon packs",
   "settings.section.icons": "Icons",
   "settings.section.navigation": "Navigation",
   "settings.section.perNote": "Per-note options (off by default)",
@@ -273,7 +297,6 @@ export const en: Messages = {
 
   "tab.colors": "Colors",
   "tab.emoji": "Emoji",
-  "tab.folders": "Folders",
   "tab.gallery": "Gallery",
   "tab.icons": "Icons",
   "tab.link": "Link",

@@ -1003,15 +1003,108 @@ body .mdp-picker .mdp-search-field input:focus-visible {
   color: inherit;
 }
 
-/* Aba Pastas: nove colunas, uma por cor, com os estilos em fileiras */
-.mdp-picker .mdp-icon-grid.is-symbols {
-  grid-template-columns: repeat(9, minmax(0, 1fr));
-}
-
-.mdp-picker .mdp-icon-grid.is-symbols img {
+/* Ícones coloridos de pacote (como o Symbols): imagem no tamanho do Lucide */
+.mdp-picker .mdp-icon-option img {
   display: block;
   width: 22px;
   height: 22px;
+}
+
+/*
+ * Ícone de pacote de uma cor só: o SVG vira máscara, pintada com a cor do
+ * texto, como o traço do Lucide. O tamanho vem das regras de `.svg-icon`.
+ */
+.mdp-pack-icon {
+  display: block;
+  background-color: currentColor;
+  mask: var(--mdp-pack-icon) center / contain no-repeat;
+}
+
+/* Faixa de exemplo na página do pacote, nas configurações */
+.mdp-pack-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px;
+  margin-bottom: var(--size-4-3);
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+
+.mdp-pack-preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.mdp-pack-preview-icon .svg-icon,
+.mdp-pack-preview-icon .mdp-pack-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.mdp-pack-preview-icon .svg-icon {
+  stroke-width: 2;
+}
+
+.mdp-pack-preview-icon img {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+/* Sub-abas dos pacotes, numa linha própria embaixo da busca */
+.mdp-picker-search.is-row:has(.mdp-pack-tabs) {
+  flex-wrap: wrap;
+}
+
+/* Como as abas do topo, menores: texto apagado e sublinhado na ativa */
+.mdp-pack-tabs {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mdp-picker .mdp-pack-tab {
+  position: relative;
+  height: auto;
+  padding: 4px 8px 7px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.mdp-picker .mdp-pack-tab:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.mdp-picker .mdp-pack-tab.is-active {
+  color: var(--text-normal);
+}
+
+.mdp-picker .mdp-pack-tab.is-active::after {
+  position: absolute;
+  right: 8px;
+  bottom: -1px;
+  left: 8px;
+  height: 2px;
+  content: "";
+  background: var(--text-normal);
+  border-radius: 1px;
 }
 
 /* Bolinha de cor: no botão ao lado da busca e em cada opção da paleta */

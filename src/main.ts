@@ -21,8 +21,15 @@ import type { PopupPosition } from "./floating-popup";
 import { folderIcon, registerFolderIconSync } from "./folder-icons";
 import { headerCacheStats } from "./header";
 import { setLanguage, t } from "./i18n";
-import { IconPicker } from "./icon-picker";
-import type { Tab as IconTab } from "./icon-picker";
+import { packInfo } from "./icon-pack-catalog";
+import {
+  configureIconPacks,
+  installedPacks,
+  refreshInstalled,
+  parsePackIcon,
+} from "./icon-packs";
+import { IconPicker, LUCIDE_PACK } from "./icon-picker";
+import type { PickerPack, Tab as IconTab } from "./icon-picker";
 import { setIconTrim } from "./icon-trim";
 import { LinkPreview } from "./link-preview";
 import { loadLucideData } from "./lucide-search";
@@ -55,7 +62,6 @@ import { PopoverHeaders } from "./popover-header";
 import { DEFAULT_SETTINGS, CoverlySettingTab } from "./settings";
 import type { CoverlySettings } from "./settings";
 import { formatSize } from "./storage";
-import { parseSymbol } from "./symbols";
 import { TocManager } from "./toc";
 import { closeTwemojiCache, loadTwemojiCache } from "./twemoji";
 import { HeaderManager } from "./view-header";
@@ -146,6 +152,11 @@ export default class CoverlyPlugin extends Plugin {
     await this.migrateCoverFolder();
     await Promise.all([twemojiCache, this.configureCoverCache()]);
     // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
+    // Pacote de ícones lido do disco: os ícones dele podem aparecer agora.
+    void refreshInstalled(this.app);
+    configureIconPacks(this.app, () => {
+      this.refreshHeaders();
+    });
     setThumbListener(() => {
       this.noteIcons.schedule();
     });
@@ -380,6 +391,11 @@ export default class CoverlyPlugin extends Plugin {
     }
     // Cópia própria: o objeto padrão não pode receber os ícones.
     this.settings.folderIcons = { ...this.settings.folderIcons };
+    this.settings.hiddenIconPacks = [...this.settings.hiddenIconPacks];
+    // A aba Pastas virou o pacote Symbols, dentro da aba Ícones.
+    if (!["emoji", "icons", "upload"].includes(this.settings.iconTab)) {
+      this.settings.iconTab = "icons";
+    }
     // Uma paleta que não existe mais (ou valor estranho) volta para a padrão.
     if (!isColorPalette(this.settings.colorPalette)) {
       this.settings.colorPalette = DEFAULT_SETTINGS.colorPalette;
@@ -511,7 +527,7 @@ export default class CoverlyPlugin extends Plugin {
   private async rememberEmoji(value: string): Promise<void> {
     if (
       parseLucide(value) !== null ||
-      parseSymbol(value) !== null ||
+      parsePackIcon(value) !== null ||
       isImageIcon(this.app, value)
     ) {
       return;
@@ -541,7 +557,7 @@ export default class CoverlyPlugin extends Plugin {
   }
 
   /**
-   * Abre o seletor de ícone da pasta. Começa sempre na aba Pastas, e trocar
+   * Abre o seletor de ícone da pasta. Começa sempre na aba Ícones, e trocar
    * de aba aqui não muda a aba em que o seletor das notas abre.
    */
   async openFolderIconPicker(
@@ -556,21 +572,46 @@ export default class CoverlyPlugin extends Plugin {
       save: async (value) => {
         await this.setFolderIcon(folderPath, value);
       },
-      tab: "folders",
+      tab: "icons",
     });
+  }
+
+  /**
+   * Sub-abas da aba Ícones: o Lucide e os pacotes instalados, menos os
+   * ocultos. Se tudo estiver oculto, fica o Lucide.
+   */
+  private async pickerPacks(): Promise<PickerPack[]> {
+    const installed = await installedPacks(this.app);
+    const packs: PickerPack[] = [
+      { id: LUCIDE_PACK, name: "Lucide", tintable: true },
+      ...installed.flatMap((id) => {
+        const info = packInfo(id);
+        return info ? [{ id, name: info.name, tintable: info.tintable }] : [];
+      }),
+    ];
+    const visible = packs.filter(
+      (pack) => !this.settings.hiddenIconPacks.includes(pack.id)
+    );
+    return visible.length > 0 ? visible : packs.slice(0, 1);
   }
 
   private async showIconPicker(target: IconTarget): Promise<void> {
     this.picker?.close();
-    await Promise.all([loadEmojiData(), loadLucideData()]);
+    const [packs] = await Promise.all([
+      this.pickerPacks(),
+      loadEmojiData(),
+      loadLucideData(),
+    ]);
     this.picker?.close();
     const { current } = target;
+    const currentColor =
+      parseLucide(current ?? "")?.color ?? parsePackIcon(current ?? "")?.color;
     const picker = new IconPicker({
       anchor: target.anchor,
       app: this.app,
       // Um ícone colorido abre o seletor na cor dele; senão, na última usada.
       askColor: this.settings.askIconColor,
-      color: parseLucide(current ?? "")?.color ?? this.settings.iconColor,
+      color: currentColor ?? this.settings.iconColor,
       current,
       onAskColorChange: async (askColor) => {
         this.settings.askIconColor = askColor;
@@ -579,6 +620,10 @@ export default class CoverlyPlugin extends Plugin {
       onColorChange: async (color) => {
         this.settings.iconColor = color;
         await this.saveSettings();
+      },
+      onPackChange: (pack) => {
+        this.settings.iconPack = pack;
+        void this.saveSettings();
       },
       onPick: async (value) => {
         await target.save(value);
@@ -593,6 +638,8 @@ export default class CoverlyPlugin extends Plugin {
           void this.saveSettings();
         }
       },
+      pack: this.settings.iconPack,
+      packs,
       recentEmojis: this.settings.recentEmojis,
       sourcePath: target.path,
       tab: target.tab,

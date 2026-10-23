@@ -8,28 +8,60 @@ import { EmojiGrid } from "./emoji-grid";
 import { emojiGroups } from "./emojis";
 import type { EmojiEntry, EmojiGroup } from "./emojis";
 import { t } from "./i18n";
+import {
+  loadPack,
+  packIconValue,
+  packNames,
+  parsePackIcon,
+  searchPack,
+} from "./icon-packs";
 import { renderIconUpload } from "./icon-upload";
 import type { IconUploadHandle } from "./icon-upload";
 import { imageUsage, releaseImage } from "./image-usage";
 import { normalize, searchLucide } from "./lucide-search";
-import { drawLucide, lucideNames, lucideValue, parseLucide } from "./page-icon";
+import {
+  DEFAULT_ICON_COLOR,
+  drawLucide,
+  drawPackIcon,
+  lucideNames,
+  lucideValue,
+  parseLucide,
+} from "./page-icon";
 import { measure } from "./perf";
 import { renderSavedImages } from "./plugin-images";
 import { TabbedPopover, searchField } from "./popover";
 import type { PopoverTab } from "./popover";
-import { symbolValue } from "./symbols";
-import { renderSymbolGrid } from "./symbols-tab";
 import { drawEmoji } from "./twemoji";
 import { renderVaultImages } from "./vault-images";
 
-export type Tab = "emoji" | "icons" | "folders" | "upload";
+export type Tab = "emoji" | "icons" | "upload";
 
 const tabs = (): PopoverTab<Tab>[] => [
   { id: "emoji", label: t("tab.emoji") },
   { id: "icons", label: t("tab.icons") },
-  { id: "folders", label: t("tab.folders") },
   { id: "upload", label: t("tab.upload") },
 ];
+
+/** Id da sub-aba do Lucide, que vem com o Obsidian. */
+export const LUCIDE_PACK = "lucide";
+
+/** Uma sub-aba da aba Ícones: o Lucide ou um pacote instalado. */
+export interface PickerPack {
+  id: string;
+  name: string;
+  /** Uma cor só: a grade mostra o botão de cor. */
+  tintable: boolean;
+}
+
+/** Busca, desenho e valor gravado dos ícones de um pacote. */
+interface IconSource {
+  search: (query: string) => readonly string[];
+  draw: (el: HTMLElement, name: string) => void;
+  value: (name: string, color: string) => string;
+  /** Nome do ícone atual, se ele for deste pacote. */
+  selected: string | undefined;
+  tintable: boolean;
+}
 
 /**
  * São mais de mil ícones Lucide; desenhar todos de uma vez trava a abertura.
@@ -81,16 +113,23 @@ export interface IconPickerOptions {
   /** Aba em que o seletor abre (a última usada). */
   tab: Tab;
   onTabChange: (tab: Tab) => void;
+  /** Sub-abas da aba Ícones, o Lucide primeiro. */
+  packs: readonly PickerPack[];
+  /** Sub-aba em que a aba Ícones abre (a última usada). */
+  pack: string;
+  onPackChange: (pack: string) => void;
   onPick: (value: string) => Promise<void>;
   onColorChange: (color: string) => Promise<void>;
   onAskColorChange: (askColor: boolean) => Promise<void>;
   onRemove: () => Promise<void>;
 }
 
-/** Seletor de ícone da página: emoji, ícone Lucide, de pasta ou imagem, como no Notion. */
+/** Seletor de ícone da página: emoji, ícone Lucide, de pacote ou imagem, como no Notion. */
 export class IconPicker extends TabbedPopover<Tab> {
   private readonly options: IconPickerOptions;
   private readonly colorState: ColorState;
+  /** Sub-aba da aba Ícones à vista; vale ao voltar de outra aba. */
+  private packId: string;
   private closeVariants: (() => void) | null = null;
   private observer: IntersectionObserver | null = null;
   private upload: IconUploadHandle | null = null;
@@ -109,6 +148,7 @@ export class IconPicker extends TabbedPopover<Tab> {
     super(options.anchor, tabs(), options.tab, "mdp-icon-picker");
     this.options = options;
     this.colorState = { askColor: options.askColor, color: options.color };
+    this.packId = options.pack;
   }
 
   override open(): void {
@@ -143,10 +183,6 @@ export class IconPicker extends TabbedPopover<Tab> {
       }
       case "icons": {
         this.renderIcons();
-        break;
-      }
-      case "folders": {
-        this.renderFolders();
         break;
       }
       case "upload": {
@@ -352,46 +388,87 @@ export class IconPicker extends TabbedPopover<Tab> {
     return button;
   }
 
+  /** Como a grade lida com os ícones de um pacote: o Lucide ou um instalado. */
+  private iconSource(pack: PickerPack): IconSource {
+    const current = this.options.current ?? "";
+    if (pack.id === LUCIDE_PACK) {
+      const all = lucideNames(getIconIds());
+      return {
+        draw: drawLucide,
+        // Nome, tags e categorias, como no lucide.dev: "money" acha "banknote".
+        search: (query) =>
+          measure("picker.lucideSearch", () => searchLucide(all, query)),
+        selected: parseLucide(current)?.name,
+        tintable: true,
+        value: lucideValue,
+      };
+    }
+    const names = packNames(pack.id);
+    const parsed = parsePackIcon(current);
+    return {
+      draw: (el, name) => {
+        drawPackIcon(el, packIconValue(pack.id, name, null));
+      },
+      search: (query) =>
+        measure("picker.packSearch", () => searchPack(names, query)),
+      selected: parsed?.pack === pack.id ? parsed.name : undefined,
+      tintable: pack.tintable,
+      value: (name, color) =>
+        packIconValue(
+          pack.id,
+          name,
+          pack.tintable && color !== DEFAULT_ICON_COLOR ? color : null
+        ),
+    };
+  }
+
+  /**
+   * Aba Ícones: o Lucide e, com pacotes instalados, uma sub-aba para cada um
+   * embaixo da busca. A busca continua ao trocar de pacote.
+   */
   private renderIcons(): void {
-    const all = lucideNames(getIconIds());
-    const selected = parseLucide(this.options.current ?? "")?.name;
-    let matches = all;
+    const { packs } = this.options;
+    let source: IconSource | null = null;
+    let matches: readonly string[] = [];
     let shown = 0;
 
     const { input, row } = this.searchRow(
       t("iconPicker.filterIcons"),
       asyncListener(async () => {
         const name = randomItem(matches);
-        if (name) {
-          await this.pick(lucideValue(name, this.colorState.color));
+        if (name && source) {
+          await this.pick(source.value(name, this.colorState.color));
         }
       })
     );
-    this.body.createDiv({
-      cls: "mdp-picker-section-title",
-      text: t("tab.icons"),
-    });
-    const grid = this.body.createDiv({ cls: "mdp-icon-grid is-lucide" });
-    renderColorButton({
+    const title = this.body.createDiv({ cls: "mdp-picker-section-title" });
+    const grid = this.body.createDiv({ cls: "mdp-icon-grid" });
+    const colorButton = renderColorButton({
       grid,
       onAskColorChange: this.options.onAskColorChange,
       onColorChange: this.options.onColorChange,
       row,
       state: this.colorState,
     });
-    const status = this.body.createDiv({
-      cls: "mdp-picker-hint is-empty",
-      text: t("iconPicker.noIcons"),
-    });
+    const status = this.body.createDiv({ cls: "mdp-picker-hint is-empty" });
     const sentinel = this.body.createDiv({ cls: "mdp-icon-sentinel" });
 
     const more = (): void => {
+      if (!source) {
+        return;
+      }
+      const shownSource = source;
       const next = matches.slice(shown, shown + BATCH);
       for (const name of next) {
-        const button = optionButton(grid, name, name === selected, async () => {
-          await this.pickIcon(button, name);
-        });
-        drawLucide(button, name);
+        const button = optionButton(
+          grid,
+          name,
+          name === shownSource.selected,
+          async () => {
+            await this.pickIcon(button, name, shownSource);
+          }
+        );
+        shownSource.draw(button, name);
       }
       shown += next.length;
       // O observer só avisa quando a visibilidade do sentinela muda. Se ele
@@ -404,16 +481,58 @@ export class IconPicker extends TabbedPopover<Tab> {
     };
 
     const filter = (): void => {
-      // Nome, tags e categorias, como no lucide.dev: "money" acha "banknote".
-      matches = measure("picker.lucideSearch", () =>
-        searchLucide(all, input.value)
-      );
+      matches = source ? source.search(input.value) : [];
       this.closeVariants?.();
       grid.empty();
       shown = 0;
-      status.toggle(matches.length === 0);
+      status.setText(t("iconPicker.noIcons"));
+      status.toggle(source !== null && matches.length === 0);
       more();
     };
+
+    // Sub-abas dos pacotes; com um só, não há o que escolher.
+    const packTabs = new Map<string, HTMLElement>();
+    const show = async (pack: PickerPack): Promise<void> => {
+      this.packId = pack.id;
+      for (const [id, tab] of packTabs) {
+        tab.toggleClass("is-active", id === pack.id);
+      }
+      title.setText(pack.name);
+      grid.toggleClass("is-lucide", pack.tintable);
+      colorButton.toggle(pack.tintable);
+      source = null;
+      filter();
+      if (pack.id !== LUCIDE_PACK) {
+        status.setText(t("settings.storage.loading"));
+        status.show();
+        await loadPack(pack.id);
+      }
+      // Trocou de pacote enquanto este carregava: o outro já está à vista.
+      if (this.packId === pack.id) {
+        source = this.iconSource(pack);
+        filter();
+      }
+    };
+    if (packs.length > 1) {
+      const bar = row.createDiv({ cls: "mdp-pack-tabs" });
+      for (const pack of packs) {
+        const tab = bar.createEl("button", {
+          cls: "mdp-pack-tab",
+          text: pack.name,
+        });
+        tab.addEventListener(
+          "click",
+          asyncListener(async () => {
+            if (this.packId !== pack.id) {
+              this.options.onPackChange(pack.id);
+              await show(pack);
+            }
+            input.focus();
+          })
+        );
+        packTabs.set(pack.id, tab);
+      }
+    }
 
     this.observer = new IntersectionObserver(
       (entries) => {
@@ -426,45 +545,35 @@ export class IconPicker extends TabbedPopover<Tab> {
     this.observer.observe(sentinel);
 
     input.addEventListener("input", filter);
-    filter();
-    input.focus();
-  }
-
-  /** Aba Pastas: os ícones já vêm coloridos, então não há botão de cor. */
-  private renderFolders(): void {
-    let grid: ReturnType<typeof renderSymbolGrid> | null = null;
-    const { input } = this.searchRow(
-      t("iconPicker.filterIcons"),
-      asyncListener(async () => {
-        const entry = randomItem(grid?.visible() ?? []);
-        if (entry) {
-          await this.pick(symbolValue(entry.id));
-        }
-      })
-    );
-    grid = renderSymbolGrid(this.body, this.options.current, async (value) => {
-      await this.pick(value);
-    });
-    input.addEventListener("input", () => {
-      grid?.filter(input.value);
-    });
+    const first =
+      packs.find((pack) => pack.id === this.packId) ??
+      packs.find((pack) => pack.id === LUCIDE_PACK);
+    if (first) {
+      void show(first);
+    }
     input.focus();
   }
 
   /** Com "Perguntar sempre", mostra o ícone nas cores; senão, usa a cor atual. */
-  private async pickIcon(button: HTMLElement, name: string): Promise<void> {
-    if (!this.colorState.askColor) {
-      await this.pick(lucideValue(name, this.colorState.color));
+  private async pickIcon(
+    button: HTMLElement,
+    name: string,
+    source: IconSource
+  ): Promise<void> {
+    if (!(source.tintable && this.colorState.askColor)) {
+      await this.pick(source.value(name, this.colorState.color));
       return;
     }
     this.closeVariants?.();
     this.closeVariants = showColorVariants(
       this.body,
       button,
-      name,
+      (el) => {
+        source.draw(el, name);
+      },
       this.colorState,
       async (color) => {
-        await this.pick(lucideValue(name, color));
+        await this.pick(source.value(name, color));
       }
     );
   }
