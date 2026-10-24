@@ -18,7 +18,13 @@ import { downloadAllCovers } from "./download-covers";
 import { loadEmojiData } from "./emojis";
 import { registerFileMenu } from "./file-menu";
 import type { PopupPosition } from "./floating-popup";
-import { folderIcon, registerFolderIconSync } from "./folder-icons";
+import {
+  folderIcon,
+  readFolderIcons,
+  registerFolderIconSync,
+  writeFolderIcons,
+} from "./folder-icons";
+import type { FolderIcons } from "./folder-icons";
 import { headerCacheStats } from "./header";
 import { setLanguage, t } from "./i18n";
 import { packInfo } from "./icon-pack-catalog";
@@ -123,6 +129,8 @@ const removeKeys = (
 
 export default class CoverlyPlugin extends Plugin {
   settings: CoverlySettings = { ...DEFAULT_SETTINGS };
+  /** Ícone de cada pasta, pelo caminho (ver folder-icons.ts). */
+  folderIcons: FolderIcons = {};
   private readonly headers = new HeaderManager(this);
   private readonly noteIcons = new NoteIconDecorator(this);
   private readonly toc = new TocManager(this);
@@ -164,6 +172,7 @@ export default class CoverlyPlugin extends Plugin {
       twemojiCache,
       this.configureCoverCache(),
       preloadIconPacks(this.app),
+      this.loadFolderIcons(),
     ]);
     // Miniatura nova pronta: o explorador pode trocar o fundo da nota.
     setThumbListener(() => {
@@ -407,8 +416,6 @@ export default class CoverlyPlugin extends Plugin {
       this.settings.treeBackgrounds = legacy.treeCovers ? "notes" : "off";
       Reflect.deleteProperty(legacy, "treeCovers");
     }
-    // Cópia própria: o objeto padrão não pode receber os ícones.
-    this.settings.folderIcons = { ...this.settings.folderIcons };
     this.settings.hiddenIconPacks = [...this.settings.hiddenIconPacks];
     // A aba Pastas virou o pacote Symbols, dentro da aba Ícones.
     if (!["emoji", "icons", "upload"].includes(this.settings.iconTab)) {
@@ -422,6 +429,33 @@ export default class CoverlyPlugin extends Plugin {
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+  }
+
+  /**
+   * Lê os ícones das pastas do arquivo na pasta do Coverly. Os que ainda
+   * estão nas configurações (versões até a 0.9.0) passam para o arquivo e
+   * saem delas, só depois de gravados.
+   */
+  private async loadFolderIcons(): Promise<void> {
+    const stored = await readFolderIcons(this.app);
+    const legacy = this.settings as Partial<Record<"folderIcons", FolderIcons>>;
+    this.folderIcons = { ...legacy.folderIcons, ...stored };
+    if (legacy.folderIcons === undefined) {
+      return;
+    }
+    try {
+      if (Object.keys(legacy.folderIcons).length > 0) {
+        await writeFolderIcons(this.app, this.folderIcons);
+      }
+      Reflect.deleteProperty(legacy, "folderIcons");
+      await this.saveSettings();
+    } catch {
+      // Sem gravar o arquivo, os ícones continuam nas configurações.
+    }
+  }
+
+  async saveFolderIcons(): Promise<void> {
+    await writeFolderIcons(this.app, this.folderIcons);
   }
 
   /** Redesenha cabeçalhos e ícones depois de uma mudança nas configurações. */
@@ -790,17 +824,17 @@ export default class CoverlyPlugin extends Plugin {
 
   /** Ícone da pasta, se ela tiver um. */
   folderIcon(folderPath: string): string | undefined {
-    return folderIcon(this.settings.folderIcons, folderPath);
+    return folderIcon(this.folderIcons, folderPath);
   }
 
-  /** Grava o ícone da pasta nas configurações. `null` remove. */
+  /** Grava o ícone da pasta. `null` remove. */
   async setFolderIcon(folderPath: string, value: string | null): Promise<void> {
     if (value === null) {
-      Reflect.deleteProperty(this.settings.folderIcons, folderPath);
+      Reflect.deleteProperty(this.folderIcons, folderPath);
     } else {
-      this.settings.folderIcons[folderPath] = value;
+      this.folderIcons[folderPath] = value;
     }
-    await this.saveSettings();
+    await this.saveFolderIcons();
     this.noteIcons.schedule();
   }
 
