@@ -8,7 +8,6 @@ import { PluginSettingTab } from "obsidian";
 
 import { asyncListener } from "./async-listener";
 import { DEFAULT_COVER_FOLDER } from "./cover-cache";
-import type { FolderIcons } from "./folder-icons";
 import { setLanguage, t } from "./i18n";
 import type { Language } from "./i18n";
 import { iconPackItems } from "./icon-packs-settings";
@@ -67,8 +66,6 @@ export interface CoverlySettings {
   iconColor: string;
   /** Clicar num ícone mostra as variantes de cor antes de escolher. */
   askIconColor: boolean;
-  /** Ícone de cada pasta, pelo caminho (ver folder-icons.ts). */
-  folderIcons: FolderIcons;
   /** Última aba aberta no seletor de ícone, para abrir nela da próxima vez. */
   iconTab: "emoji" | "icons" | "upload";
   /** Último pacote aberto na aba Ícones ("lucide" ou o id de um instalado). */
@@ -112,7 +109,6 @@ export const DEFAULT_SETTINGS: CoverlySettings = {
   coverShade: 35,
   customFonts: false,
   downloadCovers: false,
-  folderIcons: {},
   hiddenIconPacks: [],
   hideFileTooltip: true,
   iconColor: "default",
