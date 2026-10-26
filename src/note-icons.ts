@@ -164,6 +164,7 @@ export class NoteIconDecorator {
     }
 
     for (const leaf of workspace.getLeavesOfType("markdown")) {
+      this.paintTab(leaf);
       const { view } = leaf;
       const container = view.containerEl.querySelector<HTMLElement>(
         ".view-header-title-container"
@@ -184,16 +185,6 @@ export class NoteIconDecorator {
         this.plugin.settings.twemoji
       );
       this.paintBreadcrumbs(container, view.file);
-      const tabIcon = tabIconEl(leaf);
-      if (tabIcon) {
-        this.titles.add(tabIcon);
-        paintTitleIcon(
-          this.plugin.app,
-          tabIcon,
-          this.iconFor(view.file?.path ?? ""),
-          this.plugin.settings.twemoji
-        );
-      }
     }
     for (const title of this.titles) {
       if (!title.isConnected) {
@@ -208,6 +199,33 @@ export class NoteIconDecorator {
         this.observers.delete(el);
       }
     }
+  }
+
+  /**
+   * Ícone da nota na aba. Abas em segundo plano ainda não carregaram a nota
+   * (a view é adiada e não tem `file`), então o caminho vem do estado salvo
+   * da aba; assim o ícone aparece desde a abertura do Obsidian.
+   */
+  private paintTab(leaf: WorkspaceLeaf): void {
+    const tabIcon = tabIconEl(leaf);
+    if (!tabIcon) {
+      return;
+    }
+    const { view } = leaf;
+    let path = "";
+    if (view instanceof MarkdownView) {
+      path = view.file?.path ?? "";
+    } else {
+      const stored: unknown = leaf.getViewState().state?.file;
+      path = typeof stored === "string" ? stored : "";
+    }
+    this.titles.add(tabIcon);
+    paintTitleIcon(
+      this.plugin.app,
+      tabIcon,
+      this.iconFor(path),
+      this.plugin.settings.twemoji
+    );
   }
 
   /**
