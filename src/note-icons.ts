@@ -1,5 +1,5 @@
 import { MarkdownView } from "obsidian";
-import type { TFile } from "obsidian";
+import type { TFile, WorkspaceLeaf } from "obsidian";
 
 import { coverThumbUrl } from "./cover-thumbs";
 import { iconPacksVersion } from "./icon-packs";
@@ -18,6 +18,7 @@ interface DecorPass {
 }
 
 const ICON_CLASS = "mdp-inline-icon";
+const TAB_ICON_SELECTOR = ".workspace-tab-header-inner-icon";
 const NAME_CLASS = "mdp-name-colored";
 const TREE_COVER_CLASS = "mdp-tree-cover";
 const TREE_COVER_VAR = "--mdp-tree-cover";
@@ -27,6 +28,15 @@ const ROW_CONTENT_SELECTOR =
   ":scope > .nav-file-title-content, :scope > .nav-folder-title-content";
 /** Espaçamento mínimo entre as passadas completas do explorador. */
 const SWEEP_DELAY_MS = 180;
+
+/**
+ * Ícone do cabeçalho da aba, onde o Obsidian põe o ícone do tipo de arquivo.
+ * `tabHeaderEl` não está na API tipada, mas é estável há anos.
+ */
+const tabIconEl = (leaf: WorkspaceLeaf): HTMLElement | null => {
+  const header = (leaf as { tabHeaderEl?: HTMLElement }).tabHeaderEl;
+  return header?.querySelector<HTMLElement>(TAB_ICON_SELECTOR) ?? null;
+};
 
 /** Camada CSS do fundo: só fotos, pela miniatura; degradês e cores ficam de fora. */
 const treeCoverLayer = (cover: string | undefined): string | null => {
@@ -154,6 +164,7 @@ export class NoteIconDecorator {
     }
 
     for (const leaf of workspace.getLeavesOfType("markdown")) {
+      this.paintTab(leaf);
       const { view } = leaf;
       const container = view.containerEl.querySelector<HTMLElement>(
         ".view-header-title-container"
@@ -188,6 +199,33 @@ export class NoteIconDecorator {
         this.observers.delete(el);
       }
     }
+  }
+
+  /**
+   * Ícone da nota na aba. Abas em segundo plano ainda não carregaram a nota
+   * (a view é adiada e não tem `file`), então o caminho vem do estado salvo
+   * da aba; assim o ícone aparece desde a abertura do Obsidian.
+   */
+  private paintTab(leaf: WorkspaceLeaf): void {
+    const tabIcon = tabIconEl(leaf);
+    if (!tabIcon) {
+      return;
+    }
+    const { view } = leaf;
+    let path = "";
+    if (view instanceof MarkdownView) {
+      path = view.file?.path ?? "";
+    } else {
+      const stored: unknown = leaf.getViewState().state?.file;
+      path = typeof stored === "string" ? stored : "";
+    }
+    this.titles.add(tabIcon);
+    paintTitleIcon(
+      this.plugin.app,
+      tabIcon,
+      this.iconFor(path),
+      this.plugin.settings.twemoji
+    );
   }
 
   /**

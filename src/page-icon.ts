@@ -5,7 +5,7 @@ import type { MessageKey } from "./i18n";
 import { isTintablePack, packIconUrl, parsePackIcon } from "./icon-packs";
 import { trimIconImage } from "./icon-trim";
 import type { IconFile } from "./icon-trim";
-import { drawExtraLucide, extraLucideNames } from "./lucide-extra";
+import { drawExtraLucide, extraLucideNames, obsidianHas } from "./lucide-extra";
 import { isPluginImagePath, pluginImageUrl } from "./plugin-images";
 import { drawEmoji } from "./twemoji";
 
@@ -162,11 +162,21 @@ export const lucideNames = (ids: readonly string[]): string[] =>
     ...extraLucideNames(),
   ].toSorted();
 
-/** Desenha um ícone Lucide pelo nome sem prefixo. */
+/** Ícone no lugar de um Lucide extra quando a opção está desligada. */
+const MISSING_ICON = `${OBSIDIAN_LUCIDE_PREFIX}hash`;
+
+/**
+ * Desenha um ícone Lucide pelo nome sem prefixo. Um extra com a opção
+ * desligada vira um "#", em vez de um ícone invisível.
+ */
 export const drawLucide = (el: HTMLElement, name: string): void => {
-  if (!drawExtraLucide(el, name)) {
-    setIcon(el, `${OBSIDIAN_LUCIDE_PREFIX}${name}`);
+  if (drawExtraLucide(el, name)) {
+    return;
   }
+  setIcon(
+    el,
+    obsidianHas(name) ? `${OBSIDIAN_LUCIDE_PREFIX}${name}` : MISSING_ICON
+  );
 };
 
 /** Endereço da imagem do ícone, ou `null` se o ícone não for uma imagem. */
