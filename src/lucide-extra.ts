@@ -26,7 +26,7 @@ let obsidianIds: Set<string> | null = null;
 /** Os ícones já montados, para não ler o SVG de novo a cada desenho. */
 const templates = new Map<string, SVGElement>();
 
-const obsidianHas = (name: string): boolean => {
+export const obsidianHas = (name: string): boolean => {
   obsidianIds ??= new Set(getIconIds());
   return obsidianIds.has(`${OBSIDIAN_PREFIX}${name}`);
 };

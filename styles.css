@@ -1557,6 +1557,49 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 }
 
 /*
+ * Aba: o ícone da nota toma o lugar do ícone do tipo de arquivo, como o
+ * favicon de uma aba do navegador.
+ */
+.workspace-tab-header-inner-icon[data-mdp-icon] > .svg-icon {
+  display: none;
+}
+
+/* O Obsidian esconde o ícone das abas de notas; com ícone da nota, ele volta. */
+.workspace
+  .mod-root
+  .workspace-tabs:not(.mod-stacked)
+  .workspace-tab-header
+  .workspace-tab-header-inner-icon[data-mdp-icon] {
+  display: flex;
+  padding-inline-end: 4px;
+}
+
+.workspace-tab-header-inner-icon[data-mdp-icon]::before {
+  display: block;
+  width: var(--icon-s, 16px);
+  height: var(--icon-s, 16px);
+  content: "";
+  background: var(--mdp-title-icon-image) center / contain no-repeat;
+}
+
+.workspace-tab-header-inner-icon[data-mdp-icon="text"]::before {
+  font-size: 14px;
+  line-height: var(--icon-s, 16px);
+  text-align: center;
+  content: attr(data-mdp-icon-text);
+  background: none;
+}
+
+.workspace-tab-header-inner-icon[data-mdp-icon="mask"]::before {
+  background: var(--mdp-title-icon-color);
+  mask: var(--mdp-title-icon-image) center / contain no-repeat;
+}
+
+.workspace-tab-header-inner-icon[data-mdp-icon="image"]::before {
+  border-radius: 3px;
+}
+
+/*
  * Título inline da nota (posição "na linha do título"): mesmo mecanismo do
  * título da barra superior, mas com o tamanho acompanhando a fonte do título.
  */
@@ -1602,6 +1645,15 @@ body .mdp-picker .mdp-search-field input:focus-visible {
 /* Imagem de ícone esperando o corte das margens: o espaço fica, a imagem não */
 .mdp-trimming {
   visibility: hidden;
+}
+
+/*
+ * Ícones em imagem (Symbols, enviados) têm traço fino num quadro de 24px;
+ * encolhidos a 14px ficam borrados, então ganham 16px. As margens da linha
+ * seguem a variável, então o nome não anda.
+ */
+.mdp-inline-icon.is-image {
+  --mdp-inline-size: 16px;
 }
 
 .mdp-inline-icon.is-image img {

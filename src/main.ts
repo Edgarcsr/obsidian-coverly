@@ -54,6 +54,12 @@ import type { CoverData, CreditInfo } from "./note-data";
 import { showFontPopup } from "./note-font";
 import { NoteIconDecorator } from "./note-icons";
 import {
+  omitVaultSettings,
+  pickVaultSettings,
+  readVaultSettings,
+  writeVaultSettings,
+} from "./vault-settings";
+import {
   isColorPalette,
   isImageIcon,
   parseLucide,
@@ -410,6 +416,12 @@ export default class CoverlyPlugin extends Plugin {
       ...DEFAULT_SETTINGS,
       ...((await this.loadData()) as Partial<CoverlySettings> | null),
     };
+    // As opções da vault, se já estão no arquivo dela, valem mais que as do
+    // plugin; senão (até a 0.9.1) ficam como estavam e passam a ser gravadas lá.
+    Object.assign(
+      this.settings,
+      await readVaultSettings(this.app, this.settings.coverFolder)
+    );
     // A opção "capas no explorador" (liga/desliga) virou uma escolha.
     const legacy = this.settings as Partial<Record<"treeCovers", boolean>>;
     if (legacy.treeCovers !== undefined) {
@@ -427,8 +439,22 @@ export default class CoverlyPlugin extends Plugin {
     }
   }
 
+  /**
+   * As opções da vault vão para o arquivo dela e as demais para o `data.json`.
+   * Se o arquivo não puder ser gravado, tudo fica no `data.json`, como antes.
+   */
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
+    try {
+      await writeVaultSettings(
+        this.app,
+        this.settings.coverFolder,
+        pickVaultSettings(this.settings)
+      );
+    } catch {
+      await this.saveData(this.settings);
+      return;
+    }
+    await this.saveData(omitVaultSettings(this.settings));
   }
 
   /**
